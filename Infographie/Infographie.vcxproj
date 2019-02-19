@@ -72,22 +72,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Code\cpp\SFML\include;C:\Code\cpp\Infographie\Infographie;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Code\cpp\Infographie\Infographie;C:\Code\cpp\SFML\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Code\cpp\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Code\cpp\SFML\include;C:\Code\cpp\Infographie\Infographie;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Code\cpp\Infographie\Infographie;C:\Code\cpp\SFML\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Code\cpp\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Code\cpp\SFML\include;C:\Code\cpp\Infographie\Infographie;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Code\cpp\Infographie\Infographie;C:\Code\cpp\SFML\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Code\cpp\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Code\cpp\SFML\include;C:\Code\cpp\Infographie\Infographie;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Code\cpp\Infographie\Infographie;C:\Code\cpp\SFML\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Code\cpp\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -175,6 +175,10 @@
     <ClCompile Include="Containers\DynArray.cpp" />
     <ClCompile Include="Containers\Graph.cpp" />
     <ClCompile Include="Containers\QuadTree.cpp" />
+    <ClCompile Include="imgui\imgui-SFML.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Math\algorithms.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -183,6 +187,9 @@
     <ClInclude Include="Containers\DynArray.hpp" />
     <ClInclude Include="Containers\Graph.hpp" />
     <ClInclude Include="Containers\QuadTree.hpp" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui-SFML.h" />
+    <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="Math\algorithms.hpp" />
     <ClInclude Include="Math\Circle.hpp" />
     <ClInclude Include="Math\RandomData.hpp" />

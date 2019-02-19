@@ -520,6 +520,8 @@ struct Vector : public __vec_member<D, T> {
 		}
 		return result;
 	}
+#endif
+#ifdef SFML_GRAPHICS_HPP
 
 	static void renderLine(
 		sf::RenderTarget& target,
