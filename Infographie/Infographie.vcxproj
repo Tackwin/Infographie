@@ -30,7 +30,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -101,6 +101,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,6 +140,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -171,7 +173,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Common.hpp" />
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="Containers\DynArray.cpp" />
     <ClCompile Include="Containers\Graph.cpp" />
     <ClCompile Include="Containers\QuadTree.cpp" />
@@ -180,7 +182,17 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Managers\AssetsManager.cpp" />
+    <ClCompile Include="Managers\InputsManager.cpp" />
     <ClCompile Include="Math\algorithms.cpp" />
+    <ClCompile Include="OS\windows\FileIO.cpp" />
+    <ClCompile Include="OS\windows\OpenFile.cpp" />
+    <ClCompile Include="OS\windows\PathDefinition.cpp" />
+    <ClCompile Include="OS\windows\SystemConfiguration.cpp" />
+    <ClCompile Include="Scene\Image.cpp" />
+    <ClCompile Include="Scene\Widget.cpp" />
+    <ClCompile Include="UI\Images.cpp" />
+    <ClCompile Include="Utils\UUID.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +202,8 @@
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui-SFML.h" />
     <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="Managers\AssetsManager.hpp" />
+    <ClInclude Include="Managers\InputsManager.hpp" />
     <ClInclude Include="Math\algorithms.hpp" />
     <ClInclude Include="Math\Circle.hpp" />
     <ClInclude Include="Math\RandomData.hpp" />
@@ -197,6 +211,14 @@
     <ClInclude Include="Math\Rectangle.hpp" />
     <ClInclude Include="Math\Segment.hpp" />
     <ClInclude Include="Math\Vector.hpp" />
+    <ClInclude Include="OS\FileIO.hpp" />
+    <ClInclude Include="OS\OpenFile.hpp" />
+    <ClInclude Include="OS\PathDefinition.hpp" />
+    <ClInclude Include="OS\SystemConfiguration.hpp" />
+    <ClInclude Include="Scene\Image.hpp" />
+    <ClInclude Include="Scene\Widget.hpp" />
+    <ClInclude Include="UI\Images.hpp" />
+    <ClInclude Include="Utils\UUID.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>
   <ItemGroup>

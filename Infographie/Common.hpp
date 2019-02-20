@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <bitset>
+#include <cassert>
 #include <functional>
 #include <unordered_set>
 
@@ -105,12 +106,16 @@ namespace std {
 	};
 };
 
+class Assets_Manager;
 namespace Common {
+	extern Assets_Manager* AM;
 	constexpr size_t SEED = 0;
 	constexpr float PIf = 3.1415296f;
 	constexpr double PI = 3.1415926535898;
 	constexpr double RAD_2_DEG = 57.295779513;
 
+#pragma warning(push)
+#pragma warning(disable: 4307)
 	constexpr size_t operator""_id(const char* user, size_t size) {
 		size_t seed = 0;
 		for (size_t i = 0; i < size; ++i) seed = xstd::hash_combine(seed, (size_t)user[i]);
