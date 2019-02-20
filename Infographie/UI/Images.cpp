@@ -7,10 +7,23 @@
 
 #include <Os/OpenFile.hpp>
 
-void render_images_settings(Images_Settings& settings) noexcept {
+void update_image_settings(Images_Settings& settings) noexcept {
+	constexpr auto Max_Buffer_Size = 2048;
+	thread_local char buffer[Max_Buffer_Size];
 	std::lock_guard{ settings.mutex };
 
 	if (settings.closed) return;
+
+	if (ImGui::BeginPopup("Alert")) {
+		for (size_t i = settings.log.size() - 1; i + 1 > 0; --i) {
+			ImGui::Text(settings.log[i].c_str());
+			ImGui::SameLine();
+			if (ImGui::Button("X")) {
+				settings.log.erase(std::begin(settings.log) + i);
+			}
+		}
+		ImGui::EndPopup();
+	}
 
 	ImGui::Begin("Images", &settings.closed);
 	defer{ ImGui::End(); };
@@ -27,6 +40,25 @@ void render_images_settings(Images_Settings& settings) noexcept {
 
 			for (auto& x : settings.import_images_callback) x(result.filepath);
 		}, opts);
+	}
+
+	if (ImGui::Button("Screenshot")) {
+		if (settings.screenshot_directory.empty()) {
+			ImGui::OpenPopup("Alert");
+			settings.log.push_back("Please select screenshot directory");
+		}
+		settings.take_screenshot = true;
+	}
+	ImGui::SameLine();
+	auto screenshot_button_label = settings.screenshot_directory.empty()
+		? std::string{ "Please select screenshot directory" }
+			: settings.screenshot_directory.generic_string();
+	if (ImGui::Button(screenshot_button_label.c_str())) {
+		open_dir_async([&](std::optional<std::filesystem::path> dir) {
+			if (!dir) return;
+			std::lock_guard{ settings.mutex };
+			settings.screenshot_directory = *dir;
+		});
 	}
 
 	if (!settings.root) return;
@@ -46,5 +78,6 @@ void render_images_settings(Images_Settings& settings) noexcept {
 			settings.images_widget_id.erase(std::begin(settings.images_widget_id) + i);
 		}
 	}
+
 }
 

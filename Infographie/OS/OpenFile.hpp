@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread>
+#include <optional>
 #include <functional>
 #include <filesystem>
 #include <unordered_map>
@@ -26,6 +27,11 @@ struct Open_File_Result {
 	std::filesystem::path filepath;
 	std::filesystem::path filename;
 };
+
+extern void open_dir_async(
+	std::function<void(std::optional<std::filesystem::path>)>&& callback
+) noexcept;
+extern std::optional<std::filesystem::path> open_dir() noexcept;
 
 extern void open_file_async(
 	std::function<void(Open_File_Result)>&& callback, Open_File_Opts opts = Open_File_Opts{}

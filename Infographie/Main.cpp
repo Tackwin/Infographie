@@ -8,9 +8,13 @@
 #include "Scene/Widget.hpp"
 #include "Scene/Image.hpp"
 #include "Managers/AssetsManager.hpp"
+#include "Utils/TimeInfo.hpp"
 
 void construct_managers() noexcept;
 void destroy_managers() noexcept;
+
+void update(Widget& root, Images_Settings& img_settings, float dt) noexcept;
+void render(Widget& root, sf::RenderTarget& target) noexcept;
 
 int main() {
 	construct_managers();
@@ -48,19 +52,46 @@ int main() {
 				Window_Info.window.close();
 			}
 		}
-		ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
-		root.propagate_input();
-
-		render_images_settings(img_settings);
-
-		root.propagate_update(dt);
+		update(root, img_settings, dt);
 
 		Window_Info.window.clear();
-		ImGui::SFML::Render(Window_Info.window);
-		root.propagate_render(Window_Info.window);
+		render(root, Window_Info.window);
 		Window_Info.window.display();
 	}
 	ImGui::SFML::Shutdown();
+}
+
+void update(Widget& root, Images_Settings& img_settings, float dt) noexcept {
+	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
+	root.propagate_input();
+
+	update_image_settings(img_settings);
+	root.propagate_update(dt);
+
+	if (img_settings.take_screenshot) {
+		defer{ img_settings.take_screenshot = false; };
+
+		sf::RenderTexture render_texture;
+		render_texture.create(UNROLL_2(Window_Info.size));
+		render_texture.clear();
+		render(root, render_texture);
+		render_texture.display();
+
+		auto file_name =
+			std::string("screenshot") + std::to_string(get_milliseconds_epoch()) + ".png";
+		auto wstring = (img_settings.screenshot_directory / file_name).native();
+		std::string string;
+		for (auto& c : wstring) {
+			string.push_back((char)c);
+		}
+
+		render_texture.getTexture().copyToImage().saveToFile(string);
+	}
+}
+
+void render(Widget& root, sf::RenderTarget& target) noexcept {
+	ImGui::SFML::Render(target);
+	root.propagate_render(target);
 }
 
 

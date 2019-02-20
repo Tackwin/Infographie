@@ -5,6 +5,7 @@
 #include "Common.hpp"
 
 #include <Windows.h>
+#include <ShObjIdl_core.h>
 
 const char* create_cstr_extension_label_map(
 	decltype(Open_File_Opts::ext_filters) filters
@@ -90,6 +91,48 @@ Open_File_Result open_file(Open_File_Opts opts) noexcept {
 		result.succeded = false;
 		result.error_code = CommDlgExtendedError();
 	}
+	return result;
+}
+
+
+void open_dir_async(
+	std::function<void(std::optional<std::filesystem::path>)>&& callback
+) noexcept {
+	std::thread([callback]() {callback(open_dir());}).detach();
+}
+std::optional<std::filesystem::path> open_dir() noexcept {
+	std::optional<std::filesystem::path> result = std::nullopt;
+	std::thread{ [&result] {
+		constexpr auto BUFFER_SIZE = 2048;
+	
+		HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+		if (FAILED(hr)) return;
+
+		IFileDialog* file_dialog;
+		auto return_code = CoCreateInstance(
+			CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&file_dialog)
+		);
+		if (FAILED(return_code)) return;
+		defer{ file_dialog->Release(); };
+
+		DWORD options;
+		if (FAILED(file_dialog->GetOptions(&options))) return;
+	
+		file_dialog->SetOptions(options | FOS_PICKFOLDERS);
+
+		if (FAILED(file_dialog->Show(NULL))) return;
+
+		IShellItem* psi;
+		if (FAILED(file_dialog->GetResult(&psi))) return;
+		defer{ psi->Release(); };
+
+		LPWSTR pointer;
+		if (FAILED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pointer))) return;
+		assert(pointer);
+
+		result = std::filesystem::path{ std::wstring{pointer} };
+	}}.join();
+
 	return result;
 }
 

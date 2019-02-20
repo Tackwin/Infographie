@@ -77,6 +77,9 @@
     <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\TimeInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -149,6 +152,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Image.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TimeInfo.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

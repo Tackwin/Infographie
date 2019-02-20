@@ -19,7 +19,12 @@ struct Images_Settings {
 
 	Widget* root{ nullptr };
 	std::vector<UUID> images_widget_id;
+
+	bool take_screenshot{ false };
+	std::filesystem::path screenshot_directory;
+
+	std::vector<std::string> log;
 };
 
-extern void render_images_settings(Images_Settings& settings) noexcept;
+extern void update_image_settings(Images_Settings& settings) noexcept;
 

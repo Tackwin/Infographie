@@ -192,6 +192,7 @@
     <ClCompile Include="Scene\Image.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
     <ClCompile Include="UI\Images.cpp" />
+    <ClCompile Include="Utils\TimeInfo.cpp" />
     <ClCompile Include="Utils\UUID.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -218,6 +219,7 @@
     <ClInclude Include="Scene\Image.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
     <ClInclude Include="UI\Images.hpp" />
+    <ClInclude Include="Utils\TimeInfo.hpp" />
     <ClInclude Include="Utils\UUID.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>
