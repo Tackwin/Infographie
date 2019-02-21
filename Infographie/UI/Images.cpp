@@ -14,17 +14,6 @@ void update_image_settings(Images_Settings& settings) noexcept {
 
 	if (settings.closed) return;
 
-	if (ImGui::BeginPopup("Alert")) {
-		for (size_t i = settings.log.size() - 1; i + 1 > 0; --i) {
-			ImGui::Text(settings.log[i].c_str());
-			ImGui::SameLine();
-			if (ImGui::Button("X")) {
-				settings.log.erase(std::begin(settings.log) + i);
-			}
-		}
-		ImGui::EndPopup();
-	}
-
 	ImGui::Begin("Images", &settings.closed);
 	defer{ ImGui::End(); };
 
@@ -47,7 +36,9 @@ void update_image_settings(Images_Settings& settings) noexcept {
 			ImGui::OpenPopup("Alert");
 			settings.log.push_back("Please select screenshot directory");
 		}
-		settings.take_screenshot = true;
+		else {
+			settings.take_screenshot = true;
+		}
 	}
 	ImGui::SameLine();
 	auto screenshot_button_label = settings.screenshot_directory.empty()
@@ -61,6 +52,22 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		});
 	}
 
+	if (ImGui::BeginPopup("Alert")) {
+		if (ImGui::Button("Clear")) {
+			settings.log.clear();
+		}
+		for (size_t i = settings.log.size() - 1; i + 1 > 0; --i) {
+			ImGui::Text(settings.log[i].c_str());
+			ImGui::SameLine();
+			if (ImGui::Button("X")) {
+				settings.log.erase(std::begin(settings.log) + i);
+			}
+		}
+		if (settings.log.empty()) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
 	if (!settings.root) return;
 
 	ImGui::Columns(2);
@@ -78,6 +85,8 @@ void update_image_settings(Images_Settings& settings) noexcept {
 			settings.images_widget_id.erase(std::begin(settings.images_widget_id) + i);
 		}
 	}
+
+
 
 }
 

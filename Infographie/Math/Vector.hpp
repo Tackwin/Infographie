@@ -317,12 +317,12 @@ struct Vector : public __vec_member<D, T> {
 
 	template<size_t Dp = D>
 	std::enable_if_t<Dp == 2, Vector<D, T>> fitDownRatio(double ratio) const noexcept {
-		if (this->x < this->y) {
-			return { this->x, (T)(this->x / ratio) };
-		}
-		else {
-			return { (T)(this->y * ratio), this->y };
-		}
+		Vector<2, T> result;
+		result.x = (T)ratio;
+		result.y = (T)1;
+		result *= std::max(this->x, this->y) / ratio;
+
+		return result;
 	}
 
 	template<typename L>

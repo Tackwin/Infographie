@@ -77,15 +77,12 @@ void update(Widget& root, Images_Settings& img_settings, float dt) noexcept {
 		render(root, render_texture);
 		render_texture.display();
 
+		auto number_of_files = std::filesystem::hard_link_count(img_settings.screenshot_directory);
 		auto file_name =
-			std::string("screenshot") + std::to_string(get_milliseconds_epoch()) + ".png";
-		auto wstring = (img_settings.screenshot_directory / file_name).native();
-		std::string string;
-		for (auto& c : wstring) {
-			string.push_back((char)c);
-		}
+			img_settings.screenshot_directory /
+			("screenshot_" + std::to_string(number_of_files) + ".png");
 
-		render_texture.getTexture().copyToImage().saveToFile(string);
+		render_texture.getTexture().copyToImage().saveToFile(file_name.generic_string());
 	}
 }
 
