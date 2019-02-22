@@ -7,7 +7,11 @@
 #pragma warning(push)
 #pragma warning(disable: 4201)
 
+#define EXPAND(x) x
+
 #define UNROLL_2(v) (v).x, (v).y
+#define UNROLL_2_P(v, prefix) (prefix)((v).x), (prefix)((v).y)
+
 #define COLOR_UNROLL(x) (x).r, (x).g, (x).b, (x).a
 #define XYZW_UNROLL(v) (v).x, (v).y, (v).z, (v).w
 

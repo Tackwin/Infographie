@@ -63,10 +63,10 @@ Open_File_Result open_file(Open_File_Opts opts) noexcept {
 	const char* filters = create_cstr_extension_label_map(opts.ext_filters);
 	defer{ delete filters; };
 
-	OPENFILENAME ofn;
+	OPENFILENAMEA ofn;
 	ZeroMemory(&ofn, sizeof(ofn));
 
-	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = (HWND)opts.owner;
 	ofn.lpstrFilter = filters;
 	ofn.lpstrFile = filepath;
@@ -80,7 +80,7 @@ Open_File_Result open_file(Open_File_Opts opts) noexcept {
 
 	Open_File_Result result;
 
-	if (GetOpenFileName(&ofn)) {
+	if (GetOpenFileNameA(&ofn)) {
 		result.succeded = true;
 
 		// To make sure they are generic.

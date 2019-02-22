@@ -12,11 +12,6 @@ void update_image_settings(Images_Settings& settings) noexcept {
 	thread_local char buffer[Max_Buffer_Size];
 	std::lock_guard{ settings.mutex };
 
-	if (settings.closed) return;
-
-	ImGui::Begin("Images", &settings.closed);
-	defer{ ImGui::End(); };
-
 	if (ImGui::Button("Import image")) {
 		Open_File_Opts opts;
 		opts.allow_redirect_link = false;
@@ -74,10 +69,10 @@ void update_image_settings(Images_Settings& settings) noexcept {
 	for (size_t i = settings.images_widget_id.size() - 1; i + 1 > 0; --i) {
 		auto& img_widget_id = settings.images_widget_id[i];
 		if (auto img_widget = (Image*)settings.root->find_child(img_widget_id); img_widget) {
-			ImGui::Text("%u", img_widget->n);
+			ImGui::Text("%u", img_widget->get_n());
 			ImGui::NextColumn();
 			if (ImGui::Button("Open")) {
-				img_widget->open = true;
+				img_widget->set_open(true);
 			}
 			ImGui::NextColumn();
 		}
@@ -85,8 +80,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 			settings.images_widget_id.erase(std::begin(settings.images_widget_id) + i);
 		}
 	}
-
-
+	ImGui::Columns(1);
 
 }
 

@@ -1,6 +1,7 @@
 #include "InputsManager.hpp"
 
 #include "Common.hpp"
+#include "imgui/imgui-SFML.h"
 
 sf::Uint32 InputsManager::textEntered;
 
@@ -215,6 +216,13 @@ bool InputsManager::isKeyJustReleased(const sf::Keyboard::Key &key) {
 bool InputsManager::isMousePressed(const sf::Mouse::Button &button) {
 	return mousePressed[button];
 }
+bool IM::is_one_of_pressed(const std::vector<sf::Mouse::Button>& buttons) noexcept {
+	for (auto& m : buttons) {
+		if (isMousePressed(m)) return true;
+	}
+	return false;
+}
+
 bool InputsManager::isMouseJustPressed(const sf::Mouse::Button &button) {
 	return mouseJustPressed[button];
 }
@@ -289,6 +297,7 @@ void InputsManager::update(sf::RenderWindow &window) {
 
 	sf::Event event;
 	while(window.pollEvent(event)) {
+		ImGui::SFML::ProcessEvent(event);
 
 		if(event.type == sf::Event::Closed)
 			window.close();

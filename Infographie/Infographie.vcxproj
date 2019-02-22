@@ -189,8 +189,10 @@
     <ClCompile Include="OS\windows\OpenFile.cpp" />
     <ClCompile Include="OS\windows\PathDefinition.cpp" />
     <ClCompile Include="OS\windows\SystemConfiguration.cpp" />
+    <ClCompile Include="Scene\Canvas.cpp" />
     <ClCompile Include="Scene\Image.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
+    <ClCompile Include="UI\Drawings.cpp" />
     <ClCompile Include="UI\Images.cpp" />
     <ClCompile Include="Utils\TimeInfo.cpp" />
     <ClCompile Include="Utils\UUID.cpp" />
@@ -216,8 +218,10 @@
     <ClInclude Include="OS\OpenFile.hpp" />
     <ClInclude Include="OS\PathDefinition.hpp" />
     <ClInclude Include="OS\SystemConfiguration.hpp" />
+    <ClInclude Include="Scene\Canvas.hpp" />
     <ClInclude Include="Scene\Image.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
+    <ClInclude Include="UI\Drawings.hpp" />
     <ClInclude Include="UI\Images.hpp" />
     <ClInclude Include="Utils\TimeInfo.hpp" />
     <ClInclude Include="Utils\UUID.hpp" />

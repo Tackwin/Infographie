@@ -16,7 +16,7 @@ std::filesystem::path get_executable_path() noexcept {
 
 		buffer = new char[size];
 
-		copied = (size_t)GetModuleFileName(NULL, buffer, size);
+		copied = (size_t)GetModuleFileNameA(NULL, buffer, size);
 
 		if (copied != 0 || GetLastError() != ERROR_INSUFFICIENT_BUFFER) break;
 

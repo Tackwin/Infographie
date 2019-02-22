@@ -216,11 +216,15 @@ std::bitset<9u> Widget::input(const std::bitset<9u>& mask) {
 	auto mouseIsIn = get_global_bounding_box().in(IM::getMouseScreenPos());
 
 	if (mouseIsIn || focused) {
+		std::vector<sf::Mouse::Button> buttons = {
+			sf::Mouse::Left, sf::Mouse::Right, sf::Mouse::Middle
+		};
+
 		if (IM::isMouseJustPressed(sf::Mouse::Left) && !mask[0]) {
 			if (!mouseIsIn && !have_locked_focus)	set_focus(false);
 			else							result[0] = on_click.began();
 		}
-		if (IM::isMousePressed(sf::Mouse::Left) && !mask[1]) {
+		if (IM::is_one_of_pressed(buttons) && !mask[1]) {
 			result[1] = on_click.going();
 		}
 		if (IM::isMouseJustReleased(sf::Mouse::Left) && !mask[2]) {

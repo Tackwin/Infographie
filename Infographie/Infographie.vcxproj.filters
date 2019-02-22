@@ -80,6 +80,12 @@
     <ClCompile Include="Utils\TimeInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\Drawings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Canvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -155,6 +161,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\TimeInfo.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Drawings.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Canvas.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

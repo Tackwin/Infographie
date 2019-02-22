@@ -3,7 +3,8 @@
 #include <array>
 #include "Widget.hpp"
 
-struct Image : public Widget {
+class Image : public Widget {
+public:
 	static size_t Total_N;
 
 	Image(sf::Texture& texture) noexcept;
@@ -11,9 +12,16 @@ struct Image : public Widget {
 	void update(float dt) noexcept override;
 	void update_histogram() noexcept;
 
+	void render(sf::RenderTarget& target) noexcept override;
+
+	void set_open(bool v) noexcept;
+	size_t get_n() const noexcept;
+
+private:
 	size_t n;
 	bool open;
 	bool histogram_open{ false };
+
 	enum Histogram_Type : int {
 		Grey_Scale,
 		RGB,

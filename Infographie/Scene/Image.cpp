@@ -17,6 +17,8 @@ void Image::update(float dt) noexcept {
 	if (!open) return;
 
 	ImGui::Begin(std::to_string(n).c_str(), &open);
+	set_global_position(ImGui::GetWindowPos());
+	set_size(ImGui::GetWindowSize());
 	auto window_size = ImGui::GetWindowSize();
 	auto image_ratio = sprite.getTextureRect().width / sprite.getTextureRect().height;
 	auto image_size = ((Vector2f)window_size).fitDownRatio(image_ratio);
@@ -156,3 +158,28 @@ void Image::RGB_Histogram::compute(const sf::Texture& texture) noexcept {
 	}
 }
 
+void Image::render(sf::RenderTarget& target) noexcept {
+	auto last_view = target.getView();
+	target.setView(target.getDefaultView());
+
+#ifndef NDEBUG
+
+	sf::RectangleShape border;
+	border.setPosition(get_global_position());
+	border.setSize(get_size());
+	border.setOutlineThickness(1);
+	border.setOutlineColor(Vector4f{ 1, 0, 0, 1 });
+	border.setFillColor(Vector4f{ 0, 0, 0, 0 });
+
+	target.draw(border);
+#endif
+
+	target.setView(last_view);
+}
+
+void Image::set_open(bool v) noexcept {
+	open = v;
+}
+size_t Image::get_n() const noexcept {
+	return n;
+}
