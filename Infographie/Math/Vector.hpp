@@ -13,9 +13,26 @@
 #define UNROLL_2_P(v, prefix) (prefix)((v).x), (prefix)((v).y)
 
 #define COLOR_UNROLL(x) (x).r, (x).g, (x).b, (x).a
+#define COLOR_UNROLL_P(x, prefix) \
+	(prefix)((x).r), (prefix)((x).g), (prefix)((x).b), (prefix)((x).a)
 #define XYZW_UNROLL(v) (v).x, (v).y, (v).z, (v).w
 
 static constexpr auto Vector2_Type_Tag = "Vector2<T>"_id;
+
+template<size_t D, typename T>
+struct Vector;
+template<typename T> using Vector2 = Vector<2U, T>;
+template<typename T> using Vector3 = Vector<3U, T>;
+template<typename T> using Vector4 = Vector<4U, T>;
+using Vector2u = Vector2<size_t>;
+using Vector2i = Vector2<int>;
+using Vector2f = Vector2<float>;
+using Vector2d = Vector2<double>;
+using Vector3f = Vector3<float>;
+using Vector3u = Vector3<size_t>;
+using Vector4u = Vector4<size_t>;
+using Vector4f = Vector4<float>;
+using Vector4d = Vector4<double>;
 
 template<size_t D, typename T>
 struct __vec_member {
@@ -86,28 +103,14 @@ struct __vec_member<4, T> {
 			T b;
 			T a;
 		};
+		Vector3f xyz;
+		Vector3f rgb;
 		T components[4];
 	};
 
 	__vec_member() : x(0), y(0), z(0), w(0) {}
 	__vec_member(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 };
-
-
-template<size_t D, typename T>
-struct Vector;
-
-template<typename T> using Vector2 = Vector<2U, T>;
-template<typename T> using Vector3 = Vector<3U, T>;
-template<typename T> using Vector4 = Vector<4U, T>;
-using Vector2u = Vector2<size_t>;
-using Vector2i = Vector2<int>;
-using Vector2f = Vector2<float>;
-using Vector2d = Vector2<double>;
-using Vector3d = Vector3<double>;
-using Vector4u = Vector4<size_t>;
-using Vector4f = Vector4<float>;
-using Vector4d = Vector4<double>;
 
 template<size_t D, typename T = float>
 struct Vector : public __vec_member<D, T> {
@@ -199,6 +202,11 @@ struct Vector : public __vec_member<D, T> {
 	template<size_t Dp = D>
 	constexpr Vector(T x, std::enable_if_t<Dp == 2, T> y) :
 		__vec_member<2, T>(x, y)
+	{}
+
+	template<size_t Dp = D>
+	constexpr Vector(T x, T y, std::enable_if_t<Dp == 3, T> z) :
+		__vec_member<3, T>(x, y, z)
 	{}
 
 	template<size_t Dp = D>
@@ -414,6 +422,14 @@ struct Vector : public __vec_member<D, T> {
 		static_assert(std::is_scalar<U>::value);
 		for (size_t i = 0; i < getDimension(); ++i) {
 			this->components[i] *= static_cast<T>(scalaire);
+		}
+		return *this;
+	}
+	template<typename U>
+	Vector<D, T>& operator/=(const U& scalaire) {
+		static_assert(std::is_scalar<U>::value);
+		for (size_t i = 0; i < getDimension(); ++i) {
+			this->components[i] /= static_cast<T>(scalaire);
 		}
 		return *this;
 	}

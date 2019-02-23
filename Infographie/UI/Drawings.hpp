@@ -9,40 +9,41 @@ class Widget;
 struct Drawing_Settings {
 	struct DT_Circle {
 		size_t size;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 	};
 	struct DT_Fill {
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
+		float tolerance{ 0 };
 	};
 	struct DT_Square {
 		size_t size;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 	};
 	struct DT_Line {
 		size_t thick;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 		bool strip;
 	};
 
 	struct PT_Point {
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 	};
 	struct PT_Circle {
 		size_t size;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 		size_t thick;
 		Vector4f outline_color;
 	};
 	struct PT_Rect {
 		Vector2u size;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 		size_t thick;
 		Vector4f outline_color;
 	};
 	struct PT_Polygon {
 		size_t n;
 		Vector2u size;
-		Vector4f color;
+		Vector4f color{ 0, 0, 0, 1 };
 		size_t thick;
 		Vector4f outline_color;
 	};

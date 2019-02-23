@@ -14,7 +14,7 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept;
 
 void update_drawing_settings(Drawing_Settings& settings) noexcept {
 
-	static int New_Canvas_Size[2]{ 0, 0 };
+	static int New_Canvas_Size[2]{ 300, 300 };
 	ImGui::InputInt2("Size", New_Canvas_Size);
 	ImGui::SameLine();
 	if (ImGui::Button("Add Canvas")) {
@@ -65,6 +65,10 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 	// your code based on compile time info at compile time...
 	// i wonder if that exist somewhere...
 
+	// >SEE 22/02/19 The draft withe paper for Circle a superset of c++17 with full compile time
+	// code execution, AST manipulation have been released. No public compiler release for now
+	// but if it's half as good as i think i'll be glad.
+
 	auto& dt_circle_texture = AM->get_texture("DT_Circle");
 	sf::Vector2f dt_circle_texture_size{ UNROLL_2_P(dt_circle_texture.getSize(), float) };
 	auto& dt_square_texture = AM->get_texture("DT_Square");
@@ -110,6 +114,7 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 			ImGui::Text("Fill parameters");
 
 			ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
+			ImGui::InputFloat("Tolerance", reinterpret_cast<float*>(&x.tolerance));
 		}
 
 		if constexpr (std::is_same_v<T, Drawing_Settings::DT_Square>) {

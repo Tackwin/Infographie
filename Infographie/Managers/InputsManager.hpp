@@ -68,12 +68,14 @@ public:
 		return isKeyJustPressed(static_cast<sf::Keyboard::Key>(key));
 	};
 	static bool isKeyJustPressed(const sf::Keyboard::Key &key);
-	
+	static bool is_one_of_just_pressed(const std::vector<sf::Mouse::Button>& buttons) noexcept;
+
 	static bool isKeyJustReleased() noexcept;
 	static bool isKeyJustReleased(const int &key) {
 		return isKeyJustReleased(static_cast<sf::Keyboard::Key>(key));
 	};
 	static bool isKeyJustReleased(const sf::Keyboard::Key &key);
+	static bool is_one_of_just_released(const std::vector<sf::Mouse::Button>& buttons) noexcept;
 
 	static bool isMousePressed(const int &button) {
 		return isMousePressed(static_cast<sf::Mouse::Button>(button));

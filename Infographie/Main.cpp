@@ -52,7 +52,7 @@ int main() {
 	});
 
 	draw_settings.add_canvas_callback.push_back([&](Vector2u size) {
-		auto canvas_widget = root.make_child<Canvas>();
+		auto canvas_widget = root.make_child<Canvas>(draw_settings);
 		canvas_widget->set_size(size);
 		draw_settings.canvases_widget_id.push_back(canvas_widget->get_uuid());
 	});
@@ -79,8 +79,10 @@ void update(
 	root.propagate_input();
 
 
-	ImGui::Begin("Settings");
+	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove);
 	defer{ ImGui::End(); };
+
+	ImGui::SetWindowPos({ 5, 5 });
 
 	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);
 	if (ImGui::CollapsingHeader("Drawing")) update_drawing_settings(draw_settings);

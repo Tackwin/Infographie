@@ -209,6 +209,7 @@ bool InputsManager::isKeyPressed(const sf::Keyboard::Key &key) {
 bool InputsManager::isKeyJustPressed(const sf::Keyboard::Key &key) {
 	return keyJustPressed[key];
 }
+
 bool InputsManager::isKeyJustReleased(const sf::Keyboard::Key &key) {
 	return keyJustReleased[key];
 }
@@ -219,6 +220,18 @@ bool InputsManager::isMousePressed(const sf::Mouse::Button &button) {
 bool IM::is_one_of_pressed(const std::vector<sf::Mouse::Button>& buttons) noexcept {
 	for (auto& m : buttons) {
 		if (isMousePressed(m)) return true;
+	}
+	return false;
+}
+bool IM::is_one_of_just_released(const std::vector<sf::Mouse::Button>& buttons) noexcept {
+	for (auto& m : buttons) {
+		if (isMouseJustReleased(m)) return true;
+	}
+	return false;
+}
+bool IM::is_one_of_just_pressed(const std::vector<sf::Mouse::Button>& buttons) noexcept {
+	for (auto& m : buttons) {
+		if (isMouseJustPressed(m)) return true;
 	}
 	return false;
 }
