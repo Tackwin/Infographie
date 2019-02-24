@@ -4,6 +4,8 @@
 #include <cassert>
 #include <functional>
 #include <unordered_set>
+#include <unordered_map>
+#include <any>
 
 namespace details {
 	struct Defer {
@@ -107,6 +109,7 @@ namespace std {
 };
 
 class Assets_Manager;
+struct Matrix4f;
 namespace Common {
 	extern Assets_Manager* AM;
 	constexpr size_t SEED = 0;
@@ -121,6 +124,13 @@ namespace Common {
 		for (size_t i = 0; i < size; ++i) seed = xstd::hash_combine(seed, (size_t)user[i]);
 		return seed;
 	}
+	extern void check_gl_error();
+
+	extern std::unordered_map<std::string, std::any> debug_values;
+
+	extern bool Is_In_Sfml_Context;
+	extern Matrix4f* View_Matrix;
+	extern Matrix4f* Projection_Matrix;
 }
 using namespace Common;
 

@@ -57,7 +57,7 @@ struct Drawing_Settings {
 	bool primitive_tools_selected{ false };
 	bool drawing_tools_selected{ false };
 
-	std::vector<UUID> canvases_widget_id;
+	std::vector<Uuid_t> canvases_widget_id;
 	std::variant<DT_Circle, DT_Fill, DT_Line, DT_Square> drawing_tool;
 	std::variant<PT_Point, PT_Circle, PT_Rect, PT_Polygon, PT_Line> primitive_tool;
 	std::vector<std::function<void(Vector2u)>> add_canvas_callback;

@@ -40,5 +40,6 @@ private:
 
 	sf::Sprite sprite;
 	sf::Texture texture;
+	sf::RenderTexture render_texture;
 	sf::Image image;
 };

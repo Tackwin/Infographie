@@ -161,3 +161,109 @@ const sf::Font& Assets_Manager::get_font(const std::string &key) noexcept {
 	assert(it != std::end(fonts) && "Font don't exist");
 	return it->second;
 }
+
+
+bool Assets_Manager::have_object_file(const std::string& key) noexcept {
+	return objects.find(key) != std::end(objects);
+}
+bool Assets_Manager::load_object_file(
+	const std::string& key, const std::filesystem::path& path
+) noexcept {
+	if (objects.find(key) != std::end(objects))
+		return true;
+
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_BLUE
+	);
+	std::printf("Loading: ");
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	std::printf("%s: %s ", key.c_str(), path.generic_string().c_str());
+	auto& ref = objects[key];
+
+	auto loaded = Object_File::load_file(path);
+	if (!loaded) {
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_RED
+		);
+		printf(" Couldn't load file /!\\\n");
+	}
+	else {
+		ref = *loaded;
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_GREEN
+		);
+		printf(" Succes !\n");
+	}
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	return loaded.has_value();
+}
+const Object_File& Assets_Manager::get_object_file(const std::string& key) noexcept {
+	auto it = objects.find(key);
+	assert(it != std::end(objects) && "Object File don't exist (wasn't loaded)");
+	return it->second;
+}
+
+bool Assets_Manager::have_shader(const std::string& key) noexcept {
+	return shaders.find(key) != std::end(shaders);
+}
+bool Assets_Manager::load_shader(
+	const std::string& key,
+	const std::filesystem::path& vertex,
+	const std::filesystem::path& fragment
+) noexcept {
+	if (shaders.find(key) != std::end(shaders))
+		return true;
+
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_BLUE
+	);
+	std::printf("Loading: ");
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	std::printf(
+		"%s: %s %s",
+		key.c_str(),
+		vertex.generic_string().c_str(),
+		fragment.generic_string().c_str()
+	);
+	auto& ref = shaders[key];
+
+	auto loaded = ref.loadFromFile(vertex.generic_string(), fragment.generic_string());
+	if (!loaded) {
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_RED
+		);
+		printf(" Couldn't load file /!\\\n");
+	}
+	else {
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_GREEN
+		);
+		printf(" Succes !\n");
+	}
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	return loaded;
+}
+sf::Shader& Assets_Manager::get_shader(const std::string& key) noexcept {
+	auto it = shaders.find(key);
+	assert(it != std::end(shaders) && "Object File don't exist (wasn't loaded)");
+	return it->second;
+}
+

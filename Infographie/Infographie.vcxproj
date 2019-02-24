@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(MSBuildProjectDirectory)\..\..\GLEW\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -82,8 +82,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(MSBuildProjectDirectory)\..\..\GLEW\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -96,7 +96,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SFML_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;SFML_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sfml-graphics-s-d.lib;opengl32.lib;freetype.lib;sfml-window-s-d.lib;winmm.lib;gdi32.lib;sfml-system-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32s.lib;sfml-graphics-s-d.lib;opengl32.lib;freetype.lib;sfml-window-s-d.lib;winmm.lib;gdi32.lib;sfml-system-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -135,7 +135,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SFML_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;SFML_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -147,7 +147,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sfml-graphics-s.lib;opengl32.lib;freetype.lib;sfml-window-s.lib;winmm.lib;gdi32.lib;sfml-system-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32s.lib;sfml-graphics-s.lib;opengl32.lib;freetype.lib;sfml-window-s.lib;winmm.lib;gdi32.lib;sfml-system-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -177,6 +177,7 @@
     <ClCompile Include="Containers\DynArray.cpp" />
     <ClCompile Include="Containers\Graph.cpp" />
     <ClCompile Include="Containers\QuadTree.cpp" />
+    <ClCompile Include="Files\FileFormat.cpp" />
     <ClCompile Include="imgui\imgui-SFML.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -189,11 +190,15 @@
     <ClCompile Include="OS\windows\OpenFile.cpp" />
     <ClCompile Include="OS\windows\PathDefinition.cpp" />
     <ClCompile Include="OS\windows\SystemConfiguration.cpp" />
+    <ClCompile Include="Scene\Camera.cpp" />
     <ClCompile Include="Scene\Canvas.cpp" />
     <ClCompile Include="Scene\Image.cpp" />
+    <ClCompile Include="Scene\Model.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
     <ClCompile Include="UI\Drawings.cpp" />
+    <ClCompile Include="UI\Geometries.cpp" />
     <ClCompile Include="UI\Images.cpp" />
+    <ClCompile Include="Utils\Logs.cpp" />
     <ClCompile Include="Utils\TimeInfo.cpp" />
     <ClCompile Include="Utils\UUID.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -202,6 +207,7 @@
     <ClInclude Include="Containers\DynArray.hpp" />
     <ClInclude Include="Containers\Graph.hpp" />
     <ClInclude Include="Containers\QuadTree.hpp" />
+    <ClInclude Include="Files\FileFormat.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui-SFML.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -209,6 +215,7 @@
     <ClInclude Include="Managers\InputsManager.hpp" />
     <ClInclude Include="Math\algorithms.hpp" />
     <ClInclude Include="Math\Circle.hpp" />
+    <ClInclude Include="Math\Matrix.hpp" />
     <ClInclude Include="Math\RandomData.hpp" />
     <ClInclude Include="Math\Ray.hpp" />
     <ClInclude Include="Math\Rectangle.hpp" />
@@ -218,11 +225,15 @@
     <ClInclude Include="OS\OpenFile.hpp" />
     <ClInclude Include="OS\PathDefinition.hpp" />
     <ClInclude Include="OS\SystemConfiguration.hpp" />
+    <ClInclude Include="Scene\Camera.hpp" />
     <ClInclude Include="Scene\Canvas.hpp" />
     <ClInclude Include="Scene\Image.hpp" />
+    <ClInclude Include="Scene\Model.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
     <ClInclude Include="UI\Drawings.hpp" />
+    <ClInclude Include="UI\Geometries.hpp" />
     <ClInclude Include="UI\Images.hpp" />
+    <ClInclude Include="Utils\Logs.hpp" />
     <ClInclude Include="Utils\TimeInfo.hpp" />
     <ClInclude Include="Utils\UUID.hpp" />
     <ClInclude Include="Window.hpp" />

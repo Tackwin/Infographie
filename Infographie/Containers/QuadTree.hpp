@@ -28,7 +28,7 @@ public:
 	static constexpr size_t bucket_size = S;
 
 	using vector = std::vector<T>;
-	using rec = Rectangle<F>;
+	using rec = Rectangle_t<F>;
 
 
 	QuadTree() = default;

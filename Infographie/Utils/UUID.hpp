@@ -3,10 +3,10 @@
 
 #include "Common.hpp"
 
-class UUID {
+class Uuid_t {
 public:
 
-	constexpr UUID() noexcept : uuid(count++) {
+	constexpr Uuid_t() noexcept : uuid(count++) {
 		// check for overflow
 		assert(count != 0ULL);
 	}
@@ -16,30 +16,30 @@ public:
 	}
 
 	constexpr operator bool() const noexcept {
-		return *this != UUID{ 0 };
+		return *this != Uuid_t{ 0 };
 	}
 
-	constexpr bool operator==(const UUID& other) const noexcept {
+	constexpr bool operator==(const Uuid_t& other) const noexcept {
 		return uuid == other.uuid;
 	}
-	constexpr bool operator!=(const UUID& other) const noexcept {
+	constexpr bool operator!=(const Uuid_t& other) const noexcept {
 		return uuid != other.uuid;
 	}
-	constexpr bool operator<(const UUID& other) const noexcept {
+	constexpr bool operator<(const Uuid_t& other) const noexcept {
 		return uuid < other.uuid;
 	}
 
 private:
-	constexpr UUID(unsigned long long n) noexcept : uuid(n) {}
+	constexpr Uuid_t(unsigned long long n) noexcept : uuid(n) {}
 
 	static unsigned long long count;
 
 	unsigned long long uuid;
-	friend std::hash<UUID>;
+	friend std::hash<Uuid_t>;
 
-	friend void print(const UUID&) noexcept;
+	friend void print(const Uuid_t&) noexcept;
 public:
-	static constexpr UUID zero() noexcept {
+	static constexpr Uuid_t zero() noexcept {
 		return { 0 };
 	}
 
@@ -47,11 +47,11 @@ public:
 
 namespace std {
 	template<>
-	struct hash<UUID> {
-		constexpr size_t operator()(const UUID& id) const {
+	struct hash<Uuid_t> {
+		constexpr size_t operator()(const Uuid_t& id) const {
 			return (size_t)id.uuid;
 		}
 	};
 };
 
-extern void print(const UUID& id) noexcept;
+extern void print(const Uuid_t& id) noexcept;

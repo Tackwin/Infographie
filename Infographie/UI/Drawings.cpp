@@ -6,6 +6,7 @@
 #include "imgui/imgui-SFML.h"
 
 #include "Scene/Canvas.hpp"
+#include "Window.hpp"
 
 #include "Managers/AssetsManager.hpp"
 constexpr auto Image_Button_Border = 1;
@@ -21,6 +22,8 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 		for (auto& f : settings.add_canvas_callback)
 			f( {(size_t)New_Canvas_Size[0], (size_t)New_Canvas_Size[1] });
 	}
+
+	ImGui::ColorPicker3("Background Color", reinterpret_cast<float*>(&Window_Info.clear_color));
 
 	auto& pt_texture = AM->get_texture("Primitives_Tool");
 	sf::Vector2f pt_texture_size{ UNROLL_2_P(pt_texture.getSize(), float) };
@@ -55,6 +58,7 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 			settings.canvases_widget_id.erase(std::begin(settings.canvases_widget_id) + i);
 		}
 	}
+	ImGui::Columns(1);
 }
 
 void update_drawing_tools(Drawing_Settings& settings) noexcept {
@@ -105,35 +109,33 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 
 			ImGui::Text("Circle parameters");
 			ImGui::InputInt("Size", &Circle_Size_Int, 1, 5);
-			ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
 
 			x.size = (size_t)Circle_Size_Int;
 		}
 
 		if constexpr (std::is_same_v<T, Drawing_Settings::DT_Fill>) {
 			ImGui::Text("Fill parameters");
-
-			ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
 			ImGui::InputFloat("Tolerance", reinterpret_cast<float*>(&x.tolerance));
 		}
 
 		if constexpr (std::is_same_v<T, Drawing_Settings::DT_Square>) {
 			static int Square_Size_Int{ 0 };
-			ImGui::Text("Square parameters");
 
+			ImGui::Text("Square parameters");
 			ImGui::InputInt("Size", &Square_Size_Int, 1, 5);
-			ImGui::ColorPicker3("Color", reinterpret_cast<float*>(&x.color));
+
 			x.size = (size_t)Square_Size_Int;
 		}
 
 		if constexpr (std::is_same_v<T, Drawing_Settings::DT_Line>) {
 			static int Line_Thick_Int{ 0 };
-			ImGui::Text("Line parameters");
 
+			ImGui::Text("Line parameters");
 			ImGui::InputInt("Thickness", &Line_Thick_Int, 1, 5);
-			ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
 			ImGui::Checkbox("Strip", &x.strip);
 		}
+		ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
+
 	}, settings.drawing_tool);
 
 }

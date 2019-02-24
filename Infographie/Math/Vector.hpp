@@ -11,6 +11,8 @@
 
 #define UNROLL_2(v) (v).x, (v).y
 #define UNROLL_2_P(v, prefix) (prefix)((v).x), (prefix)((v).y)
+#define UNROLL_3(v) (v).x, (v).y, (v).z
+#define UNROLL_3_P(v, prefix) (prefix)(v).x, (prefix)(v).y (prefix)(v).z
 
 #define COLOR_UNROLL(x) (x).r, (x).g, (x).b, (x).a
 #define COLOR_UNROLL_P(x, prefix) \
@@ -33,6 +35,7 @@ using Vector3u = Vector3<size_t>;
 using Vector4u = Vector4<size_t>;
 using Vector4f = Vector4<float>;
 using Vector4d = Vector4<double>;
+using Vector4b = Vector4<uint8_t>;
 
 template<size_t D, typename T>
 struct __vec_member {
@@ -79,7 +82,7 @@ struct __vec_member<3, T> {
 		T components[3];
 	};
 
-	__vec_member() : x(0), y(0), z(0) {}
+	__vec_member() : x{}, y{}, z{} {}
 	__vec_member(T x, T y, T z) : x(x), y(y), z(z) {}
 };
 template<typename T>
@@ -195,7 +198,7 @@ struct Vector : public __vec_member<D, T> {
 
 	constexpr Vector() {
 		for (size_t i = 0u; i < D; ++i) {
-			this->components[i] = static_cast<T>(0);
+			this->components[i] = T{};
 		}
 	}
 
@@ -238,6 +241,15 @@ struct Vector : public __vec_member<D, T> {
 		}
 
 		return true;
+	}
+
+	template<size_t Dp = D>
+	std::enable_if_t<Dp == 3, Vector3<T>> cross(Vector3<T> other) const noexcept {
+		return Vector3<T>{
+			this->y * other.z - this->z * other.y,
+			this->z * other.x - this->x * other.z,
+			this->x * other.y - this->y * other.x
+		};
 	}
 
 	T dot(const Vector<D, T>& other) const noexcept {

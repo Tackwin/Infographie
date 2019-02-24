@@ -5,8 +5,8 @@
 
 #include "Managers/InputsManager.hpp"
 
-const Widget::Callback::type Widget::Callback::FALSE = []() { return false; };
-const Widget::Callback::type Widget::Callback::TRUE =  []() { return true; };
+const Widget::Callback::type Widget::Callback::False_V = []() { return false; };
+const Widget::Callback::type Widget::Callback::True_V =  []() { return true; };
 
 Widget::Widget() noexcept {};
 Widget::Widget(Widget* const parent) : parent(parent) {}
@@ -57,7 +57,7 @@ void Widget::add_child(Widget* const child, int z) {
 void Widget::kill_every_childs() noexcept {
 	childs.clear();
 }
-void Widget::kill_direct_child(UUID id) noexcept {
+void Widget::kill_direct_child(Uuid_t id) noexcept {
 	auto it = std::find_if(std::begin(childs), std::end(childs), [id](const auto& x) {
 		return x->get_uuid() = id;
 	});
@@ -77,7 +77,7 @@ bool Widget::have_child(const Widget* const child) {
 
 	return it != childs.end();
 }
-bool Widget::have_child(UUID id) noexcept {
+bool Widget::have_child(Uuid_t id) noexcept {
 	return std::find_if(std::begin(childs), std::end(childs), [id](const auto& x) {
 		return x->get_uuid() == id;
 	}) != std::end(childs);
@@ -132,7 +132,7 @@ void Widget::set_position(const Vector2f& p) {
 	pos = p;
 }
 void Widget::set_global_position(const Vector2f& p) noexcept {
-	pos = p - (parent ? parent->get_global_position() : Vector2f{0, 0});
+	pos = p - (parent ? parent->get_global_position() : Vector2f{ 0, 0 });
 }
 void Widget::set_origin(const Vector2f& o) {
 	origin = o;
@@ -141,6 +141,57 @@ void Widget::set_origin_abs(const Vector2f& o) {
 	origin.x = o.x / get_size().x;
 	origin.y = o.y / get_size().y;
 }
+
+void Widget3::set_size(Vector3f s) noexcept {
+	size3 = s;
+}
+void Widget3::set_position(Vector3f p) noexcept {
+	pos3 = p;
+}
+void Widget3::set_global_position(Vector3f p) noexcept {
+	if (auto parent3 = dynamic_cast<Widget3*>(parent)) {
+		pos3 = p - (parent3 ? parent3->get_global_position3() : Vector3f{ 0, 0, 0 });
+	}
+	else {
+		pos3 = p - Vector3f{
+			(parent ? parent->get_global_position() : Vector2f{ 0, 0 }).x,
+			(parent ? parent->get_global_position() : Vector2f{ 0, 0 }).y,
+			0
+		};
+	}
+}
+void Widget3::set_origin(Vector3f o) noexcept {
+	origin3 = o;
+}
+void Widget3::set_origin_abs(Vector3f o) noexcept {
+	origin3.x = o.x / get_size3().x;
+	origin3.y = o.y / get_size3().y;
+	origin3.z = o.z / get_size3().z;
+}
+
+
+Vector3f Widget3::get_size3() const noexcept {
+	return size3;
+}
+Vector3f Widget3::get_origin3() const noexcept {
+	return origin3;
+}
+Vector3f Widget3::get_global_position3() const noexcept {
+	if (auto parent3 = dynamic_cast<Widget3*>(parent)) {
+		return pos3 + (parent3 ? parent3->get_global_position3() : Vector3f{ 0, 0, 0 });
+	}
+	else {
+		return pos3 + Vector3f{
+			(parent ? parent->get_global_position() : Vector2f{ 0, 0 }).x,
+			(parent ? parent->get_global_position() : Vector2f{ 0, 0 }).y,
+			0
+		};
+	}
+}
+Vector3f Widget3::get_position3() const noexcept {
+	return pos3;
+}
+
 void Widget::set_visible(bool v) {
 	visible = v;
 }
@@ -149,7 +200,7 @@ const std::vector<std::unique_ptr<Widget>>& Widget::get_childs() const noexcept 
 	return childs;
 }
 
-Widget* Widget::find_child(UUID id) const noexcept {
+Widget* Widget::find_child(Uuid_t id) const noexcept {
 
 	std::queue<Widget*> open;
 	for (auto& child : get_childs()) {
@@ -311,7 +362,7 @@ void Widget::set_on_key(const Callback& c) {
 	on_key = c;
 }
 
-UUID Widget::get_uuid() const noexcept {
+Uuid_t Widget::get_uuid() const noexcept {
 	return uuid;
 }
 

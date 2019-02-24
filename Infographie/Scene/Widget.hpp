@@ -27,17 +27,17 @@ public:
 		Count
 	}; };
 
-	using ID_t = UUID;
+	using ID_t = Uuid_t;
 
 	struct Callback {
 		using type = std::function<bool(void)>;
 
-		static const type FALSE;
-		static const type TRUE;
+		static const type False_V;
+		static const type True_V;
 
-		type began = FALSE;
-		type ended = FALSE;
-		type going = FALSE;
+		type began = False_V;
+		type ended = False_V;
+		type going = False_V;
 	};
 
 	Widget() noexcept;
@@ -61,8 +61,8 @@ public:
 	void set_on_key(const Callback& onKey);
 
 	virtual void set_size(const Vector2f& size);
-	void set_position(const Vector2f& pos);
-	void set_global_position(const Vector2f& pos) noexcept;
+	virtual void set_position(const Vector2f& pos);
+	virtual void set_global_position(const Vector2f& pos) noexcept;
 	void set_origin(const Vector2f& origin);
 	void set_origin_abs(const Vector2f& origin);
 	void set_visible(bool visible);
@@ -79,14 +79,14 @@ public:
 	void deny_child(Widget* const child);
 	void add_child(Widget* const child, int z = 0);
 	bool have_child(const Widget* const child);
-	bool have_child(UUID id) noexcept;
+	bool have_child(Uuid_t id) noexcept;
 	void set_parent(Widget* const parent, int z = 0);
 	Widget* const get_parent();
 	const std::vector<std::unique_ptr<Widget>>& get_childs() const noexcept;
-	Widget* find_child(UUID id) const noexcept;
+	Widget* find_child(Uuid_t id) const noexcept;
 
 	void kill_every_childs() noexcept;
-	void kill_direct_child(UUID id) noexcept;
+	void kill_direct_child(Uuid_t id) noexcept;
 
 	virtual void update(float dt) noexcept;
 	virtual void propagate_update(float dt) noexcept;
@@ -98,7 +98,7 @@ public:
 	std::bitset<9u> propagate_input();
 	std::bitset<9u> post_order_input(const std::bitset<9u>& mask);
 
-	UUID get_uuid() const noexcept;
+	Uuid_t get_uuid() const noexcept;
 
 	virtual void set_focus(bool v) noexcept;
 	virtual void lock_focus(bool v) noexcept;
@@ -134,3 +134,22 @@ protected: //god this is growing into a god class... :(
 	Callback on_key;
 	Callback on_focus;
 };
+
+class Widget3 : public Widget {
+public:
+	void set_size(Vector3f size) noexcept;
+	void set_position(Vector3f pos) noexcept;
+	void set_global_position(Vector3f pos) noexcept;
+	void set_origin(Vector3f origin) noexcept;
+	void set_origin_abs(Vector3f origin) noexcept;
+
+	virtual Vector3f get_size3() const noexcept;
+	Vector3f get_origin3() const noexcept;
+	Vector3f get_global_position3() const noexcept;
+	Vector3f get_position3() const noexcept;
+protected:
+	Vector3f pos3;
+	Vector3f size3;
+	Vector3f origin3;
+};
+

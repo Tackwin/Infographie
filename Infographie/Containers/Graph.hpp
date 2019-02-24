@@ -6,13 +6,13 @@
 
 template<typename T>
 struct Node {
-	std::unordered_set<UUID> edges;
-	UUID me;
+	std::unordered_set<Uuid_t> edges;
+	Uuid_t me;
 	T data;
 };
 
 template<typename T>
-using Graph = std::unordered_map<UUID, Node<T>>;
+using Graph = std::unordered_map<Uuid_t, Node<T>>;
 
 template<typename T> void link_nodes(Node<T>& A, Node<T>& B) noexcept {
 	A.edges.emplace(B.me);
@@ -41,7 +41,7 @@ bool is_remotely_linked(const Graph<T>& graph, const Node<T>& A, const Node<T>& 
 }
 
 template<typename T>
-void add_node(Graph<T>& graph, const T& data, std::unordered_set<UUID> neighboor) noexcept
+void add_node(Graph<T>& graph, const T& data, std::unordered_set<Uuid_t> neighboor) noexcept
 {
 	Node<T> n;
 	auto id = n.me;
@@ -54,11 +54,11 @@ void add_node(Graph<T>& graph, const T& data, std::unordered_set<UUID> neighboor
 
 template<typename T>
 void walk_connexe_coponent(
-	const Graph<T>& graph, UUID origin, std::function<void(UUID)> pred
+	const Graph<T>& graph, Uuid_t origin, std::function<void(Uuid_t)> pred
 ) noexcept
 {
-	std::unordered_set<UUID> close;
-	std::vector<UUID> open;
+	std::unordered_set<Uuid_t> close;
+	std::vector<Uuid_t> open;
 	open.push_back(origin);
 	while (!open.empty()) {
 		auto n = open.back();
@@ -83,10 +83,10 @@ void graph_min_spanning_tree(
 	std::function<float(const Node<T>&, const Node<T>&)> cost,
 	bool cache_cost = false
 ) noexcept {
-	std::unordered_set<UUID> Q;
-	std::unordered_map<UUID, std::optional<UUID>> E;
-	std::unordered_map<UUID, float> C;
-	std::unordered_map<OrderedPair<UUID>, float> cost_cache;
+	std::unordered_set<Uuid_t> Q;
+	std::unordered_map<Uuid_t, std::optional<UUID>> E;
+	std::unordered_map<Uuid_t, float> C;
+	std::unordered_map<OrderedPair<Uuid_t>, float> cost_cache;
 	for (auto&[id, _] : graph) {
 		Q.insert(id);
 		C.insert({ id, FLT_MAX });
@@ -97,7 +97,7 @@ void graph_min_spanning_tree(
 
 	auto min_key = [&]{
 		float min = FLT_MAX;
-		UUID min_index{ UUID::zero() };
+		Uuid_t min_index{ Uuid_t::zero() };
 
 		for (auto&[id, w] : C) {
 			if (Q.count(id) && C.at(id) < min) {
@@ -119,7 +119,7 @@ void graph_min_spanning_tree(
 		if (cache_cost) {
 			for (auto&[id, w] : graph) {
 				if (!Q.count(id)) continue;
-				auto p = OrderedPair<UUID>(id, v);
+				auto p = OrderedPair<Uuid_t>(id, v);
 
 				if (!cost_cache.count(p)) {
 					cost_cache[p] = cost(graph.at(v), w);

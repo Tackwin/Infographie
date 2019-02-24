@@ -2,7 +2,7 @@
 #include "Vector.hpp"
 
 template<typename T>
-struct Rectangle {
+struct Rectangle_t {
 	union {
 		struct {
 			Vector<2, T> pos;
@@ -16,21 +16,21 @@ struct Rectangle {
 		};
 	};
 
-	Rectangle() {}
+	Rectangle_t() {}
 
-	Rectangle(const Vector<2, T>& pos, const Vector<2, T>& size) :
+	Rectangle_t(const Vector<2, T>& pos, const Vector<2, T>& size) :
 		pos(pos),
 		size(size) 
 	{}
 #ifdef SFML_GRAPHICS_HPP
 
-	Rectangle(const sf::FloatRect& rec) : 
+	Rectangle_t(const sf::FloatRect& rec) : 
 		x(rec.left), y(rec.top), w(rec.width), h(rec.height)
 	{}
 
 #endif
 
-	bool intersect(const Rectangle<T>& other) const {
+	bool intersect(const Rectangle_t<T>& other) const {
 		return !(
 				pos.x + size.x < other.pos.x || pos.x > other.pos.x + other.size.x ||
 				pos.y + size.y < other.pos.y || pos.y > other.pos.y + other.size.y
@@ -38,18 +38,18 @@ struct Rectangle {
 	}
 
 	// works only for top down y
-	bool isOnTopOf(Rectangle<T> other) const {
+	bool isOnTopOf(Rectangle_t<T> other) const {
 		T distEdgeToEdge = std::max(other.x + other.w - x, x + w - other.x);
 		T sumOfWidth = w + other.w;
 
 		return y < other.y && distEdgeToEdge < sumOfWidth;
 	}
-	bool isFullyOnTopOf(Rectangle<T> other, T tolerance = FLT_EPSILON) const noexcept {
+	bool isFullyOnTopOf(Rectangle_t<T> other, T tolerance = FLT_EPSILON) const noexcept {
 		return y + h < other.y + tolerance;
 	}
 
 	// works only for top down y
-	bool isOnBotOf(Rectangle<T> other) const {
+	bool isOnBotOf(Rectangle_t<T> other) const {
 		T distEdgeToEdge = std::max(other.x + other.w - x, x + w - other.x);
 		T sumOfWidth = w + other.w;
 
@@ -69,13 +69,13 @@ struct Rectangle {
 	}
 
 	std::tuple<
-		Rectangle<T>, Rectangle<T>, Rectangle<T>, Rectangle<T>
+		Rectangle_t<T>, Rectangle_t<T>, Rectangle_t<T>, Rectangle_t<T>
 	> divide() const noexcept {
 		return {
-			Rectangle<T>{pos, size / 2},
-			Rectangle<T>{ {pos.x + size.x / 2, pos.y}, size / 2 },
-			Rectangle<T>{ {pos.x, pos.y + size.y / 2}, size / 2 },
-			Rectangle<T>{pos + size / 2, size / 2},
+			Rectangle_t<T>{pos, size / 2},
+			Rectangle_t<T>{ {pos.x + size.x / 2, pos.y}, size / 2 },
+			Rectangle_t<T>{ {pos.x, pos.y + size.y / 2}, size / 2 },
+			Rectangle_t<T>{pos + size / 2, size / 2},
 		};
 	}
 
@@ -98,7 +98,7 @@ struct Rectangle {
 		return pos + size;
 	}
 
-	Rectangle<T> fitUpRatio(double ratio) const noexcept {
+	Rectangle_t<T> fitUpRatio(double ratio) const noexcept {
 		if (w > h) {
 			return { pos,{ w, (T)(w / ratio) } };
 		}
@@ -106,7 +106,7 @@ struct Rectangle {
 			return { pos,{ (T)(h * ratio), h } };
 		}
 	}
-	Rectangle<T> fitDownRatio(double ratio) const noexcept {
+	Rectangle_t<T> fitDownRatio(double ratio) const noexcept {
 		if (w < h) {
 			return { pos,{ w, (T)(w / ratio) } };
 		}
@@ -115,8 +115,8 @@ struct Rectangle {
 		}
 	}
 
-	Rectangle<T> restrictIn(Rectangle<T> area) const noexcept {
-		Rectangle<T> result = *this;
+	Rectangle_t<T> restrictIn(Rectangle_t<T> area) const noexcept {
+		Rectangle_t<T> result = *this;
 
 		if (w > area.w) {
 			result.x = area.center().x - result.size.x / 2;
@@ -176,8 +176,8 @@ struct Rectangle {
 
 #endif
 
-	static Rectangle<T> hull(std::vector<Rectangle<T>> recs) noexcept {
-		Rectangle<T> hull = recs[0];
+	static Rectangle_t<T> hull(std::vector<Rectangle_t<T>> recs) noexcept {
+		Rectangle_t<T> hull = recs[0];
 
 		for (auto rec : recs) {
 			hull.x = std::min(rec.x, hull.x);
@@ -193,9 +193,15 @@ struct Rectangle {
 };
 
 template<typename T>
-using Rectangle2 = Rectangle<T>;
+using Rectangle2 = Rectangle_t<T>;
 using Rectangle2f = Rectangle2<float>;
+using Rectangle2d = Rectangle2<double>;
 /*
+
+// >SEE
+// This stuff is usefull for my game Boss Room, i keep it here just in case i end up pulling over
+// my json class serializer (dyn_struct)
+
 template<typename T>
 void from_dyn_struct(const dyn_struct& d_struct, Rectangle<T>& x) noexcept {
 	assert(holds_array(d_struct));

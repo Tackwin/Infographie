@@ -68,7 +68,7 @@ void Canvas::render(sf::RenderTarget& target) noexcept {
 
 	if (!texture_cached) {
 		defer{ texture_cached = true; };
-
+	
 		texture.loadFromImage(image);
 		sprite = sf::Sprite{ texture };
 		sprite.setPosition(get_global_position());

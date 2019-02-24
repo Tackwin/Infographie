@@ -12,7 +12,9 @@ namespace details {
 		Vector2u size;
 		std::string title;
 
+		Vector3f clear_color;
 		sf::RenderWindow window;
+
 	};
 }
 

@@ -5,7 +5,9 @@
 
 #include "Scene/Image.hpp"
 
-#include <Os/OpenFile.hpp>
+#include "Utils/Logs.hpp"
+
+#include "Os/OpenFile.hpp"
 
 void update_image_settings(Images_Settings& settings) noexcept {
 	constexpr auto Max_Buffer_Size = 2048;
@@ -28,8 +30,8 @@ void update_image_settings(Images_Settings& settings) noexcept {
 
 	if (ImGui::Button("Screenshot")) {
 		if (settings.screenshot_directory.empty()) {
-			ImGui::OpenPopup("Alert");
-			settings.log.push_back("Please select screenshot directory");
+			Log.push("Please select screenshot directory");
+			Log.show = true;
 		}
 		else {
 			settings.take_screenshot = true;
@@ -47,22 +49,6 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		});
 	}
 
-	if (ImGui::BeginPopup("Alert")) {
-		if (ImGui::Button("Clear")) {
-			settings.log.clear();
-		}
-		for (size_t i = settings.log.size() - 1; i + 1 > 0; --i) {
-			ImGui::Text(settings.log[i].c_str());
-			ImGui::SameLine();
-			if (ImGui::Button("X")) {
-				settings.log.erase(std::begin(settings.log) + i);
-			}
-		}
-		if (settings.log.empty()) {
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
 	if (!settings.root) return;
 
 	ImGui::Columns(2);

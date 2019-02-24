@@ -1,49 +1,95 @@
+#include <GL/glew.h>
+#include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
 #include "Window.hpp"
 
+#include "Math/Matrix.hpp"
+
 #include "UI/Images.hpp"
 #include "UI/Drawings.hpp"
+#include "UI/Geometries.hpp"
 #include "Scene/Widget.hpp"
 #include "Scene/Image.hpp"
+#include "Scene/Model.hpp"
 #include "Scene/Canvas.hpp"
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 #include "Utils/TimeInfo.hpp"
+#include "Utils/Logs.hpp"
 
 void load_textures() noexcept;
+void load_objects() noexcept;
+void load_shaders() noexcept;
 
 void construct_managers() noexcept;
 void destroy_managers() noexcept;
 
 void update(
-	Widget& root, Images_Settings& img_settings, Drawing_Settings& draw_settings, float dt
+	Widget& root,
+	Images_Settings& img_settings,
+	Drawing_Settings& draw_settings,
+	Geometries_Settings& geo_settings,
+	float dt
 ) noexcept;
 void render(Widget& root, sf::RenderTarget& target) noexcept;
+Vector3f pos{ 0, 0, -1 };
 
 int main() {
+	View_Matrix = new Matrix4f();
+	Projection_Matrix = new Matrix4f();
+
 	construct_managers();
 	defer{ destroy_managers(); };
 
 	load_textures();
+	load_objects();
+	load_shaders();
 
 	details::Window_Struct::instance = new details::Window_Struct();
 	defer{ delete details::Window_Struct::instance; };
 
+	sf::ContextSettings context_settings;
+	context_settings.depthBits = 24;
+	context_settings.stencilBits = 8;
+	context_settings.antialiasingLevel = 4;
+	context_settings.majorVersion = 3;
+	context_settings.minorVersion = 3;
+
 	Window_Info.title = "Infographie";
 	Window_Info.size = { 1600u, 900u };
-	Window_Info.window.create(sf::VideoMode{ UNROLL_2(Window_Info.size) }, Window_Info.title);
+	Window_Info.window.create(
+		sf::VideoMode{ UNROLL_2_P(Window_Info.size, size_t) },
+		Window_Info.title,
+		sf::Style::Default,
+		context_settings
+	);
+
+	glewExperimental = true; // Needed for core profile
+	if (glewInit() != GLEW_OK) {
+		fprintf(stderr, "Failed to initialize GLEW\n");
+		getchar();
+		return -1;
+	}
+
+	check_gl_error();
 
 	ImGui::SFML::Init(Window_Info.window);
+	glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 
 	Images_Settings img_settings;
 	Drawing_Settings draw_settings;
+	Geometries_Settings geo_settings;
+
+	std::shared_mutex function_from_another_thread_mutex;
+	std::vector<std::function<void(void)>> function_from_another_thread;
 
 	Widget root;
 	img_settings.root = &root;
 	draw_settings.root = &root;
+	geo_settings.root = &root;
 
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
@@ -57,27 +103,87 @@ int main() {
 		draw_settings.canvases_widget_id.push_back(canvas_widget->get_uuid());
 	});
 
+	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
+		if (!AM->load_object_file(path.generic_string(), path)) return;
+
+		auto model_widget = root.make_child<Model>();
+		geo_settings.models_widget_id.push_back(model_widget->get_uuid());
+		
+		std::lock_guard{ function_from_another_thread_mutex };
+		function_from_another_thread.push_back([model_widget, path] {
+			model_widget->set_object(AM->get_object_file(path.generic_string()));
+			model_widget->set_shader(AM->get_shader("Simple"));
+		});
+	});
+
+	geo_settings.texture_added_callback.push_back(
+		[&](Uuid_t id, const std::filesystem::path& path) {
+			if (!AM->load_texture(path.generic_string(), path)) return;
+			auto model_widget = (Model*)root.find_child(id);
+
+			std::lock_guard{ function_from_another_thread_mutex };
+			function_from_another_thread.push_back([model_widget, path] {
+				model_widget->set_texture(AM->get_texture(path.generic_string()));
+			});
+		}
+	);
+
+
 	sf::Clock dt_clock;
 	float dt;
 	while (Window_Info.window.isOpen()) {
 		dt = dt_clock.restart().asSeconds();
 		IM::update(Window_Info.window);
+		if (!Window_Info.window.isOpen()) break;
 
-		update(root, img_settings, draw_settings, dt);
+		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 
-		Window_Info.window.clear();
+		*View_Matrix = Matrix4f::translation(pos);
+		*Projection_Matrix = Matrix4f::perspective(
+			90, (float)Window_Info.size.x / (float)Window_Info.size.y, 0, 10
+		);
+
+		{
+			std::lock_guard{ function_from_another_thread_mutex };
+			for (auto& f : function_from_another_thread) {
+				f();
+			}
+			function_from_another_thread.clear();
+		}
+		update(root, img_settings, draw_settings, geo_settings, dt);
+
 		render(root, Window_Info.window);
+
 		Window_Info.window.display();
 	}
 	ImGui::SFML::Shutdown();
 }
 
 void update(
-	Widget& root, Images_Settings& img_settings, Drawing_Settings& draw_settings, float dt
+	Widget& root,
+	Images_Settings& img_settings,
+	Drawing_Settings& draw_settings,
+	Geometries_Settings& geo_settings,
+	float dt
 ) noexcept {
+	if (IM::isKeyPressed(sf::Keyboard::Z)) {
+		pos.y -= 1 * dt;
+	}
+	if (IM::isKeyPressed(sf::Keyboard::Q)) {
+		pos.x += 1 * dt;
+	}
+	if (IM::isKeyPressed(sf::Keyboard::S)) {
+		pos.y += 1 * dt;
+	}
+	if (IM::isKeyPressed(sf::Keyboard::D)) {
+		pos.x -= 1 * dt;
+	}
+
 	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
 	root.propagate_input();
 
+	list_all_logs_imgui();
 
 	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove);
 	defer{ ImGui::End(); };
@@ -86,8 +192,27 @@ void update(
 
 	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);
 	if (ImGui::CollapsingHeader("Drawing")) update_drawing_settings(draw_settings);
+	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
 
+	if (ImGui::CollapsingHeader("Debug")) {
+		static float rotation = 0;
+		static Vector3f light_pos{};
 
+		ImGui::DragFloat("Rotate", &rotation, 0.02, 0, 2 * PIf);
+	
+		ImGui::Columns(3);
+		ImGui::DragFloat("Light X", &light_pos.x, 0.02, -2, 2); ImGui::NextColumn();
+		ImGui::DragFloat("Light Y", &light_pos.y, 0.02, -2, 2); ImGui::NextColumn();
+		ImGui::DragFloat("Light Z", &light_pos.z, 0.02, -2, 2);
+		ImGui::Columns(1);
+
+		debug_values["Rotate"] = rotation;
+		debug_values["Light X"] = light_pos.x;
+		debug_values["Light Y"] = light_pos.y;
+		debug_values["Light Z"] = light_pos.z;
+
+		if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
+	}
 
 	root.propagate_update(dt);
 
@@ -110,8 +235,47 @@ void update(
 }
 
 void render(Widget& root, sf::RenderTarget& target) noexcept {
+	glPopAttrib();
+
+	Is_In_Sfml_Context = true;
+	Window_Info.window.pushGLStates();
+	defer {
+		Window_Info.window.popGLStates();
+		Is_In_Sfml_Context = false;
+
+		glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_SCISSOR_TEST);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_LIGHTING);
+
+		glViewport(0, 0, Window_Info.size.x, Window_Info.size.y);
+
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+
+		glOrtho(-5, 5, 0, 10, -1.0f, +1.0f);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		Window_Info.window.setActive();
+	};
+	check_gl_error();
+
 	ImGui::SFML::Render(target);
+	check_gl_error();
 	root.propagate_render(target);
+	check_gl_error();
+
+
 }
 
 
@@ -130,4 +294,13 @@ void load_textures() noexcept {
 	AM->load_texture("DT_Line", "res/DT_Line.png");
 	AM->load_texture("DT_Square", "res/DT_Square.png");
 	AM->load_texture("DT_Fill", "res/DT_Fill.png");
+	AM->load_texture("Bill", "res/models/BillCipher.png");
+}
+
+void load_objects() noexcept {
+	AM->load_object_file("Bill", "res/models/BillCipher.obj");
+}
+
+void load_shaders() noexcept {
+	AM->load_shader("Simple", "res/shaders/simple.vertex", "res/shaders/simple.fragment");
 }

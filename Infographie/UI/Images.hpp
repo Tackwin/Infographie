@@ -18,7 +18,7 @@ struct Images_Settings {
 	std::vector<std::function<void(const std::filesystem::path&)>> import_images_callback;
 
 	Widget* root{ nullptr };
-	std::vector<UUID> images_widget_id;
+	std::vector<Uuid_t> images_widget_id;
 
 	bool take_screenshot{ false };
 	std::filesystem::path screenshot_directory;
