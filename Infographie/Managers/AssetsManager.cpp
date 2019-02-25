@@ -23,6 +23,12 @@ void stubSetConsoleTextAttibute() {
 bool Assets_Manager::have_texture(const std::string& key) noexcept {
 	return textures.find(key) != std::end(textures);
 }
+
+sf::Texture& Assets_Manager::create_texture(const std::string& key) noexcept {
+	assert(textures.find(key) == std::end(textures));
+	return textures[key];
+}
+
 bool Assets_Manager::load_texture(
 	const std::string& key, const std::filesystem::path& path
 ) noexcept {

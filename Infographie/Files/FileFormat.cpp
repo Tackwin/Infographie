@@ -17,7 +17,7 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 	constexpr auto Face_Char = 'f';
 
 	auto opt_bytes = read_whole_file(path);
-	if (!opt_bytes) { DebugBreak(); return std::nullopt; };
+	if (!opt_bytes) return std::nullopt;
 	auto& bytes = *opt_bytes;
 
 	Object_File obj;
@@ -44,7 +44,7 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 		else
 		if (bytes[i] == Face_Char) {
 			i++;
-			if (bytes.size() <= i) { DebugBreak(); return std::nullopt; };
+			if (bytes.size() <= i) return std::nullopt;
 
 			Vector3<Vector3u> face;
 			auto read = sscanf_s(
@@ -60,8 +60,8 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 				&face.z.y,
 				&face.z.z
 			);
-			if (read == EOF) { DebugBreak(); return std::nullopt; };
-			if (read != 9) { DebugBreak(); return std::nullopt; };
+			if (read == EOF) return std::nullopt;
+			if (read != 9) return std::nullopt;
 
 			faces.push_back(face);
 		}
@@ -71,12 +71,12 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 			memcmp(bytes.data() + i, Texture_Char.data(), Texture_Char.size() - 1) == 0
 		) {
 			i += 2;
-			if (bytes.size() <= i) { DebugBreak(); return std::nullopt; };
+			if (bytes.size() <= i) return std::nullopt;
 			Vector2f vec;
 
 			auto read = sscanf_s(bytes.data() + i, "%f %f", &vec.x, &vec.y);
-			if (read == EOF) { DebugBreak(); return std::nullopt; };
-			if (read != 2) { DebugBreak(); return std::nullopt; };
+			if (read == EOF) return std::nullopt;
+			if (read != 2) return std::nullopt;
 
 			// >SEE we use sf::Texture for our texture and they are top down.
 			vec.y = 1 - vec.y;
@@ -89,25 +89,25 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 			memcmp(bytes.data() + i, Normal_Char.data(), Normal_Char.size() - 1) == 0
 		) {
 			i += 2;
-			if (bytes.size() <= i) { DebugBreak(); return std::nullopt; };
+			if (bytes.size() <= i) return std::nullopt;
 			Vector3f vec;
 
 			auto read = sscanf_s(bytes.data() + i, "%f %f %f", &vec.x, &vec.y, &vec.z);
-			if (read == EOF) { DebugBreak(); return std::nullopt; };
-			if (read != 3) { DebugBreak(); return std::nullopt; };
+			if (read == EOF) return std::nullopt;
+			if (read != 3) return std::nullopt;
 
 			obj.normals.push_back(vec);
 		}
 		else
 		if (bytes[i] == Vertex_Char) {
 			i++;
-			if (bytes.size() <= i) { DebugBreak(); return std::nullopt; };
+			if (bytes.size() <= i) return std::nullopt;
 			Vector3f vec;
 			static bool first = true;
 
 			auto read = sscanf_s(bytes.data() + i, "%f %f %f", &vec.x, &vec.y, &vec.z);
-			if (read == EOF) { DebugBreak(); return std::nullopt; };
-			if (read != 3) { DebugBreak(); return std::nullopt; };
+			if (read == EOF) return std::nullopt;
+			if (read != 3) return std::nullopt;
 
 			if (first || obj.min.x > vec.x) obj.min.x = vec.x;
 			if (first || obj.min.y > vec.y) obj.min.y = vec.y;
@@ -147,6 +147,88 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 	obj.normals.swap(indexed_normals);
 	obj.uvs.swap(indexed_uvs);
 	obj.vertices.swap(indexed_vertices);
+
+	return obj;
+}
+
+Object_File Object_File::cube(Vector3f size) noexcept {
+	Object_File obj;
+	obj.min = size / -2;
+	obj.max = size / +2;
+
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 1.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({1.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 0.0f});
+	obj.uvs.push_back({0.0f, 1.0f});
+
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x, -0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({ 0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y,  0.5f * size.z});
+	obj.vertices.push_back({-0.5f * size.x,  0.5f * size.y, -0.5f * size.z});
 
 	return obj;
 }

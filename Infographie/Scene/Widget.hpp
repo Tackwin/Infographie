@@ -76,6 +76,7 @@ public:
 		add_child(c);
 		return c;
 	}
+	Widget* find_parent(const type_info& type) noexcept;
 	void deny_child(Widget* const child);
 	void add_child(Widget* const child, int z = 0);
 	bool have_child(const Widget* const child);

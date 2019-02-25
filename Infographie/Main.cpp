@@ -12,6 +12,7 @@
 #include "UI/Drawings.hpp"
 #include "UI/Geometries.hpp"
 #include "Scene/Widget.hpp"
+#include "Scene/Camera.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
 #include "Scene/Canvas.hpp"
@@ -35,7 +36,6 @@ void update(
 	float dt
 ) noexcept;
 void render(Widget& root, sf::RenderTarget& target) noexcept;
-Vector3f pos{ 0, 0, -1 };
 
 int main() {
 	View_Matrix = new Matrix4f();
@@ -60,6 +60,7 @@ int main() {
 
 	Window_Info.title = "Infographie";
 	Window_Info.size = { 1600u, 900u };
+	Window_Info.clear_color = { 0.2f, 0.2f, 0.2f };
 	Window_Info.window.create(
 		sf::VideoMode{ UNROLL_2_P(Window_Info.size, size_t) },
 		Window_Info.title,
@@ -86,7 +87,12 @@ int main() {
 	std::shared_mutex function_from_another_thread_mutex;
 	std::vector<std::function<void(void)>> function_from_another_thread;
 
-	Widget root;
+	Camera root;
+	root.set_viewport({ 0, 0, UNROLL_2(Window_Info.size) });
+	root.set_perspective(90, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1);
+	root.set_global_position({ 0, 0, -5 });
+	root.look_at({ 0, 0, 0 });
+
 	img_settings.root = &root;
 	draw_settings.root = &root;
 	geo_settings.root = &root;
@@ -105,12 +111,12 @@ int main() {
 
 	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_object_file(path.generic_string(), path)) return;
-
-		auto model_widget = root.make_child<Model>();
-		geo_settings.models_widget_id.push_back(model_widget->get_uuid());
-		
 		std::lock_guard{ function_from_another_thread_mutex };
-		function_from_another_thread.push_back([model_widget, path] {
+		function_from_another_thread.push_back([&, path] {
+			std::lock_guard{ geo_settings.mutex };
+
+			auto model_widget = root.make_child<Model>();
+			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
 			model_widget->set_object(AM->get_object_file(path.generic_string()));
 			model_widget->set_shader(AM->get_shader("Simple"));
 		});
@@ -137,20 +143,17 @@ int main() {
 		if (!Window_Info.window.isOpen()) break;
 
 		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
+		glClearDepth(0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 
-		*View_Matrix = Matrix4f::translation(pos);
-		*Projection_Matrix = Matrix4f::perspective(
-			90, (float)Window_Info.size.x / (float)Window_Info.size.y, 0, 10
-		);
-
 		{
-			std::lock_guard{ function_from_another_thread_mutex };
-			for (auto& f : function_from_another_thread) {
-				f();
-			}
-			function_from_another_thread.clear();
+		std::lock_guard{ function_from_another_thread_mutex };
+		for (auto& f : function_from_another_thread) {
+			f();
 		}
+		function_from_another_thread.clear();
+		}
+
 		update(root, img_settings, draw_settings, geo_settings, dt);
 
 		render(root, Window_Info.window);
@@ -167,19 +170,6 @@ void update(
 	Geometries_Settings& geo_settings,
 	float dt
 ) noexcept {
-	if (IM::isKeyPressed(sf::Keyboard::Z)) {
-		pos.y -= 1 * dt;
-	}
-	if (IM::isKeyPressed(sf::Keyboard::Q)) {
-		pos.x += 1 * dt;
-	}
-	if (IM::isKeyPressed(sf::Keyboard::S)) {
-		pos.y += 1 * dt;
-	}
-	if (IM::isKeyPressed(sf::Keyboard::D)) {
-		pos.x -= 1 * dt;
-	}
-
 	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
 	root.propagate_input();
 
@@ -196,20 +186,38 @@ void update(
 
 	if (ImGui::CollapsingHeader("Debug")) {
 		static float rotation = 0;
+		static float cam_speed = 5;
+		static float cam_fov = 90;
 		static Vector3f light_pos{};
+		static bool use_identity{ false };
 
-		ImGui::DragFloat("Rotate", &rotation, 0.02, 0, 2 * PIf);
-	
+		ImGui::DragFloat("Rotate", &rotation, 0.02f, 0, 2 * PIf);
+		ImGui::DragFloat("Camera speed", &cam_speed, 0.1f, 0, 10);
+		ImGui::DragFloat("Camera fov", &cam_fov, 1, 0, 180);
+		ImGui::Checkbox("Use Identity", &use_identity);
+
+		((Camera&)root).set_perspective(
+			cam_fov / RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+		);
+
 		ImGui::Columns(3);
-		ImGui::DragFloat("Light X", &light_pos.x, 0.02, -2, 2); ImGui::NextColumn();
-		ImGui::DragFloat("Light Y", &light_pos.y, 0.02, -2, 2); ImGui::NextColumn();
-		ImGui::DragFloat("Light Z", &light_pos.z, 0.02, -2, 2);
+		ImGui::DragFloat("Light X", &light_pos.x, 0.02f, -2, 2); ImGui::NextColumn();
+		ImGui::DragFloat("Light Y", &light_pos.y, 0.02f, -2, 2); ImGui::NextColumn();
+		ImGui::DragFloat("Light Z", &light_pos.z, 0.02f, -2, 2);
+
 		ImGui::Columns(1);
+		ImGui::Text("x: %.3f y: %.3f z: %.3f",
+			((Widget3&)root).get_global_position3().x,
+			((Widget3&)root).get_global_position3().y,
+			((Widget3&)root).get_global_position3().z
+		);
 
 		debug_values["Rotate"] = rotation;
 		debug_values["Light X"] = light_pos.x;
 		debug_values["Light Y"] = light_pos.y;
 		debug_values["Light Z"] = light_pos.z;
+		debug_values["Camera_Speed"] = cam_speed;
+		debug_values["Use_Identity"] = use_identity;
 
 		if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
 	}
@@ -247,25 +255,15 @@ void render(Widget& root, sf::RenderTarget& target) noexcept {
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
 
-		glViewport(0, 0, Window_Info.size.x, Window_Info.size.y);
-
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-
-		glOrtho(-5, 5, 0, 10, -1.0f, +1.0f);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
+		glFrontFace(GL_CW);
+		//glCullFace(GL_BACK);
+		glDepthFunc(GL_GREATER);
 		Window_Info.window.setActive();
 	};
 	check_gl_error();

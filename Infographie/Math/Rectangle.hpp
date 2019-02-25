@@ -16,15 +16,17 @@ struct Rectangle_t {
 		};
 	};
 
-	Rectangle_t() {}
+	constexpr Rectangle_t() noexcept {}
 
-	Rectangle_t(const Vector<2, T>& pos, const Vector<2, T>& size) :
+	constexpr Rectangle_t(T x, T y, T w, T h) noexcept : x(x), y(y), w(w), h(h) {}
+
+	constexpr Rectangle_t(const Vector<2, T>& pos, const Vector<2, T>& size) noexcept :
 		pos(pos),
 		size(size) 
 	{}
 #ifdef SFML_GRAPHICS_HPP
 
-	Rectangle_t(const sf::FloatRect& rec) : 
+	constexpr Rectangle_t(const sf::FloatRect& rec) : 
 		x(rec.left), y(rec.top), w(rec.width), h(rec.height)
 	{}
 
@@ -195,6 +197,7 @@ struct Rectangle_t {
 template<typename T>
 using Rectangle2 = Rectangle_t<T>;
 using Rectangle2f = Rectangle2<float>;
+using Rectangle2u = Rectangle2<size_t>;
 using Rectangle2d = Rectangle2<double>;
 /*
 

@@ -30,20 +30,22 @@ struct Matrix4f {
 
 	static Matrix4f translation(Vector3f vec) noexcept {
 		Matrix4f matrix;
-		for (size_t i = 0u; i < 3; ++i) {
+		for (size_t i = 0u; i < 4; ++i) {
 			matrix[i][4 - 1] = vec[i];
 			matrix[i][i] = 1;
 		}
-		matrix[3][3] = 1;
 		return matrix;
 	}
 
-	static Matrix4f perspective(float fov, float ratio, float n, float f) noexcept {
+	static Matrix4f perspective(float fov, float ratio, float f, float n) noexcept {
+		float uh = 1.f / std::tanf(fov / 2);
+		float uw = uh * (1.f / ratio);
+
 		Matrix4f matrix;
-		matrix[0] = Vector4f{ (std::cosf(fov / 2) / std::sinf(fov / 2)) / ratio, 0, 0, 0 };
-		matrix[1] = Vector4f{ 0, (std::cosf(fov / 2) / std::sinf(fov / 2)) , 0, 0 };
+		matrix[0] = Vector4f{ uw, 0, 0, 0 };
+		matrix[1] = Vector4f{ 0, uh, 0, 0 };
 		matrix[2] = Vector4f{ 0, 0, f / (f - n), 1 };
-		matrix[3] = Vector4f{ 0, 0, 0, - f * n / (f - n)};
+		matrix[3] = Vector4f{ 0, 0, - f * n / (f - n), 0};
 		return matrix;
 	}
 

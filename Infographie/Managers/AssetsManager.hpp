@@ -17,6 +17,7 @@ public:
 	// i don't want somebody to change a texture for everyone else
 	// but then i can't set the smoothness of a texture for instance
 	/*const*/ sf::Texture& get_texture(const std::string& key) noexcept; 
+	sf::Texture& create_texture(const std::string& key) noexcept;
 	bool have_image(const std::string& key) noexcept;
 	bool load_image(const std::string& key, const std::string& path) noexcept;
 	const sf::Image& get_image(const std::string& key) noexcept;

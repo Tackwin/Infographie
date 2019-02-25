@@ -32,9 +32,13 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	}
 
 	if (settings.root) {
-		ImGui::Columns(3);
+
+		static std::unordered_map<int, bool> render_checkbox_map;
 		for (auto& m : settings.models_widget_id) {
 			auto model = (Model*)settings.root->find_child(m);
+			ImGui::BeginGroup();
+			defer{ ImGui::EndGroup(); };
+			ImGui::Columns(4);
 			ImGui::Text("%u", model->get_n());
 			ImGui::NextColumn();
 			if (!model->get_texture()) {
@@ -50,12 +54,18 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 				}
 			}
 			ImGui::NextColumn();
-			if (ImGui::Button("Open")) {
-				model->set_visible(true);
+			
+			if (ImGui::Button("Bounding box")) {
+				model->set_render_checkbox(!model->does_render_checkbox());
+			}
+
+			ImGui::NextColumn();
+			if (ImGui::Button(model->is_visible() ? "Close" : "Open")) {
+				model->set_visible(!model->is_visible());
 			}
 			ImGui::NextColumn();
+			ImGui::Columns(1);
 		}
-		ImGui::Columns(1);
 	}
 
 }

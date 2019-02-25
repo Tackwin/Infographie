@@ -200,6 +200,18 @@ const std::vector<std::unique_ptr<Widget>>& Widget::get_childs() const noexcept 
 	return childs;
 }
 
+Widget* Widget::find_parent(const type_info& type) noexcept {
+	Widget* w{ nullptr };
+	auto next_up = parent;
+
+	while (next_up) {
+		if (typeid(*next_up) == type) return next_up;
+		next_up = next_up->parent;
+	}
+
+	return next_up;
+}
+
 Widget* Widget::find_child(Uuid_t id) const noexcept {
 
 	std::queue<Widget*> open;
@@ -256,7 +268,7 @@ void Widget::propagate_update(float dt) noexcept {
 	update(dt);
 
 	for (const auto& c : childs) {
-		c->update(dt);
+		c->propagate_update(dt);
 	}
 }
 

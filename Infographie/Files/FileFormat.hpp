@@ -14,4 +14,5 @@ struct Object_File {
 	Vector3f max;
 
 	static std::optional<Object_File> load_file(const std::filesystem::path& path) noexcept;
+	static Object_File cube(Vector3f size) noexcept;
 };
