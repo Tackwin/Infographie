@@ -25,22 +25,22 @@ void Camera::update(float dt) noexcept {
 	}
 
 	if (IM::isKeyPressed(sf::Keyboard::Q)) {
-		auto right = look_dir.cross({ 0, 1, 0 });
+		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		pos3 -= speed * dt * right;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::D)) {
-		auto right = look_dir.cross({ 0, 1, 0 });
+		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		pos3 += speed * dt * right;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::Z)) {
 		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		auto up = look_dir.cross(right);
-		pos3 -= speed * dt * up;
+		pos3 += speed * dt * up;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::S)) {
 		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		auto up = look_dir.cross(right);
-		pos3 += speed * dt * up;
+		pos3 -= speed * dt * up;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::LShift)) {
 		pos3 += speed * dt * look_dir;
@@ -48,16 +48,23 @@ void Camera::update(float dt) noexcept {
 	if (IM::isKeyPressed(sf::Keyboard::LControl)) {
 		pos3 -= speed * dt * look_dir;
 	}
+	if (IM::isMousePressed(sf::Mouse::Middle)) {
+		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
+		auto up = look_dir.cross(right);
+
+		auto mouse_dt = IM::getMouseScreenDelta().normalize();
+		look_dir += (0.01f) * (right * mouse_dt.x + up * mouse_dt.y);
+		look_dir = look_dir.normalize();
+	}
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
-	view = Matrix4f::translation(pos3);
-
+	compute_view();
 
 	if (IM::isMouseJustPressed(sf::Mouse::Right)) {
 		Vector3f ray_origin = pos3;
 		Vector3f ray = {
-			1.0f - (2.0f * IM::getMouseScreenPos().x) / Window_Info.size.x,
-			(2.0f * IM::getMouseScreenPos().y) / Window_Info.size.y - 1.0f,
+			(2.0f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.0f,
+			1.0f - (2.0f * IM::getMouseScreenPos().y) / Window_Info.size.y,
 			1
 		};
 		Vector4f ray_clip = { ray.x, ray.y, -1, 1 };
@@ -122,19 +129,7 @@ void Camera::set_viewport(Rectangle2u rec) noexcept {
 }
 
 void Camera::look_at(Vector3f target) noexcept {
-	auto zaxis = (pos3 - target).normalize();    // The "forward" vector.
-	auto xaxis = Vector3f{ 0, 1, 0 }.cross(zaxis).normalize();// The "right" vector.
-	auto yaxis = zaxis.cross(xaxis);     // The "up" vector.
-
-	// Create a 4x4 view matrix from the right, up, forward and eye position vectors
-	float mat_comp[]{
-		xaxis.x,            yaxis.x,            zaxis.x,       0.f,
-		xaxis.y,            yaxis.y,            zaxis.y,       0.f,
-		xaxis.z,            yaxis.z,            zaxis.z,       0.f,
-		-xaxis.dot(pos3), -yaxis.dot(pos3), -zaxis.dot(pos3),  1.f
-	};
-
-	view = { mat_comp };
+	look_dir = (get_global_position3() - target).normalize();
 }
 
 void Camera::set_perspective(float fov, float ratio, float f, float n) noexcept {
@@ -146,5 +141,22 @@ const Matrix4f& Camera::get_view_matrix() noexcept {
 }
 const Matrix4f& Camera::get_projection_matrix() noexcept {
 	return projection;
+}
+
+void Camera::compute_view() noexcept {
+	auto zaxis = look_dir;    // The "forward" vector.
+	auto xaxis = Vector3f{ 0, 1, 0 }.cross(zaxis).normalize();// The "right" vector.
+	auto yaxis = zaxis.cross(xaxis);     // The "up" vector.
+
+	// Create a 4x4 view matrix from the right, up, forward and eye position vectors
+	float mat_comp[]{
+		xaxis.x,            xaxis.y,            xaxis.z,       0.f,
+		yaxis.x,            yaxis.y,            yaxis.z,       0.f,
+		zaxis.x,            zaxis.y,            zaxis.z,       0.f,
+		0,                        0,                  0,       1.f
+	};
+
+	view = { mat_comp };
+	view = view * Matrix4f::translation(-1 * get_global_position3());
 }
 

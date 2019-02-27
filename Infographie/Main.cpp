@@ -11,6 +11,7 @@
 #include "UI/Images.hpp"
 #include "UI/Drawings.hpp"
 #include "UI/Geometries.hpp"
+#include "UI/Transform.hpp"
 #include "Scene/Widget.hpp"
 #include "Scene/Camera.hpp"
 #include "Scene/Image.hpp"
@@ -33,6 +34,7 @@ void update(
 	Camera& camera,
 	Images_Settings& img_settings,
 	Drawing_Settings& draw_settings,
+	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	float dt
 ) noexcept;
@@ -85,6 +87,7 @@ int main() {
 
 	Images_Settings img_settings;
 	Drawing_Settings draw_settings;
+	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
 
 	std::shared_mutex function_from_another_thread_mutex;
@@ -106,8 +109,9 @@ int main() {
 	
 
 	img_settings.root = &scene_root;
-	draw_settings.root = &scene_root;
 	geo_settings.root = &scene_root;
+	draw_settings.root = &scene_root;
+	tran_settings.root = &scene_root;
 
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
@@ -177,7 +181,7 @@ int main() {
 		function_from_another_thread.clear();
 		}
 
-		update(scene_root, camera, img_settings, draw_settings, geo_settings, dt);
+		update(scene_root, camera, img_settings, draw_settings, tran_settings, geo_settings, dt);
 
 		render(scene_root, camera, Window_Info.window);
 
@@ -191,6 +195,7 @@ void update(
 	Camera& camera,
 	Images_Settings& img_settings,
 	Drawing_Settings& draw_settings,
+	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	float dt
 ) noexcept {
@@ -207,6 +212,7 @@ void update(
 
 	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);
 	if (ImGui::CollapsingHeader("Drawing")) update_drawing_settings(draw_settings);
+	if (ImGui::CollapsingHeader("Transform")) update_transform_settings(tran_settings);
 	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
 	if (ImGui::CollapsingHeader("Debug")) update_debug_ui(root, camera);
 

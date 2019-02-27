@@ -153,6 +153,10 @@ void Model::opengl_render() noexcept {
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+
+	glBegin(GL_POINTS);
+	glVertex3f(UNROLL_3(get_global_position3() + (obj_to_use.min + obj_to_use.max) / 2));
+	glEnd();
 }
 
 void Model::set_object(const Object_File& o) noexcept {
@@ -341,7 +345,7 @@ std::optional<Vector3f> Model::is_selected(Vector3f ray_origin, Vector3f ray) co
 	if (!is_visible()) return std::nullopt;
 	auto& o = (object_file ? *object_file : object_file_copy);
 
-	auto sphere_center = get_global_position3() - (o.min + o.max) / 2;
+	auto sphere_center = get_global_position3() + (o.min + o.max) / 2;
 	return Vector3f::ray_intersect_sphere(sphere_center, picking_sphere_radius, ray_origin, ray);
 /*	std::optional<Vector3f> intersection;
 

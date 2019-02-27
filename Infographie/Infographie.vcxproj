@@ -199,6 +199,7 @@
     <ClCompile Include="UI\Drawings.cpp" />
     <ClCompile Include="UI\Geometries.cpp" />
     <ClCompile Include="UI\Images.cpp" />
+    <ClCompile Include="UI\Transform.cpp" />
     <ClCompile Include="Utils\Logs.cpp" />
     <ClCompile Include="Utils\TimeInfo.cpp" />
     <ClCompile Include="Utils\UUID.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="UI\Drawings.hpp" />
     <ClInclude Include="UI\Geometries.hpp" />
     <ClInclude Include="UI\Images.hpp" />
+    <ClInclude Include="UI\Transform.hpp" />
     <ClInclude Include="Utils\Logs.hpp" />
     <ClInclude Include="Utils\TimeInfo.hpp" />
     <ClInclude Include="Utils\UUID.hpp" />

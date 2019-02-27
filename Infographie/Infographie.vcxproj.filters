@@ -101,6 +101,9 @@
     <ClCompile Include="Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\Transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -200,6 +203,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Camera.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Transform.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

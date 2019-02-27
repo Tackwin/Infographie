@@ -23,6 +23,8 @@ public:
 	const Matrix4f& get_projection_matrix() noexcept;
 private:
 
+	void compute_view() noexcept;
+
 	Widget3* render_root{ nullptr };
 
 	Matrix4f view;
