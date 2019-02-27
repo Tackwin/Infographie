@@ -48,8 +48,8 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 
 	if (settings.root) {
 		static std::unordered_map<int, bool> selected_map;
-		ImGui::Columns(5);
 		for (auto& m : settings.models_widget_id) {
+			ImGui::Columns(5);
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
@@ -83,8 +83,8 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 				model->set_visible(!model->is_visible());
 			}
 			ImGui::NextColumn();
+			ImGui::Columns(1);
 		}
-		ImGui::Columns(1);
 	}
 
 }
