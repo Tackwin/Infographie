@@ -82,6 +82,7 @@ public:
 	};
 	static bool isMousePressed(const sf::Mouse::Button &button);
 	static bool is_one_of_pressed(const std::vector<sf::Mouse::Button>& buttons) noexcept;
+	static bool is_one_of_pressed(const std::vector<sf::Keyboard::Key>& keys) noexcept;
 
 	static bool isMouseJustPressed(const int &button) {
 		return isMouseJustPressed(static_cast<sf::Mouse::Button>(button));

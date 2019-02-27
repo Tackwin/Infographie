@@ -7,15 +7,17 @@
 #include "Math/Matrix.hpp"
 
 #include "Utils/Logs.hpp"
+#include "Utils/TimeInfo.hpp"
 
 #include "Camera.hpp"
+#include "Window.hpp"
 
 #include "Managers/AssetsManager.hpp"
 
 size_t Model::Total_N = 0;
 constexpr auto Plain_Cube_Boundingbox_Texture_Key = "plain_cube_boundingbox";
 
-Model::Model(bool without_bounding_box) noexcept {
+Model::Model(bool w) noexcept : without_bounding_box(w) {
 	Total_N++;
 	n = Total_N;
 
@@ -30,8 +32,7 @@ Model::Model(bool without_bounding_box) noexcept {
 	}
 
 	boundingbox_child = make_child<Model>(true);
-	boundingbox_child->set_object_box(size3);
-	boundingbox_child->set_position({ 0, size3.y / 2, 0 });
+	boundingbox_child->set_object_copy(Object_File::cube(size3));
 	boundingbox_child->set_texture(AM->get_texture(Plain_Cube_Boundingbox_Texture_Key));
 	boundingbox_child->set_shader(AM->get_shader("Simple"));
 	boundingbox_child->set_visible(false);
@@ -45,22 +46,25 @@ Model::~Model() noexcept {
 	}
 }
 
-void Model::update(float) noexcept {
+void Model::opengl_render() noexcept {
 	if (!visible) return;
 	if (!vertex_array_id) return;
+
 	glBindVertexArray(*vertex_array_id);
 	defer{ glBindVertexArray(0); };
 
 	auto& obj_to_use = object_file ? *object_file : object_file_copy;
 
-	if (shader) {
-		auto camera = (Camera*)find_parent(typeid(Camera));
+	if (shader || select_shader) {
+		auto s = shader;
+		if (is_focus() && select_shader) s = select_shader;
 
 		float rotate = 0.f;
 		Vector3f light_pos;
 
 		if (debug_values["Rotate"].type() == typeid(float)) {
 			rotate = std::any_cast<float>(debug_values["Rotate"]);
+			set_rotation(rotate);
 		}
 		if (debug_values["Light_X"].type() == typeid(float)) {
 			light_pos.x = std::any_cast<float>(debug_values["Light_X"]);
@@ -72,19 +76,27 @@ void Model::update(float) noexcept {
 			light_pos.z = std::any_cast<float>(debug_values["Light_Z"]);
 		}
 
-		Matrix4f model = Matrix4f::translation(get_global_position3()) * Matrix4f::rotation({ 0, 1, 0 }, rotate);
-		Matrix4f view = camera->get_view_matrix();
-		Matrix4f projection = camera->get_projection_matrix();
+		Matrix4f model = Matrix4f::translation(get_global_position3()) * Matrix4f::rotation(axis, theta);
+		Matrix4f view = Window_Info.active_camera->get_view_matrix();
+		Matrix4f projection = Window_Info.active_camera->get_projection_matrix();
 
-		glUseProgram(shader->getNativeHandle());
-		auto uni = glGetUniformLocation(shader->getNativeHandle(), "model");
+		glUseProgram(s->getNativeHandle());
+
+		auto uni = glGetUniformLocation(s->getNativeHandle(), "model");
 		glUniformMatrix4fv(uni, 1, GL_FALSE, &model[0][0]);
-		uni = glGetUniformLocation(shader->getNativeHandle(), "view");
+		uni = glGetUniformLocation(s->getNativeHandle(), "view");
 		glUniformMatrix4fv(uni, 1, GL_FALSE, &(view)[0][0]);
-		uni = glGetUniformLocation(shader->getNativeHandle(), "projection");
+		uni = glGetUniformLocation(s->getNativeHandle(), "projection");
 		glUniformMatrix4fv(uni, 1, GL_FALSE, &(projection)[0][0]);
-		uni = glGetUniformLocation(shader->getNativeHandle(), "light_pos");
+		uni = glGetUniformLocation(s->getNativeHandle(), "light_pos");
 		glUniform3f(uni, UNROLL_3(light_pos));
+
+		if (s == select_shader) {
+			uni = glGetUniformLocation(s->getNativeHandle(), "time");
+			float a = (get_milliseconds_epoch() % 500000) / 1000.f;
+			glUniform1f(uni, a);
+			check_gl_error();
+		}
 	}
 	defer{ if (shader) glUseProgram(0); };
 	if (texture) {
@@ -199,13 +211,11 @@ void Model::set_object(const Object_File& o) noexcept {
 	);
 
 	object_file = &o;
-	size3 = o.max - o.min;
-
-	if (boundingbox_child) boundingbox_child->set_object_box(size3);
+	set_size(o.max - o.min);
 }
 
-void Model::set_object_box(Vector3f size) noexcept {
-	object_file_copy = Object_File::cube(size);
+void Model::set_object_copy(const Object_File& obj) noexcept {
+	object_file_copy = obj;
 	auto& o = object_file_copy;
 
 	if (vertex_array_id) {
@@ -262,9 +272,9 @@ void Model::set_object_box(Vector3f size) noexcept {
 		GL_STATIC_DRAW
 	);
 
-	size3 = o.max - o.min;
-	set_position({ 0, size3.y / 2, 0 });
+	set_size(o.max - o.min);
 }
+
 
 
 void Model::set_texture(const sf::Texture& t) noexcept {
@@ -274,6 +284,10 @@ void Model::set_texture(const sf::Texture& t) noexcept {
 void Model::set_shader(sf::Shader& s) noexcept {
 	shader = &s;
 }
+void Model::set_select_shader(sf::Shader& s) noexcept {
+	select_shader = &s;
+}
+
 
 const sf::Texture* Model::get_texture() const noexcept {
 	return texture;
@@ -290,3 +304,59 @@ void Model::set_render_checkbox(bool v) noexcept {
 	render_checkbox = v;
 	boundingbox_child->set_visible(v);
 }
+
+void Model::set_rotation_axis(Vector3f a) noexcept {
+	axis = a;
+	if (boundingbox_child) boundingbox_child->set_rotation_axis(a);
+}
+void Model::set_rotation(float r) noexcept {
+	theta = r;
+	if (boundingbox_child) boundingbox_child->set_rotation(r);
+}
+Vector3f Model::get_rotation_axis() noexcept {
+	return axis;
+}
+float Model::get_rotation() noexcept {
+	return theta;
+}
+
+float Model::get_picking_sphere_radius() const noexcept {
+	return picking_sphere_radius;
+}
+
+void Model::set_size(Vector3f s) noexcept {
+	Widget3::set_size(s);
+	size3 = s;
+	picking_sphere_radius = std::powf(3 * s.x * s.y * s.z / (4 * PIf), 1 / 3.f);
+	if (boundingbox_child && !without_bounding_box) {
+		auto& o = (object_file ? *object_file : object_file_copy);
+
+		boundingbox_child->set_object_copy(Object_File::cube(size3));
+		boundingbox_child->set_position((o.min + o.max) / 2);
+	}
+}
+
+std::optional<Vector3f> Model::is_selected(Vector3f ray_origin, Vector3f ray) const noexcept {
+	Widget3::is_selected(ray_origin, ray);
+	if (!is_visible()) return std::nullopt;
+	auto& o = (object_file ? *object_file : object_file_copy);
+
+	auto sphere_center = get_global_position3() - (o.min + o.max) / 2;
+	return Vector3f::ray_intersect_sphere(sphere_center, picking_sphere_radius, ray_origin, ray);
+/*	std::optional<Vector3f> intersection;
+
+	for (size_t i = 0; i < o.vertices.size(); i += 3) {
+		auto intersection_vec = Vector3f::intersect_tirangle(
+			ray_origin, ray, o.vertices[i + 0], o.vertices[i + 1], o.vertices[i + 2]
+		);
+		if (!intersection_vec) continue;
+		if (
+			!intersection ||
+			(*intersection_vec - ray_origin).length2() < (*intersection - ray_origin).length2()
+		) {
+			intersection = intersection_vec;
+		}
+	}
+	return intersection;
+*/}
+

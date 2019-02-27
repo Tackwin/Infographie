@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+#include <optional>
 #include <type_traits>
 
 #include "Common.hpp"
@@ -628,6 +629,106 @@ struct Vector : public __vec_member<D, T> {
 	}
 
 #endif
+
+	template<size_t Dp = D>
+	static std::enable_if_t<Dp == 3, std::optional<Vector3f>> intersect_tirangle(
+		Vector<D, T> P, Vector<D, T> V, Vector<D, T> v0, Vector<D, T> v1, Vector<D, T> v2
+	) noexcept {
+		const float EPSILON = 0.0000001f;
+
+		// compute plane's normal
+		auto v0v1 = v1 - v0;
+		auto v0v2 = v2 - v0;
+		// no need to normalize
+		auto N = v0v1.cross(v0v2); // N 
+		float area2 = N.length();
+
+		// Step 1: finding P
+
+		// check if ray and plane are parallel ?
+		float NdotRayDirection = N.dot(V);
+		if (fabs(NdotRayDirection) < EPSILON) // almost 0 
+			return std::nullopt; // they are parallel so they don't intersect ! 
+
+		// compute d parameter using equation 2
+		float d = N.dot(v0);
+
+		// compute t (equation 3)
+		auto t = (N.dot(P) + d) / NdotRayDirection;
+		// check if the triangle is in behind the ray
+		if (t < 0) return std::nullopt; // the triangle is behind 
+
+		// compute the intersection point using equation 1
+		auto p = P + t * V;
+
+		// Step 2: inside-outside test
+		Vector3f C; // vector perpendicular to triangle's plane 
+
+		// edge 0
+		auto edge0 = v1 - v0;
+		auto vp0 = p - v0;
+		C = edge0.cross(vp0);
+		if (N.dot(C) < 0) return std::nullopt; // p is on the right side 
+
+		// edge 1
+		auto edge1 = v2 - v1;
+		auto vp1 = p - v1;
+		C = edge1.cross(vp1);
+		if (N.dot(C) < 0)  return std::nullopt; // p is on the right side 
+
+		// edge 2
+		auto edge2 = v0 - v2;
+		auto vp2 = p - v2;
+		C = edge2.cross(vp2);
+		if (N.dot(C) < 0) return std::nullopt; // p is on the right side; 
+
+		return p; // this ray hits the triangle 
+		/*
+		Vector3<T> edge1, edge2, h, s, q;
+		float a, f, u, v;
+		edge1 = B - A;
+		edge2 = C - A;
+		h = V.cross(edge2);
+		a = edge1.dot(h);
+		if (a > -EPSILON && a < EPSILON)
+			return std::nullopt;    // This ray is parallel to this triangle.
+		f = 1.f / a;
+		s = P - A;
+		u = f * (s.dot(h));
+		if (u < 0.0 || u > 1.0)
+			return std::nullopt;
+		q = s.cross(edge1);
+		v = f * V.dot(q);
+		if (v < 0.0 || u + v > 1.0)
+			return std::nullopt;
+		// At this stage we can compute t to find out where the intersection point is on the line.
+		float t = f * edge2.dot(q);
+		return (t > EPSILON) ? std::optional<Vector3f>{P + V * t} : std::nullopt; // ray intersection
+		*/
+	}
+
+	template<size_t Dp = D>
+	static std::enable_if_t<Dp == 3, std::optional<Vector3f>> ray_intersect_sphere(
+		Vector3<T> C, T R, Vector3<T> ray_pos, Vector3<T> ray_dir 
+	) noexcept {
+		Vector3<T> m = ray_pos - C;
+		float b = m.dot(ray_dir);
+		float c = m.dot(m) - R * R;
+
+		// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0) 
+		if (c > 0.0f && b > 0.0f) return std::nullopt;
+		float discr = b * b - c;
+
+		// A negative discriminant corresponds to ray missing sphere 
+		if (discr < 0.0f) return std::nullopt;
+
+		// Ray now found to intersect sphere, compute smallest t value of intersection
+		auto t = -b - sqrt(discr);
+
+		// If t is negative, ray started inside sphere so clamp t to zero 
+		if (t < 0.0f) t = 0.0f;
+		return ray_pos + t * ray_dir;
+	}
 };
 
 template<size_t D, typename T, typename U>

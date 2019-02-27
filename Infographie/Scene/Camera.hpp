@@ -8,6 +8,9 @@ class Camera : public Widget3 {
 public:
 	Camera() noexcept;
 
+	void render_from(Widget3* root) noexcept;
+	Widget3* get_render_root() const noexcept;
+
 	void update(float dt) noexcept override;
 
 	void set_viewport(Rectangle2u rec) noexcept;
@@ -19,6 +22,8 @@ public:
 	const Matrix4f& get_view_matrix() noexcept;
 	const Matrix4f& get_projection_matrix() noexcept;
 private:
+
+	Widget3* render_root{ nullptr };
 
 	Matrix4f view;
 	Matrix4f projection;

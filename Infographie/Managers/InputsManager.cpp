@@ -223,6 +223,12 @@ bool IM::is_one_of_pressed(const std::vector<sf::Mouse::Button>& buttons) noexce
 	}
 	return false;
 }
+bool IM::is_one_of_pressed(const std::vector<sf::Keyboard::Key>& keys) noexcept {
+	for (auto& m : keys) {
+		if (isKeyPressed(m)) return true;
+	}
+	return false;
+}
 bool IM::is_one_of_just_released(const std::vector<sf::Mouse::Button>& buttons) noexcept {
 	for (auto& m : buttons) {
 		if (isMouseJustReleased(m)) return true;

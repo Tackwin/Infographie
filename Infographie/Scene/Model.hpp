@@ -15,29 +15,44 @@ public:
 
 	Model(bool without_bounding_box = false) noexcept;
 	~Model() noexcept override;
-	// >Tackwin
-	// I'm going to use the update function since i can't mix the render cycle of sfml
-	// with that of opengl
-	// I KNOW shut up, i'll make a separate cycle later...
-	// I just want to see thoses sweet triangles
-	void update(float dt) noexcept;
+
+	virtual void opengl_render() noexcept override;
 
 	bool does_render_checkbox() noexcept;
 	void set_render_checkbox(bool v) noexcept;
 
 	void set_object(const Object_File& object_file) noexcept;
+	void set_object_copy(const Object_File& object_file) noexcept;
 	void set_texture(const sf::Texture& texture) noexcept;
 	void set_shader(sf::Shader& shader) noexcept;
+	void set_select_shader(sf::Shader& shader) noexcept;
+
+	void set_rotation_axis(Vector3f axis) noexcept;
+	void set_rotation(float r) noexcept;
+	Vector3f get_rotation_axis() noexcept;
+	float get_rotation() noexcept;
 
 	const sf::Texture* get_texture() const noexcept;
 
+	float get_picking_sphere_radius() const noexcept;
+
 	size_t get_n() const noexcept;
+	virtual void set_size(Vector3f size) noexcept override;
+
+	virtual std::optional<Vector3f>
+	is_selected(Vector3f ray_origin, Vector3f ray) const noexcept override;
+
 private:
-	void set_object_box(Vector3f size) noexcept;
+
+	Vector3f axis{ 0, 1, 0 };
+	float theta{ 0 };
+
+	float picking_sphere_radius{ 0.f };
 
 	size_t n;
 
 	sf::Shader* shader;
+	sf::Shader* select_shader;
 	const sf::Texture* texture;
 
 	// For complexe object we take a reference from the Assets Manager
@@ -48,6 +63,7 @@ private:
 	Object_File object_file_copy;
 
 	bool render_checkbox{ false };
+	bool without_bounding_box{ false };
 
 	std::optional<GLuint> vertex_array_id;
 	std::optional<GLuint> vertex_buffer_id;

@@ -275,5 +275,98 @@ struct Matrix4f {
 		return result;
 	}
 
+	std::optional<Matrix4f> invert() const noexcept {
+		auto get_cofactor = [](Matrix4f& A, size_t p, size_t q, size_t n) {
+			Matrix4f result;
+			size_t i = 0, j = 0;
+
+			// Looping for each element of the matrix 
+			for (size_t row = 0; row < n; row++)
+			{
+				for (size_t col = 0; col < n; col++)
+				{
+					//  Copying into temporary matrix only those element 
+					//  which are not in given row and column 
+					if (row != p && col != q)
+					{
+						result[i][j++] = A[row][col];
+
+						// Row is filled, so increase row index and 
+						// reset col index 
+						if (j + 1 == n)
+						{
+							j = 0;
+							i++;
+						}
+					}
+				}
+			}
+			return result;
+		};
+
+		std::function<float(Matrix4f, size_t)> determinant;
+		determinant = [&](Matrix4f A, size_t n) {
+			float D = 0; // Initialize result 
+
+			//  Base case : if matrix contains single element 
+			if (n == 1)
+				return A[0][0];
+
+			Matrix4f temp; // To store cofactors 
+
+			int sign = 1;  // To store sign multiplier 
+
+				// Iterate for each element of first row 
+			for (size_t f = 0; f < n; f++) {
+				// Getting Cofactor of A[0][f] 
+				temp = get_cofactor(A, 0, f, n);
+				D += sign * A[0][f] * determinant(temp, n - 1);
+
+				// terms are to be added with alternate sign 
+				sign = -sign;
+			}
+
+			return D;
+		};
+
+		auto adjoint = [&](Matrix4f A) {
+			// temp is used to store cofactors of A[][] 
+			int sign = 1;
+			Matrix4f temp;
+			Matrix4f adj;
+
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					// Get cofactor of A[i][j] 
+					temp = get_cofactor(A, i, j, 4);
+
+					// sign of adj[j][i] positive if sum of row 
+					// and column indexes is even. 
+					sign = ((i + j) % 2 == 0) ? 1 : -1;
+
+					// Interchanging rows and columns to get the 
+					// transpose of the cofactor matrix 
+					adj[j][i] = (sign)*(determinant(temp, 4 - 1));
+				}
+			}
+			return adj;
+		};
+
+		// Find determinant of A[][] 
+		auto det = determinant(*this, 4);
+		if (det == 0) return std::nullopt;
+
+		// Find adjoint 
+		auto adj = adjoint(*this);
+		Matrix4f inverse;
+
+		// Find Inverse using formula "inverse(A) = adj(A)/det(A)" 
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				inverse[i][j] = adj[i][j] / det;
+
+		return inverse;
+	}
+
 };
 
