@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "Math/Vector.hpp"
+#include "Scene/Camera.hpp"
 
 namespace details {
 	struct Window_Struct {
@@ -15,6 +16,7 @@ namespace details {
 		Vector3f clear_color;
 		sf::RenderWindow window;
 
+		Camera* active_camera;
 	};
 }
 

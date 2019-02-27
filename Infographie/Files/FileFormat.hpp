@@ -15,4 +15,5 @@ struct Object_File {
 
 	static std::optional<Object_File> load_file(const std::filesystem::path& path) noexcept;
 	static Object_File cube(Vector3f size) noexcept;
+	static Object_File tetraedre(Vector3f size) noexcept;
 };

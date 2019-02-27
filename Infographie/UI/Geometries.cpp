@@ -6,7 +6,10 @@
 #include "Window.hpp"
 
 #include "OS/OpenFile.hpp"
+#include "Files/FileFormat.hpp"
 #include "Scene/Model.hpp"
+
+#include "Managers/AssetsManager.hpp"
 
 void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	std::lock_guard{ settings.mutex };
@@ -31,14 +34,30 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 		});
 	}
 
-	if (settings.root) {
+	if (ImGui::ImageButton(AM->get_texture("Cube_Icon"), { 20, 20 }, 2)) {
+		for (auto& f : settings.spawn_object_callback) {
+			f(Object_File::cube({ 1, 1, 1 }));
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(AM->get_texture("Tetra_Icon"), { 20, 20 }, 2)) {
+		for (auto& f : settings.spawn_object_callback) {
+			f(Object_File::tetraedre({ 1, 1, 1 }));
+		}
+	}
 
-		static std::unordered_map<int, bool> render_checkbox_map;
+	if (settings.root) {
+		static std::unordered_map<int, bool> selected_map;
+		ImGui::Columns(5);
 		for (auto& m : settings.models_widget_id) {
 			auto model = (Model*)settings.root->find_child(m);
-			ImGui::BeginGroup();
-			defer{ ImGui::EndGroup(); };
-			ImGui::Columns(4);
+			ImGui::PushID(model);
+			defer{ ImGui::PopID(); };
+
+			selected_map[model->get_n()] = model->is_focus();
+			ImGui::Checkbox("X", &selected_map[model->get_n()]);
+			//model->set_focus(selected_map[model->get_n()]);
+			ImGui::NextColumn();
 			ImGui::Text("%u", model->get_n());
 			ImGui::NextColumn();
 			if (!model->get_texture()) {
@@ -64,8 +83,8 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 				model->set_visible(!model->is_visible());
 			}
 			ImGui::NextColumn();
-			ImGui::Columns(1);
 		}
+		ImGui::Columns(1);
 	}
 
 }

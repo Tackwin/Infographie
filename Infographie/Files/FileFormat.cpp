@@ -103,21 +103,11 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 			i++;
 			if (bytes.size() <= i) return std::nullopt;
 			Vector3f vec;
-			static bool first = true;
 
 			auto read = sscanf_s(bytes.data() + i, "%f %f %f", &vec.x, &vec.y, &vec.z);
 			if (read == EOF) return std::nullopt;
 			if (read != 3) return std::nullopt;
 
-			if (first || obj.min.x > vec.x) obj.min.x = vec.x;
-			if (first || obj.min.y > vec.y) obj.min.y = vec.y;
-			if (first || obj.min.z > vec.z) obj.min.z = vec.z;
-
-			if (first || obj.max.x < vec.x) obj.max.x = vec.x;
-			if (first || obj.max.y < vec.y) obj.max.y = vec.y;
-			if (first || obj.max.z < vec.z) obj.max.z = vec.z;
-
-			first = false;
 
 			obj.vertices.push_back(vec);
 		}
@@ -134,6 +124,17 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 		indexed_vertices.push_back(obj.vertices[f.x.x - 1]);
 		indexed_vertices.push_back(obj.vertices[f.y.x - 1]);
 		indexed_vertices.push_back(obj.vertices[f.z.x - 1]);
+		static bool first = true;
+
+		if (first || obj.min.x > indexed_vertices.back().x) obj.min.x = indexed_vertices.back().x;
+		if (first || obj.min.y > indexed_vertices.back().y) obj.min.y = indexed_vertices.back().y;
+		if (first || obj.min.z > indexed_vertices.back().z) obj.min.z = indexed_vertices.back().z;
+
+		if (first || obj.max.x < indexed_vertices.back().x) obj.max.x = indexed_vertices.back().x;
+		if (first || obj.max.y < indexed_vertices.back().y) obj.max.y = indexed_vertices.back().y;
+		if (first || obj.max.z < indexed_vertices.back().z) obj.max.z = indexed_vertices.back().z;
+
+		first = false;
 
 		indexed_uvs.push_back(obj.uvs[f.x.y - 1]);
 		indexed_uvs.push_back(obj.uvs[f.y.y - 1]);
@@ -233,3 +234,42 @@ Object_File Object_File::cube(Vector3f size) noexcept {
 	return obj;
 }
 
+Object_File Object_File::tetraedre(Vector3f size) noexcept {
+	Object_File obj;
+	obj.min = size / -2;
+	obj.max = size / +2;
+
+	obj.vertices.push_back({ 0, 0, 0.5f * size.z });
+	obj.vertices.push_back({ -0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+	obj.vertices.push_back({ +0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+
+	obj.uvs.push_back({ 0.0f, 0.0f });
+	obj.uvs.push_back({ 1.0f, 0.0f });
+	obj.uvs.push_back({ 0.5f, 1.0f });
+
+	obj.vertices.push_back({ 0, 0, 0.5f * size.z });
+	obj.vertices.push_back({ +0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+	obj.vertices.push_back({ 0, +0.5f * size.y, -0.5f * size.z });
+
+	obj.uvs.push_back({ 0.0f, 0.0f });
+	obj.uvs.push_back({ 1.0f, 0.0f });
+	obj.uvs.push_back({ 0.5f, 1.0f });
+
+	obj.vertices.push_back({ 0, 0, 0.5f * size.z });
+	obj.vertices.push_back({ -0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+	obj.vertices.push_back({ 0, +0.5f * size.y, -0.5f * size.z });
+
+	obj.uvs.push_back({ 0.0f, 0.0f });
+	obj.uvs.push_back({ 1.0f, 0.0f });
+	obj.uvs.push_back({ 0.5f, 1.0f });
+
+	obj.vertices.push_back({ 0, +0.5f * size.y, -0.5f * size.z });
+	obj.vertices.push_back({ -0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+	obj.vertices.push_back({ +0.5f * size.x, -0.5f * size.y, -0.5f * size.z });
+
+	obj.uvs.push_back({ 0.0f, 0.0f });
+	obj.uvs.push_back({ 1.0f, 0.0f });
+	obj.uvs.push_back({ 0.5f, 1.0f });
+
+	return obj;
+}

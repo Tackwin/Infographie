@@ -201,7 +201,6 @@ const std::vector<std::unique_ptr<Widget>>& Widget::get_childs() const noexcept 
 }
 
 Widget* Widget::find_parent(const type_info& type) noexcept {
-	Widget* w{ nullptr };
 	auto next_up = parent;
 
 	while (next_up) {
@@ -392,4 +391,37 @@ bool Widget::is_focus() const noexcept {
 
 int Widget::get_z_index() const noexcept {
 	return z_index;
+}
+
+// by default every widget is transparent to mouse picking
+std::optional<Vector3f> Widget3::is_selected(Vector3f, Vector3f) const noexcept {
+	return std::nullopt;
+}
+
+void Widget::for_every_childs(std::function<void(Widget*)>&& f) noexcept {
+	std::vector<Widget*> list;
+	for (auto& x : childs) list.push_back(x.get());
+
+	while (!list.empty()) {
+		auto x = list.back();
+		list.pop_back();
+
+		f(x);
+
+		for (auto& y : x->get_childs()) {
+			list.push_back(y.get());
+		}
+	}
+}
+
+
+void Widget3::opengl_render() noexcept {}
+
+void Widget3::propagate_opengl_render() noexcept {
+	if (!is_visible()) return;
+	opengl_render();
+
+	for (const auto& c : childs) {
+		if (auto c3 = dynamic_cast<Widget3*>(c.get())) c3->propagate_opengl_render();
+	}
 }

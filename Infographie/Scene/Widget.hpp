@@ -3,6 +3,7 @@
 #include <memory>
 #include <functional>
 #include <type_traits>
+#include <optional>
 
 #include <SFML/Graphics.hpp>
 
@@ -86,8 +87,13 @@ public:
 	const std::vector<std::unique_ptr<Widget>>& get_childs() const noexcept;
 	Widget* find_child(Uuid_t id) const noexcept;
 
+	void for_every_childs(std::function<void(Widget*)>&& f) noexcept;
+
 	void kill_every_childs() noexcept;
 	void kill_direct_child(Uuid_t id) noexcept;
+
+	//>NOTE i know one child, two children but it's not an english test it's c++ so i'm going
+	// for consistency rather than accuracy.
 
 	virtual void update(float dt) noexcept;
 	virtual void propagate_update(float dt) noexcept;
@@ -138,7 +144,11 @@ protected: //god this is growing into a god class... :(
 
 class Widget3 : public Widget {
 public:
-	void set_size(Vector3f size) noexcept;
+
+	virtual void opengl_render() noexcept;
+	virtual void propagate_opengl_render() noexcept;
+
+	virtual void set_size(Vector3f size) noexcept;
 	void set_position(Vector3f pos) noexcept;
 	void set_global_position(Vector3f pos) noexcept;
 	void set_origin(Vector3f origin) noexcept;
@@ -148,6 +158,8 @@ public:
 	Vector3f get_origin3() const noexcept;
 	Vector3f get_global_position3() const noexcept;
 	Vector3f get_position3() const noexcept;
+
+	virtual std::optional<Vector3f> is_selected(Vector3f ray_origin, Vector3f ray) const noexcept;
 protected:
 	Vector3f pos3;
 	Vector3f size3;
