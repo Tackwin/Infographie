@@ -23,6 +23,7 @@ void main()
 
     float sin_time = sin(time);
     sin_time = sin_time * sin_time;
+    sin_time = 0.1 + sin_time * 0.9;
 
 	// Output color = color of the texture at the specified UV
 	frag_color = texture( myTextureSampler, UV );
@@ -30,5 +31,5 @@ void main()
 
 	//frag_color = vec4(0, 1, 1, 1);
 
-	frag_color = vec4(vec3(depth), 1);
+	//frag_color = vec4(vec3(depth), 1);
 }

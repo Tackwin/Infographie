@@ -231,6 +231,11 @@ void update(
 }
 
 void render(Widget3& root, Camera& camera, sf::RenderTarget& target) noexcept {
+	Window_Info.active_camera = &camera;
+	root.propagate_opengl_render();
+	Window_Info.active_camera = nullptr;
+
+
 	glPopAttrib();
 
 	Is_In_Sfml_Context = true;
@@ -243,22 +248,19 @@ void render(Widget3& root, Camera& camera, sf::RenderTarget& target) noexcept {
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
 
 		glFrontFace(GL_CW);
-		glCullFace(GL_FRONT);
+		//glCullFace(GL_FRONT);
 		glDepthFunc(GL_GREATER);
 		Window_Info.window.setActive();
 	};
 	check_gl_error();
 
-	Window_Info.active_camera = &camera;
-	root.propagate_opengl_render();
-	Window_Info.active_camera = nullptr;
 
 	ImGui::SFML::Render(target);
 	check_gl_error();
