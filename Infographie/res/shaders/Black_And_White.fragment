@@ -1,0 +1,15 @@
+uniform sampler2D texture;
+uniform float leakage;
+
+void main() {
+    vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
+    
+    float grey = (pixel.r + pixel.g + pixel.b) / 3;
+
+    gl_FragColor = gl_Color * vec4(
+    	grey + (pixel.r - grey) * leakage,
+    	grey + (pixel.g - grey) * leakage,
+    	grey + (pixel.b - grey) * leakage,
+    	pixel.a
+    );
+}

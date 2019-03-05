@@ -1,0 +1,15 @@
+uniform sampler2D image;
+
+// Again i know... should be a mat3x3 but see Texture.cpp...
+uniform vec3 sepia_red;
+uniform vec3 sepia_green;
+uniform vec3 sepia_blue;
+
+void main() {
+    vec3 texel = texture2D(image, gl_TexCoord[0].xy).rgb;
+    gl_FragColor = vec4(texel.x,texel.y,texel.z, 1.0);
+
+    gl_FragColor.r = dot(texel, sepia_red);
+    gl_FragColor.g = dot(texel, sepia_green);
+    gl_FragColor.b = dot(texel, sepia_blue);   
+}

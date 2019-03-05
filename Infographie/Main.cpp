@@ -12,6 +12,7 @@
 #include "UI/Drawings.hpp"
 #include "UI/Geometries.hpp"
 #include "UI/Transform.hpp"
+#include "UI/Texture.hpp"
 #include "Scene/Widget.hpp"
 #include "Scene/Camera.hpp"
 #include "Scene/Image.hpp"
@@ -36,9 +37,24 @@ void update(
 	Drawing_Settings& draw_settings,
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
+	Texture_Settings& tex_settings,
+	sf::RenderTexture& texture_target,
 	float dt
 ) noexcept;
-void render(Widget3& root,Camera& camera, sf::RenderTarget& target) noexcept;
+
+
+void render(
+	Widget3& root,
+	Camera& camera,
+	Texture_Settings& tex_settings,
+	sf::RenderTexture& texture_target,
+	sf::RenderTarget& target,
+	bool with_imgui = true
+) noexcept;
+
+void render_postprocessing(
+	Texture_Settings& settings, const sf::Texture& texture, sf::RenderTarget& target
+) noexcept;
 
 void update_debug_ui(Widget3& root, Camera& camera) noexcept;
 
@@ -85,7 +101,13 @@ int main() {
 	ImGui::SFML::Init(Window_Info.window);
 	glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 
+	sf::RenderTexture texture_target;
+	texture_target.create(
+		Window_Info.size.x, Window_Info.size.y, Window_Info.window.getSettings()
+	);
+
 	Images_Settings img_settings;
+	Texture_Settings tex_settings;
 	Drawing_Settings draw_settings;
 	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
@@ -127,9 +149,9 @@ int main() {
 
 	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_object_file(path.generic_string(), path)) return;
-		std::lock_guard{ function_from_another_thread_mutex };
+		std::lock_guard guard{ function_from_another_thread_mutex };
 		function_from_another_thread.push_back([&, path] {
-			std::lock_guard{ geo_settings.mutex };
+			std::lock_guard guard{ geo_settings.mutex };
 
 			auto model_widget = scene_root.make_child<Model>();
 			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
@@ -144,7 +166,7 @@ int main() {
 			if (!AM->load_texture(path.generic_string(), path)) return;
 			auto model_widget = (Model*)scene_root.find_child(id);
 
-			std::lock_guard{ function_from_another_thread_mutex };
+			std::lock_guard guard{ function_from_another_thread_mutex };
 			function_from_another_thread.push_back([model_widget, path] {
 				model_widget->set_texture(AM->get_texture(path.generic_string()));
 			});
@@ -169,21 +191,32 @@ int main() {
 		IM::update(Window_Info.window);
 		if (!Window_Info.window.isOpen()) break;
 
+		update(
+			scene_root,
+			camera,
+			img_settings,
+			draw_settings,
+			tran_settings,
+			geo_settings,
+			tex_settings,
+			texture_target,
+			dt
+		);
+
 		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
 		glClearDepth(0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 
 		{
-		std::lock_guard{ function_from_another_thread_mutex };
-		for (auto& f : function_from_another_thread) {
-			f();
-		}
-		function_from_another_thread.clear();
+			std::lock_guard guard{ function_from_another_thread_mutex };
+			for (auto& f : function_from_another_thread) {
+				f();
+			}
+			function_from_another_thread.clear();
 		}
 
-		update(scene_root, camera, img_settings, draw_settings, tran_settings, geo_settings, dt);
 
-		render(scene_root, camera, Window_Info.window);
+		render(scene_root, camera, tex_settings, texture_target, Window_Info.window);
 
 		Window_Info.window.display();
 	}
@@ -197,6 +230,8 @@ void update(
 	Drawing_Settings& draw_settings,
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
+	Texture_Settings& tex_settings,
+	sf::RenderTexture& texture_target,
 	float dt
 ) noexcept {
 
@@ -206,17 +241,17 @@ void update(
 	list_all_logs_imgui();
 
 	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove);
-	defer{ ImGui::End(); };
-
 	ImGui::SetWindowPos({ 5, 5 });
 
 	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);
 	if (ImGui::CollapsingHeader("Drawing")) update_drawing_settings(draw_settings);
 	if (ImGui::CollapsingHeader("Transform")) update_transform_settings(tran_settings);
 	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
+	if (ImGui::CollapsingHeader("Texture")) update_texture_settings(tex_settings);
 	if (ImGui::CollapsingHeader("Debug")) update_debug_ui(root, camera);
 
 	root.propagate_update(dt);
+	ImGui::End();
 
 	if (img_settings.take_screenshot) {
 		defer{ img_settings.take_screenshot = false; };
@@ -224,7 +259,7 @@ void update(
 		sf::RenderTexture render_texture;
 		render_texture.create(UNROLL_2(Window_Info.size));
 		render_texture.clear();
-		render(root, camera, render_texture);
+		render(root, camera, tex_settings, texture_target, render_texture, false);
 		render_texture.display();
 
 		auto number_of_files = std::filesystem::hard_link_count(img_settings.screenshot_directory);
@@ -236,18 +271,34 @@ void update(
 	}
 }
 
-void render(Widget3& root, Camera& camera, sf::RenderTarget& target) noexcept {
+void render(
+	Widget3& root,
+	Camera& camera,
+	Texture_Settings& tex_settings,
+	sf::RenderTexture& texture_target,
+	sf::RenderTarget& target,
+	bool with_imgui
+) noexcept {
+	//texture_target.clear({ 35, 40, 45, 255 });
+	texture_target.setActive();
+
+	glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
+	glClearDepth(0.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 	Window_Info.active_camera = &camera;
 	root.propagate_opengl_render();
 	Window_Info.active_camera = nullptr;
+	texture_target.display();
 
+
+	target.setActive();
 
 	glPopAttrib();
 
 	Is_In_Sfml_Context = true;
-	Window_Info.window.pushGLStates();
+	target.pushGLStates();
 	defer {
-		Window_Info.window.popGLStates();
+		target.popGLStates();
 		Is_In_Sfml_Context = false;
 
 		glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
@@ -263,17 +314,60 @@ void render(Widget3& root, Camera& camera, sf::RenderTarget& target) noexcept {
 		glFrontFace(GL_CW);
 		//glCullFace(GL_FRONT);
 		glDepthFunc(GL_GREATER);
-		Window_Info.window.setActive();
+		target.setActive(false);
 	};
-	check_gl_error();
 
 
-	ImGui::SFML::Render(target);
-	check_gl_error();
+	render_postprocessing(tex_settings, texture_target.getTexture(), target);
+	if (with_imgui) ImGui::SFML::Render(target);
 	root.propagate_render(target);
-	check_gl_error();
 }
 
+void render_postprocessing(
+	Texture_Settings& settings, const sf::Texture& texture, sf::RenderTarget& target
+) noexcept {
+	auto& shader = AM->get_shader(Texture_Settings::Tone_String[(int)settings.current_tone]);
+	shader.setUniform("texture", texture);
+
+	switch (settings.current_tone)
+	{
+	case Texture_Settings::Tone::Blur:
+		shader.setUniform("blur_radius", settings.blur_radius);
+		break;
+	case Texture_Settings::Tone::BW:
+		shader.setUniform("leakage", settings.bw_leakage);
+		break;
+	case Texture_Settings::Tone::Edge:
+		shader.setUniform("edge_threshold", settings.edge_threshold);
+		break;
+	case Texture_Settings::Tone::Sepia: {
+		sf::Glsl::Vec3 red;
+		sf::Glsl::Vec3 green;
+		sf::Glsl::Vec3 blue;
+		red.x = settings.sepia_weights.x.x;
+		red.y = settings.sepia_weights.x.y;
+		red.z = settings.sepia_weights.x.z;
+
+		green.x = settings.sepia_weights.y.x;
+		green.y = settings.sepia_weights.y.y;
+		green.z = settings.sepia_weights.y.z;
+
+		blue.x = settings.sepia_weights.z.x;
+		blue.y = settings.sepia_weights.z.y;
+		blue.z = settings.sepia_weights.z.z;
+
+		shader.setUniform("sepia_red", red);
+		shader.setUniform("sepia_green", green);
+		shader.setUniform("sepia_blue", blue);
+		break;
+	}
+	default:
+		break;
+	}
+
+	sf::Sprite sprite{ texture };
+	target.draw(sprite, &shader);
+}
 
 void construct_managers() noexcept {
 	AM = new Assets_Manager();
@@ -299,6 +393,31 @@ void load_objects() noexcept {
 }
 
 void load_shaders() noexcept {
+	AM->load_shader(
+		Texture_Settings::Tone_String[(int)Texture_Settings::Tone::Identity],
+		"res/shaders/Identity.vertex",
+		"res/shaders/Identity.fragment"
+	);
+	AM->load_shader(
+		Texture_Settings::Tone_String[(int)Texture_Settings::Tone::BW],
+		"res/shaders/Identity.vertex",
+		"res/shaders/Black_And_White.fragment"
+	);
+	AM->load_shader(
+		Texture_Settings::Tone_String[(int)Texture_Settings::Tone::Sepia],
+		"res/shaders/Identity.vertex",
+		"res/shaders/Sepia.fragment"
+	);
+	AM->load_shader(
+		Texture_Settings::Tone_String[(int)Texture_Settings::Tone::Blur],
+		"res/shaders/Identity.vertex",
+		"res/shaders/Blur.fragment"
+	);
+	AM->load_shader(
+		Texture_Settings::Tone_String[(int)Texture_Settings::Tone::Edge],
+		"res/shaders/Identity.vertex",
+		"res/shaders/Edge.fragment"
+	);
 	AM->load_shader("Simple", "res/shaders/simple.vertex", "res/shaders/simple.fragment");
 	AM->load_shader(
 		"Uniform_Glow", "res/shaders/uniform_glow.vertex", "res/shaders/uniform_glow.fragment"
