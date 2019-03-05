@@ -425,3 +425,10 @@ void Widget3::propagate_opengl_render() noexcept {
 		if (auto c3 = dynamic_cast<Widget3*>(c.get())) c3->propagate_opengl_render();
 	}
 }
+
+void Widget3::set_rotation(Vector3f r) noexcept {
+	rotation3 = r;
+}
+Vector3f Widget3::get_rotation3() const noexcept {
+	return rotation3;
+}

@@ -361,14 +361,6 @@ struct Vector : public __vec_member<D, T> {
 		return res;
 	}
 
-#pragma region COLORS
-
-	template<size_t Dp = D>
-	std::enable_if_t<Dp == 4 && std::is_floating_point_v<T>, Vector4d>
-		hslaToRgba() const noexcept { throw new std::runtime_error("Not yet implemented"); }
-
-#pragma endregion
-
 #pragma region OPERATOR
 	T& operator[](size_t i) {
 		return this->components[i];

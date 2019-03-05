@@ -27,6 +27,14 @@ struct Matrix4f {
 		matrix[3][3] = 1;
 		return matrix;
 	}
+	static Matrix4f scale(Vector3f scalar) noexcept {
+		Matrix4f matrix;
+		for (size_t i = 0u; i + 1 < 4; ++i) {
+			matrix[i][i] = scalar[i];
+		}
+		matrix[3][3] = 1;
+		return matrix;
+	}
 
 	static Matrix4f translation(Vector3f vec) noexcept {
 		Matrix4f matrix;
@@ -87,6 +95,39 @@ struct Matrix4f {
 			0.f, 0.f, 0.f, 1.f
 		};
 		return Matrix4f{ele};
+	}
+	static Matrix4f rotation(Vector3f rpy) noexcept {
+		Matrix4f x;
+		Matrix4f y;
+		Matrix4f z;
+		{
+			float ele[]{
+				cosf(rpy.x), -sinf(rpy.x), 0.f, 0.f,
+				sinf(rpy.x), cosf(rpy.x), 0.f, 0.f,
+				0.f, 0.f, 1.f, 0.f,
+				0.f, 0.f, 0.f, 1.f
+			};
+			z = { ele };
+		}
+		{
+			float ele[]{
+				cosf(rpy.y), 0.f, sinf(rpy.y), 0.f,
+				0.f, 1.f, 0.f, 0.f,
+				-sinf(rpy.y), 0.f, cosf(rpy.y), 0.f,
+				0.f, 0.f, 0.f, 1.f
+			};
+			y = { ele };
+		}
+		{
+			float ele[]{
+				1.f, 0.f, 0.f, 0.f,
+				0.f, cosf(rpy.z), -sinf(rpy.z), 0.f,
+				0.f, sinf(rpy.z), cosf(rpy.z), 0.f,
+				0.f, 0.f, 0.f, 1.f
+			};
+			x = { ele };
+		}
+		return z * y * x;
 	}
 
 	Matrix4f() noexcept {

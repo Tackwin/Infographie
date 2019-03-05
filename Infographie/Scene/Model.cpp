@@ -64,7 +64,7 @@ void Model::opengl_render() noexcept {
 
 		if (debug_values["Rotate"].type() == typeid(float)) {
 			rotate = std::any_cast<float>(debug_values["Rotate"]);
-			set_rotation(rotate);
+			set_rotation({ rotate, 0.f, 0.f });
 		}
 		if (debug_values["Light_X"].type() == typeid(float)) {
 			light_pos.x = std::any_cast<float>(debug_values["Light_X"]);
@@ -76,7 +76,10 @@ void Model::opengl_render() noexcept {
 			light_pos.z = std::any_cast<float>(debug_values["Light_Z"]);
 		}
 
-		Matrix4f model = Matrix4f::translation(get_global_position3()) * Matrix4f::rotation(axis, theta);
+		Matrix4f model =
+			Matrix4f::translation(get_global_position3()) *
+			Matrix4f::rotation(rotation3) *
+			Matrix4f::scale(scaling);
 		Matrix4f view = Window_Info.active_camera->get_view_matrix();
 		Matrix4f projection = Window_Info.active_camera->get_projection_matrix();
 
@@ -309,21 +312,6 @@ void Model::set_render_checkbox(bool v) noexcept {
 	boundingbox_child->set_visible(v);
 }
 
-void Model::set_rotation_axis(Vector3f a) noexcept {
-	axis = a;
-	if (boundingbox_child) boundingbox_child->set_rotation_axis(a);
-}
-void Model::set_rotation(float r) noexcept {
-	theta = r;
-	if (boundingbox_child) boundingbox_child->set_rotation(r);
-}
-Vector3f Model::get_rotation_axis() noexcept {
-	return axis;
-}
-float Model::get_rotation() noexcept {
-	return theta;
-}
-
 float Model::get_picking_sphere_radius() const noexcept {
 	return picking_sphere_radius;
 }
@@ -364,3 +352,12 @@ std::optional<Vector3f> Model::is_selected(Vector3f ray_origin, Vector3f ray) co
 	return intersection;
 */}
 
+void Model::set_scaling(Vector3f s) noexcept {
+	scaling = s;
+	if (boundingbox_child) {
+		boundingbox_child->set_scaling(s);
+	}
+}
+Vector3f Model::get_scaling() const noexcept {
+	return scaling;
+}

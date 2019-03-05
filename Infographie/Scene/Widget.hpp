@@ -153,16 +153,19 @@ public:
 	void set_global_position(Vector3f pos) noexcept;
 	void set_origin(Vector3f origin) noexcept;
 	void set_origin_abs(Vector3f origin) noexcept;
+	void set_rotation(Vector3f r) noexcept;
 
 	virtual Vector3f get_size3() const noexcept;
 	Vector3f get_origin3() const noexcept;
 	Vector3f get_global_position3() const noexcept;
 	Vector3f get_position3() const noexcept;
+	Vector3f get_rotation3() const noexcept;
 
 	virtual std::optional<Vector3f> is_selected(Vector3f ray_origin, Vector3f ray) const noexcept;
 protected:
 	Vector3f pos3;
 	Vector3f size3;
 	Vector3f origin3;
+	Vector3f rotation3;
 };
 

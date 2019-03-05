@@ -27,11 +27,6 @@ public:
 	void set_shader(sf::Shader& shader) noexcept;
 	void set_select_shader(sf::Shader& shader) noexcept;
 
-	void set_rotation_axis(Vector3f axis) noexcept;
-	void set_rotation(float r) noexcept;
-	Vector3f get_rotation_axis() noexcept;
-	float get_rotation() noexcept;
-
 	const sf::Texture* get_texture() const noexcept;
 
 	float get_picking_sphere_radius() const noexcept;
@@ -42,11 +37,10 @@ public:
 	virtual std::optional<Vector3f>
 	is_selected(Vector3f ray_origin, Vector3f ray) const noexcept override;
 
+	void set_scaling(Vector3f s) noexcept;
+	Vector3f get_scaling() const noexcept;
+
 private:
-
-	Vector3f axis{ 0, 1, 0 };
-	float theta{ 0 };
-
 	float picking_sphere_radius{ 0.f };
 
 	size_t n;
@@ -71,4 +65,6 @@ private:
 	std::optional<GLuint> normal_buffer_id;
 
 	Model* boundingbox_child{ nullptr };
+
+	Vector3f scaling{ 1, 1, 1 };
 };
