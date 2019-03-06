@@ -19,6 +19,10 @@ Matrix4f* Common::Projection_Matrix{ nullptr };
 
 void Common::check_gl_error() {
 	if (auto err = glGetError(); err != GL_NO_ERROR) {
+		// So that was a nice day ruined...
+		if (!Is_In_Sfml_Context) Log.push(
+			"You are tring to do the next error outside of the opengl thread is that cool ?"
+		);
 		std::string str((const char* const)glewGetErrorString(err));
 		DebugBreak();
 		Log.push(str);

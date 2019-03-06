@@ -45,12 +45,12 @@ private:
 
 	size_t n;
 
-	sf::Shader* shader;
-	sf::Shader* select_shader;
-	const sf::Texture* texture;
+	sf::Shader* shader{ nullptr };
+	sf::Shader* select_shader{ nullptr };
+	const sf::Texture* texture{ nullptr };
 
 	// For complexe object we take a reference from the Assets Manager
-	const Object_File* object_file;
+	const Object_File* object_file{ nullptr };
 
 	// For simple one that we generate ourself (like the bounding box cube)
 	// we use a local copy

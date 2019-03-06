@@ -193,6 +193,7 @@
     <ClCompile Include="OS\windows\SystemConfiguration.cpp" />
     <ClCompile Include="Scene\Camera.cpp" />
     <ClCompile Include="Scene\Canvas.cpp" />
+    <ClCompile Include="Scene\CubeMap.cpp" />
     <ClCompile Include="Scene\Image.cpp" />
     <ClCompile Include="Scene\Model.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
@@ -230,6 +231,7 @@
     <ClInclude Include="OS\SystemConfiguration.hpp" />
     <ClInclude Include="Scene\Camera.hpp" />
     <ClInclude Include="Scene\Canvas.hpp" />
+    <ClInclude Include="Scene\CubeMap.hpp" />
     <ClInclude Include="Scene\Image.hpp" />
     <ClInclude Include="Scene\Model.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />

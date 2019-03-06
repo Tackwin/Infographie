@@ -156,10 +156,6 @@ void Model::opengl_render() noexcept {
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
-
-	glBegin(GL_POINTS);
-	glVertex3f(UNROLL_3(get_global_position3() + (obj_to_use.min + obj_to_use.max) / 2));
-	glEnd();
 }
 
 void Model::set_object(const Object_File& o) noexcept {

@@ -1,8 +1,14 @@
 #pragma once
 
 #include <string>
+#include <functional>
+#include <filesystem>
+#include <shared_mutex>
 
 #include "Math/Vector.hpp"
+
+#include "Utils/UUID.hpp"
+#include "Scene/Widget.hpp"
 
 struct Texture_Settings {
 	static constexpr const char* Tone_String[] = {
@@ -13,6 +19,8 @@ struct Texture_Settings {
 		"Blur",
 		"Count"
 	};
+	std::shared_mutex mutex;
+
 	enum class Tone : int {
 		Identity = 0,
 		BW,
@@ -32,8 +40,13 @@ struct Texture_Settings {
 		Vector3f{.272f, .534f, .131f}
 	};
 
-
 	std::pair<std::string, std::string> get_shader_path() const noexcept;
+
+	std::vector<std::function<void(std::filesystem::path)>> cubemap_added;
+
+	Widget* root{ nullptr };
+	std::vector<Uuid_t> cubemap_ids;
+
 };
 
 extern void update_texture_settings(Texture_Settings& settings) noexcept;

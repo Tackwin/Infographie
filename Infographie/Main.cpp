@@ -13,11 +13,12 @@
 #include "UI/Geometries.hpp"
 #include "UI/Transform.hpp"
 #include "UI/Texture.hpp"
-#include "Scene/Widget.hpp"
-#include "Scene/Camera.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
+#include "Scene/Widget.hpp"
+#include "Scene/Camera.hpp"
 #include "Scene/Canvas.hpp"
+#include "Scene/CubeMap.hpp"
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 #include "Utils/TimeInfo.hpp"
@@ -132,6 +133,7 @@ int main() {
 
 	img_settings.root = &scene_root;
 	geo_settings.root = &scene_root;
+	tex_settings.root = &scene_root;
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
 
@@ -183,6 +185,39 @@ int main() {
 		}
 	);
 
+	tex_settings.cubemap_added.push_back([&](std::filesystem::path path) {
+		if (!std::filesystem::is_directory(path)) return;
+
+		// i know i should stay away from manual memory management
+		// but i don't want to make the render thread wait to load those images
+		// and i'm not sure of the semantics of std::shared/unique_ptr just yet..
+		sf::Image* data = new sf::Image[6];
+		const auto texture_names =
+			{ "right.png", "left.png", "top.png", "bot.png", "front.png", "back.png" };
+
+		size_t i = 0;
+		for (auto& x : texture_names) {
+			if (!std::filesystem::is_regular_file(path / x)) {
+				Log.push(std::string("Missing in the cube map folder: ") + x);
+				return;
+			}
+			if (!data[i].loadFromFile((path / x).generic_string())) return;
+			++i;
+		}
+
+		std::lock_guard guard{ function_from_another_thread_mutex };
+		function_from_another_thread.push_back([&, p = path, d = data] {
+			auto cubemap = new Cube_Map();
+			scene_root.add_child(cubemap, -1);
+
+			tex_settings.cubemap_ids.push_back(cubemap->get_uuid());
+			cubemap->set_name((--p.end())->generic_string());
+			cubemap->set_textures(std::move(d));
+
+			// I hope this will eventually execute
+			delete[] d;
+		});
+	});
 
 	sf::Clock dt_clock;
 	float dt;
@@ -419,6 +454,7 @@ void load_shaders() noexcept {
 		"res/shaders/Edge.fragment"
 	);
 	AM->load_shader("Simple", "res/shaders/simple.vertex", "res/shaders/simple.fragment");
+	AM->load_shader("Skybox", "res/shaders/Skybox.vertex", "res/shaders/Skybox.fragment");
 	AM->load_shader(
 		"Uniform_Glow", "res/shaders/uniform_glow.vertex", "res/shaders/uniform_glow.fragment"
 	);
