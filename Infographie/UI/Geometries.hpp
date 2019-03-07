@@ -15,6 +15,7 @@ struct Geometries_Settings {
 
 	std::vector<std::function<void(const std::filesystem::path&)>> model_added_callback;
 	std::vector<std::function<void(Uuid_t, const std::filesystem::path&)>> texture_added_callback;
+	std::vector<std::function<void(Uuid_t)>> texture_generated_set_callback;
 	std::vector<std::function<void(const Object_File&)>> spawn_object_callback;
 
 	Widget* root{ nullptr };

@@ -182,9 +182,14 @@ int main() {
 			std::lock_guard guard{ function_from_another_thread_mutex };
 			function_from_another_thread.push_back([model_widget, path] {
 				model_widget->set_texture(AM->get_texture(path.generic_string()));
-			});
+				});
 		}
 	);
+	
+	geo_settings.texture_generated_set_callback.push_back([&](Uuid_t id) {
+		auto model_widget = (Model*)scene_root.find_child(id);
+		model_widget->set_texture(tex_settings.gradient_texture);
+	});
 
 	geo_settings.spawn_object_callback.push_back(
 		[&](const Object_File& obj) {

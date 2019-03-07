@@ -1,6 +1,7 @@
 #include "Texture.hpp"
 
 #include "imgui/imgui.h"
+#include "imgui/imgui-SFML.h"
 
 #include "OS/OpenFile.hpp"
 #include "Scene/CubeMap.hpp"
@@ -33,6 +34,11 @@ std::pair<std::string, std::string> Texture_Settings::get_shader_path() const no
 
 
 void update_texture_settings(Texture_Settings& settings) noexcept {
+	if (settings.gradient_image.getSize().x == 0) {
+		settings.gradient_image.create(100, 100);
+		settings.gradient_texture.create(100, 100);
+	}
+
 	if (ImGui::Button("Load Cubemap")) {
 		open_dir_async([&](std::optional<std::filesystem::path> opt_path) {
 			if (!opt_path) return;
@@ -99,4 +105,31 @@ void update_texture_settings(Texture_Settings& settings) noexcept {
 	default:
 		break;
 	}
+
+	ImGui::Separator();
+
+	ImGui::ColorEdit4("Gradient start", &settings.gradient_color_start.x);
+	ImGui::ColorEdit4("Gradient end", &settings.gradient_color_end.x);
+	if (ImGui::Button("Apply")) {
+		for (size_t x = 0; x < settings.gradient_image.getSize().x; ++x) {
+			for (size_t y = 0; y < settings.gradient_image.getSize().y; ++y) {
+				float t = ((x * x) + (y * y)) / Vector2f{
+					(float)settings.gradient_image.getSize().x,
+					(float)settings.gradient_image.getSize().y
+				}.length2();
+
+				auto vec_color = 255 *
+					(settings.gradient_color_start * (1 - t) + t * settings.gradient_color_end);
+				settings.gradient_image.setPixel(x, y, sf::Color{
+					(sf::Uint8)vec_color.x,
+					(sf::Uint8)vec_color.y,
+					(sf::Uint8)vec_color.z,
+					(sf::Uint8)vec_color.w
+				});
+			}
+		}
+		
+		settings.gradient_texture.update(settings.gradient_image.getPixelsPtr());
+	}
+	ImGui::Image(settings.gradient_texture, { 100, 100 });
 }

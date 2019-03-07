@@ -47,6 +47,11 @@ struct Texture_Settings {
 	Widget* root{ nullptr };
 	std::vector<Uuid_t> cubemap_ids;
 
+	Vector4f gradient_color_start{ 0, 0, 0, 0 };
+	Vector4f gradient_color_end{ 255, 255, 255, 255 };
+
+	sf::Texture gradient_texture;
+	sf::Image gradient_image;
 };
 
 extern void update_texture_settings(Texture_Settings& settings) noexcept;

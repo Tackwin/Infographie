@@ -49,7 +49,7 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	if (settings.root) {
 		static std::unordered_map<int, bool> selected_map;
 		for (auto& m : settings.models_widget_id) {
-			ImGui::Columns(5);
+			ImGui::Columns(6);
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
@@ -71,8 +71,16 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 						}
 					});
 				}
+				ImGui::NextColumn();
+				if (ImGui::Button("Set generated texture")) {
+					for (auto& f : settings.texture_generated_set_callback) f(m);
+				}
+				ImGui::NextColumn();
 			}
-			ImGui::NextColumn();
+			else {
+				ImGui::NextColumn();
+				ImGui::NextColumn();
+			}
 			
 			if (ImGui::Button("Bounding box")) {
 				model->set_render_checkbox(!model->does_render_checkbox());
