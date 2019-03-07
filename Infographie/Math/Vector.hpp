@@ -350,6 +350,14 @@ struct Vector : public __vec_member<D, T> {
 		return result;
 	}
 
+	template<size_t Dp = D>
+	std::enable_if_t<Dp == 2, Vector<D, T>> fit_into_preserve_ratio(Vector<D, T> out) noexcept {
+		auto scale = std::min(out.x / this->x, out.y / this->y);
+		auto result = *this;
+		result *= scale;
+		return result;
+	}
+
 	template<typename L>
 	std::enable_if_t<
 		std::is_invocable_r_v<T, L, T>, Vector<D, T>
@@ -740,7 +748,11 @@ namespace std {
 	template<size_t D, typename T>
 	struct hash<Vector<D, T>> {
 		std::size_t operator()(const Vector<D, T>& k) const {
-			return hash_combine_vector(0, k.components, D);
+			auto seed = 0;
+			for (size_t i = 0; i < D; ++i) {
+				seed = xstd::hash_combine(seed, k[i]);
+			}
+			return seed;
 		}
 	};
 }

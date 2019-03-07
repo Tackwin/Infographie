@@ -9,6 +9,7 @@ Image::Image(sf::Texture& texture) noexcept {
 	Total_N++;
 	n = Total_N;
 	sprite.setTexture(texture);
+	image = texture.copyToImage();
 }
 
 void Image::update(float dt) noexcept {
@@ -17,11 +18,14 @@ void Image::update(float dt) noexcept {
 	if (!open) return;
 
 	ImGui::Begin(std::to_string(n).c_str(), &open);
-	set_global_position(ImGui::GetWindowPos());
-	set_size(ImGui::GetWindowSize());
+
 	auto window_size = ImGui::GetWindowSize();
-	auto image_ratio = sprite.getTextureRect().width / sprite.getTextureRect().height;
-	auto image_size = ((Vector2f)window_size).fitDownRatio(image_ratio);
+	auto image_size = Vector2f{
+		(float)sprite.getTextureRect().width,
+		(float)sprite.getTextureRect().height
+	}.fit_into_preserve_ratio({ window_size.x * 0.8f, window_size.y / 2.f });
+
+	auto image_pos = Vector2f{ ImGui::GetCursorPos() } +Vector2f{ ImGui::GetWindowPos() };
 	ImGui::Image(sprite, image_size);
 
 	ImGui::Checkbox("Histogramme", &histogram_open);
@@ -34,8 +38,56 @@ void Image::update(float dt) noexcept {
 	);
 
 	if (histogram_open) update_histogram();
+	update_echantillon();
+
+	ImGui::SetWindowSize({
+		std::max(ImGui::GetWindowSize().x, 100.f),
+		std::max(ImGui::GetWindowSize().y, 100.f)
+	});
 
 	ImGui::End();
+
+	set_position(image_pos);
+	set_size(image_size);
+}
+
+void Image::update_echantillon() noexcept {
+	ImGui::Separator();
+	ImGui::Checkbox("Echantillon", &taking_echantillon);
+
+	echantillon.pos.x = std::min(echantillon.pos.x, get_size().x);
+	echantillon.pos.y = std::min(echantillon.pos.y, get_size().y);
+
+	echantillon.size.x =
+		std::min(echantillon.size.x + echantillon.pos.x, get_size().x) - echantillon.pos.x;
+	echantillon.size.y = 
+		std::min(echantillon.size.y + echantillon.pos.y, get_size().y) - echantillon.pos.y;
+
+	if (taking_echantillon) {
+		ImGui::PushID("Echantillon");
+		defer{ ImGui::PopID(); };
+
+		ImGui::Columns(3);
+		ImGui::PushID("Pos");
+		ImGui::Text("Pos");
+		ImGui::NextColumn();
+		ImGui::DragFloat("##x", &echantillon.pos.x, 1, 0, get_size().x);
+		ImGui::NextColumn();
+		ImGui::DragFloat("##y", &echantillon.pos.y, 1, 0, get_size().y);
+		ImGui::NextColumn();
+		ImGui::PopID();
+
+		ImGui::PushID("Size");
+		ImGui::Text("Size");
+		ImGui::NextColumn();
+		ImGui::DragFloat("##x", &echantillon.size.x, 1, 0, get_size().x - echantillon.size.x);
+		ImGui::NextColumn();
+		ImGui::DragFloat("##y", &echantillon.size.y, 1, 0, get_size().y - echantillon.size.y);
+		ImGui::NextColumn();
+		ImGui::PopID();
+		ImGui::Columns(1);
+	}
+
 }
 
 void Image::update_histogram() noexcept {
@@ -125,13 +177,13 @@ void Image::update_histogram() noexcept {
 }
 
 void Image::Grey_Scale_Histogram::compute(const sf::Texture& texture) noexcept {
-	auto image = texture.copyToImage();
-	auto pixels = image.getPixelsPtr();
+	auto image_data = texture.copyToImage();
+	auto pixels = image_data.getPixelsPtr();
 
 	data[256] = 0;
 	// >TODO see if i really need to do that.
 	for (auto& x : data) x = 0;
-	for (size_t i = 0; i < image.getSize().x * image.getSize().y * 4; i += 4) {
+	for (size_t i = 0; i < image_data.getSize().x * image_data.getSize().y * 4; i += 4) {
 		auto sum = (size_t)((pixels[i + 0] + pixels[i + 1] + pixels[i + 2]) / 3.f);
 		data[sum]++;
 		data[256] = data[256] < data[sum] ? data[sum] : data[256];
@@ -139,18 +191,18 @@ void Image::Grey_Scale_Histogram::compute(const sf::Texture& texture) noexcept {
 }
 
 void Image::RGB_Histogram::compute(const sf::Texture& texture) noexcept {
-	auto image = texture.copyToImage();
-	auto pixels = image.getPixelsPtr();
+	auto image_data = texture.copyToImage();
+	auto pixels = image_data.getPixelsPtr();
 
 	// >TODO see if i really need to do that.
 	for (auto& x : reds) x = 0;
 	for (auto& x : greens) x = 0;
 	for (auto& x : blues) x = 0;
 
-	for (size_t i = 0; i < image.getSize().x * image.getSize().y * 4; i += 4) {
-		reds[(size_t)pixels[i + 0]]++;
-		greens[(size_t)pixels[i + 1]]++;
-		blues[(size_t)pixels[i + 2]]++;
+	for (size_t i = 0; i < image_data.getSize().x * image_data.getSize().y * 4; i += 4) {
+		reds[pixels[i + 0]]++;
+		greens[pixels[i + 1]]++;
+		blues[pixels[i + 2]]++;
 
 		reds[256]	= reds[256]		< reds[pixels[i + 0]]	? reds[pixels[i + 0]]	: reds[256];
 		greens[256]	= greens[256]	< greens[pixels[i + 1]]	? greens[pixels[i + 1]]	: greens[256];
@@ -161,6 +213,8 @@ void Image::RGB_Histogram::compute(const sf::Texture& texture) noexcept {
 void Image::render(sf::RenderTarget& target) noexcept {
 	auto last_view = target.getView();
 	target.setView(target.getDefaultView());
+	defer{ target.setView(last_view); };
+	if (!open) return;
 
 #ifndef NDEBUG
 
@@ -174,7 +228,19 @@ void Image::render(sf::RenderTarget& target) noexcept {
 	target.draw(border);
 #endif
 
-	target.setView(last_view);
+	if (taking_echantillon) {
+		auto echantillon_pos = echantillon.pos + get_global_position();
+		auto echantillon_size = echantillon.size;
+
+		sf::RectangleShape echantillon_border;
+		echantillon_border.setPosition(echantillon_pos);
+		echantillon_border.setSize(echantillon_size);
+		echantillon_border.setOutlineThickness(1);
+		echantillon_border.setOutlineColor(Vector4f{ 1, 0, 0, 1 });
+		echantillon_border.setFillColor(Vector4f{ 0, 0, 0, 0 });
+
+		target.draw(echantillon_border);
+	}
 }
 
 void Image::set_open(bool v) noexcept {
@@ -183,3 +249,29 @@ void Image::set_open(bool v) noexcept {
 size_t Image::get_n() const noexcept {
 	return n;
 }
+
+std::optional<Image::Echantillon_Data> Image::get_echantillon() const noexcept {
+	if (!taking_echantillon) return {};
+	Echantillon_Data d;
+	d.pos.x = (size_t)(image.getSize().x * (echantillon.pos.x / get_size().x));
+	d.pos.y = (size_t)(image.getSize().y * (echantillon.pos.y / get_size().y));
+	d.size.x = (size_t)(image.getSize().x * (echantillon.size.x / get_size().x));
+	d.size.y = (size_t)(image.getSize().y * (echantillon.size.y / get_size().y));
+	d.pixels = &image;
+	return d;
+}
+
+std::optional<sf::Sprite> Image::get_echantillon_sprite() const noexcept {
+	if (!taking_echantillon) return {};
+
+	sf::IntRect rec;
+	rec.left = (int)((echantillon.pos.x / get_size().x) * sprite.getTextureRect().width);
+	rec.top = (int)((echantillon.pos.y / get_size().y) * sprite.getTextureRect().height);
+	rec.width = (int)((echantillon.size.x / get_size().x) * sprite.getTextureRect().width);
+	rec.height = (int)((echantillon.size.x / get_size().y) * sprite.getTextureRect().height);
+
+	sf::Sprite sample = sprite;
+	sample.setTextureRect(rec);
+	return sample;
+}
+

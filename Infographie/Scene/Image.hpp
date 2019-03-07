@@ -1,9 +1,24 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <array>
+#include <optional>
 #include "Widget.hpp"
 
 class Image : public Widget {
+public:
+	struct Echantillon_View {
+		Vector2f size;
+		Vector2f pos;
+	};
+
+	// This is in pixels in contrast to the top one wich is in float pos (meaning that it's range
+	// take into account the scale
+	struct Echantillon_Data {
+		Vector2u pos;
+		Vector2u size;
+		const sf::Image* pixels; // <-- carefull this stuff will live only as far a the image live.
+	};
+
 public:
 	static size_t Total_N;
 
@@ -11,15 +26,19 @@ public:
 
 	void update(float dt) noexcept override;
 	void update_histogram() noexcept;
+	void update_echantillon() noexcept;
 
 	void render(sf::RenderTarget& target) noexcept override;
 
 	void set_open(bool v) noexcept;
 	size_t get_n() const noexcept;
 
+	std::optional<sf::Sprite> get_echantillon_sprite() const noexcept;
+	std::optional<Echantillon_Data> get_echantillon() const noexcept;
+
 private:
 	size_t n;
-	bool open;
+	bool open{ true };
 	bool histogram_open{ false };
 
 	enum Histogram_Type : int {
@@ -44,5 +63,9 @@ private:
 		void compute(const sf::Texture& texture) noexcept;
 	} rgb_scale_histogram;
 
+	bool taking_echantillon{ false };
+	Echantillon_View echantillon;
+
 	sf::Sprite sprite;
+	sf::Image image;
 };

@@ -143,6 +143,17 @@ int main() {
 		img_settings.images_widget_id.push_back(img_widget->get_uuid());
 	});
 
+	img_settings.create_images_callback.push_back([&](const sf::Image& image){
+		static size_t Counter{ 0 };
+		auto& texture = AM->create_texture(std::to_string(Counter++) + "_created_image___");
+		if (!texture.loadFromImage(image)) {
+			Log.push("Proble creating the texture from the sampled image.");
+			return;
+		}
+		auto img_widget = scene_root.make_child<Image>(texture);
+		img_settings.images_widget_id.push_back(img_widget->get_uuid());
+	});
+
 	draw_settings.add_canvas_callback.push_back([&](Vector2u size) {
 		auto canvas_widget = scene_root.make_child<Canvas>(draw_settings);
 		canvas_widget->set_size(size);
@@ -417,6 +428,7 @@ void load_textures() noexcept {
 	AM->load_texture("Drawings_Tool", "res/Drawings_Tool.png");
 	AM->load_texture("DT_Circle", "res/DT_Circle.png");
 	AM->load_texture("DT_Line", "res/DT_Line.png");
+	AM->load_texture("White", "res/White.png");
 	AM->load_texture("DT_Square", "res/DT_Square.png");
 	AM->load_texture("DT_Fill", "res/DT_Fill.png");
 	AM->load_texture("Cube_Icon", "res/cube_icon.png");
@@ -461,11 +473,12 @@ void load_shaders() noexcept {
 }
 
 void update_debug_ui(Widget3&, Camera& camera) noexcept {
-	static float rotation = 0;
-	static float cam_speed = 5;
-	static float cam_fov = 90;
-	static Vector3f light_pos{};
-	static bool use_identity{ false };
+	thread_local float rotation = 0;
+	thread_local float cam_speed = 5;
+	thread_local float cam_fov = 90;
+	thread_local Vector3f light_pos{};
+	thread_local bool use_identity{ false };
+	thread_local bool show_demo_window{ false };
 
 	ImGui::DragFloat("Rotate", &rotation, 0.02f, 0, 2 * PIf);
 	ImGui::DragFloat("Camera speed", &cam_speed, 0.1f, 0, 10);
@@ -496,4 +509,6 @@ void update_debug_ui(Widget3&, Camera& camera) noexcept {
 	debug_values["Use_Identity"] = use_identity;
 
 	if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
+	ImGui::Checkbox("Demo", &show_demo_window);
+	if (show_demo_window) ImGui::ShowDemoWindow();
 }
