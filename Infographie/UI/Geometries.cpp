@@ -11,6 +11,7 @@
 
 #include "Managers/AssetsManager.hpp"
 
+
 void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	std::lock_guard{ settings.mutex };
 	sf::ContextSettings context_settings = Window_Info.window.getSettings();

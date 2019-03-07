@@ -473,7 +473,16 @@ void load_shaders() noexcept {
 	AM->load_shader("Simple", "res/shaders/simple.vertex", "res/shaders/simple.fragment");
 	AM->load_shader("Skybox", "res/shaders/Skybox.vertex", "res/shaders/Skybox.fragment");
 	AM->load_shader(
-		"Uniform_Glow", "res/shaders/uniform_glow.vertex", "res/shaders/uniform_glow.fragment"
+		"Uniform_Glow",
+		"res/shaders/uniform_glow.vertex",
+		"res/shaders/uniform_glow.fragment",
+		"res/shaders/Explode.geometry"
+	);
+	AM->load_shader(
+		"Explode",
+		"res/shaders/uniform_glow.vertex",
+		"res/shaders/uniform_glow.fragment",
+		"res/shaders/Explode.geometry"
 	);
 }
 

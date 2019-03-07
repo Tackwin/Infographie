@@ -36,6 +36,12 @@ public:
 		const std::filesystem::path& vertex,
 		const std::filesystem::path& fragment
 	) noexcept;
+	bool load_shader(
+		const std::string& key,
+		const std::filesystem::path& vertex,
+		const std::filesystem::path& fragment,
+		const std::filesystem::path& geometry
+	) noexcept;
 	sf::Shader& get_shader(const std::string& key) noexcept;
 
 private:

@@ -244,9 +244,58 @@ bool Assets_Manager::load_shader(
 		vertex.generic_string().c_str(),
 		fragment.generic_string().c_str()
 	);
-	auto& ref = shaders[key];
+	auto & ref = shaders[key];
 
 	auto loaded = ref.loadFromFile(vertex.generic_string(), fragment.generic_string());
+	if (!loaded) {
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_RED
+		);
+		printf(" Couldn't load file /!\\\n");
+	}
+	else {
+		stubSetConsoleTextAttribute(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			FOREGROUND_GREEN
+		);
+		printf(" Succes !\n");
+	}
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	return loaded;
+}
+bool Assets_Manager::load_shader(
+	const std::string& key,
+	const std::filesystem::path& vertex,
+	const std::filesystem::path& fragment,
+	const std::filesystem::path& geometry
+) noexcept {
+	if (shaders.find(key) != std::end(shaders))
+		return true;
+
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_BLUE
+	);
+	std::printf("Loading: ");
+	stubSetConsoleTextAttribute(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+	);
+	std::printf(
+		"%s: %s %s",
+		key.c_str(),
+		vertex.generic_string().c_str(),
+		fragment.generic_string().c_str()
+	);
+	auto & ref = shaders[key];
+
+	auto loaded = ref.loadFromFile(
+		vertex.generic_string(), geometry.generic_string(), fragment.generic_string()
+	);
 	if (!loaded) {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE),
