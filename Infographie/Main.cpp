@@ -189,6 +189,7 @@ int main() {
 				}
 				case Enum::Alpha :{
 					model_widget->set_alpha_texture(AM->get_texture(path.generic_string()));
+					break;
 				}
 				}
 
@@ -339,7 +340,6 @@ void render(
 	sf::RenderTarget& target,
 	bool with_imgui
 ) noexcept {
-	//texture_target.clear({ 35, 40, 45, 255 });
 	texture_target.setActive();
 
 	glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
@@ -365,7 +365,7 @@ void render(
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
@@ -443,6 +443,10 @@ void load_textures() noexcept {
 	AM->load_texture("DT_Fill", "res/DT_Fill.png");
 	AM->load_texture("Cube_Icon", "res/cube_icon.png");
 	AM->load_texture("Tetra_Icon", "res/tetraèdre_icon.png");
+	AM->load_texture("PT_Polygon", "res/PT_Polygon.png");
+	AM->load_texture("PT_Arrow", "res/PT_Arrow.png");
+	AM->load_texture("PT_Star", "res/PT_Star.png");
+	AM->load_texture("PT_Heart", "res/PT_Heart.png");
 }
 
 void load_objects() noexcept {
@@ -480,7 +484,8 @@ void load_shaders() noexcept {
 	AM->load_shader(
 		"Uniform_Glow",
 		"res/shaders/uniform_glow.vertex",
-		"res/shaders/uniform_glow.fragment"
+		"res/shaders/uniform_glow.fragment",
+		"res/shaders/Implode.geometry"
 	);
 	AM->load_shader(
 		"Explode",
@@ -491,25 +496,25 @@ void load_shaders() noexcept {
 }
 
 void update_debug_ui(Widget3&, Camera& camera) noexcept {
-	thread_local float cam_speed = 5;
-	thread_local float cam_fov = 90;
-	thread_local bool use_identity{ false };
+	thread_local float Cam_Speed = 15;
+	thread_local float Cam_Fov = 90;
+	thread_local float Cam_Near = 1;
 	thread_local bool show_demo_window{ false };
 
-	ImGui::DragFloat("Camera speed", &cam_speed, 0.1f, 0, 50);
-	ImGui::DragFloat("Camera fov", &cam_fov, 1, 0, 180);
+	ImGui::DragFloat("Camera speed", &Cam_Speed, 0.1f, 0, 50);
+	ImGui::DragFloat("Camera fov", &Cam_Fov, 1, 0, 180);
+	ImGui::DragFloat("Camera near", &Cam_Near, 0.001, 0, 10);
 
 	camera.set_perspective(
-		cam_fov / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+		Cam_Fov / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, Cam_Near
 	);
+	camera.set_speed(Cam_Speed);
 	ImGui::Text("Camera pos; x: %.3f y: %.3f z: %.3f",
 		camera.get_global_position3().x,
 		camera.get_global_position3().y,
 		camera.get_global_position3().z
 	);
 
-	debug_values["Camera_Speed"] = cam_speed;
-	debug_values["Use_Identity"] = use_identity;
 
 	if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
 	ImGui::Checkbox("Demo", &show_demo_window);

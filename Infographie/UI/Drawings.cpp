@@ -12,6 +12,7 @@
 constexpr auto Image_Button_Border = 1;
 
 void update_drawing_tools(Drawing_Settings& settings) noexcept;
+void update_primitive_tools(Drawing_Settings& settings) noexcept;
 
 void update_drawing_settings(Drawing_Settings& settings) noexcept {
 
@@ -23,10 +24,11 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 			f( {(size_t)New_Canvas_Size[0], (size_t)New_Canvas_Size[1] });
 	}
 
+	ImGui::PushItemWidth(300);
 	ImGui::ColorPicker3("Background Color", reinterpret_cast<float*>(&Window_Info.clear_color));
+	ImGui::PopItemWidth();
 
-	auto& pt_t
-		exture = AM->get_texture("Primitives_Tool");
+	auto& pt_texture = AM->get_texture("Primitives_Tool");
 	sf::Vector2f pt_texture_size{ UNROLL_2_P(pt_texture.getSize(), float) };
 	auto& dt_texture = AM->get_texture("Drawings_Tool");
 	sf::Vector2f dt_texture_size{ UNROLL_2_P(dt_texture.getSize(), float) };
@@ -39,6 +41,7 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 	}
 
 	if (settings.drawing_tools_selected) update_drawing_tools(settings);
+	if (settings.primitive_tools_selected) update_primitive_tools(settings);
 
 	if (!settings.root) return;
 
@@ -50,8 +53,8 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 		{
 			ImGui::Text("%u", canvas_widget->get_n());
 			ImGui::NextColumn();
-			if (ImGui::Button("Open")) {
-				canvas_widget->set_visible(true);
+			if (ImGui::Button(canvas_widget->is_visible() ? "Close" : "Open")) {
+				canvas_widget->set_visible(!canvas_widget->is_visible());
 			}
 			ImGui::NextColumn();
 		}
@@ -141,3 +144,112 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 
 }
 
+void update_primitive_tools(Drawing_Settings& settings) noexcept {
+	ImGui::Separator();
+	ImGui::Separator();
+
+	auto& pt_polygon_texture = AM->get_texture("PT_Polygon");
+	sf::Vector2f pt_polygon_texture_size{ UNROLL_2_P(pt_polygon_texture.getSize(), float) };
+	auto& pt_star_texture = AM->get_texture("PT_Star");
+	sf::Vector2f pt_star_texture_size{ UNROLL_2_P(pt_star_texture.getSize(), float) };
+	auto& pt_arrow_texture = AM->get_texture("PT_Arrow");
+	sf::Vector2f pt_arrow_texture_size{ UNROLL_2_P(pt_star_texture.getSize(), float) };
+
+	if (ImGui::ImageButton(pt_polygon_texture, pt_polygon_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Polygon{};
+	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(pt_star_texture, pt_star_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Star{};
+	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(pt_arrow_texture, pt_arrow_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Arrow{};
+	}
+	
+	ImGui::Separator();
+
+	std::visit([](auto&& x) {
+		using T = std::decay_t<decltype(x)>;
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Polygon>) {
+			// I need to do those thread_local/static variables because i like to be restrictive
+			// with my types (uses unsigned where it makes sense etc...)
+			// but imgui interface with only int for instance.
+			thread_local int Faces{ 3 };
+			thread_local int Radius{ 10 };
+			thread_local int Outline_Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+
+			ImGui::DragInt("Number of faces", &Faces, 1, 3, 10);
+			ImGui::DragInt("Radius", &Radius, 1, 5, 20);
+			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Radius);
+			
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+
+			x.n = Faces;
+			x.radius = Radius;
+			x.thick = Outline_Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Star>) {
+			// I need to do those thread_local/static variables because i like to be restrictive
+			// with my types (uses unsigned where it makes sense etc...)
+			// but imgui interface with only int for instance.
+			thread_local int Branches{ 3 };
+			thread_local int Radius{ 10 };
+			thread_local int Outline_Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+
+			ImGui::DragInt("Number of branches", &Branches, 1, 3, 10);
+			ImGui::DragInt("Radius", &Radius, 1, 5, 20);
+			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Radius);
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+
+			x.n = Branches;
+			x.radius = Radius;
+			x.thick = Outline_Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Arrow>) {
+			// I need to do those thread_local/static variables because i like to be restrictive
+			// with my types (uses unsigned where it makes sense etc...)
+			// but imgui interface with only int for instance.
+			// here i do a deg to rad conversion
+			thread_local int Length{ 3 };
+			thread_local float Theta{ 0.f };
+			thread_local int Thickness{ 0 };
+			thread_local int Outline_Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+
+			ImGui::DragInt("Length", &Length, 1, 10, 100);
+			ImGui::DragInt("Thickness", &Thickness, 1, 5, 30);
+			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Thickness);
+			ImGui::DragFloat("Theta", &Theta, 1, 0, 360);
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+
+			x.length = Length;
+			x.thick = Thickness;
+			x.thick = Outline_Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
+			x.theta = Theta;
+		}
+	}, settings.primitive_tool);
+}

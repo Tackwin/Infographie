@@ -1,0 +1,33 @@
+#version 330 core
+layout (triangles) in;
+layout (triangle_strip, max_vertices = 3) out;
+
+in Vertex_Data {
+    vec2 uv;
+} in_data[];
+
+out vec2 UV; 
+
+uniform float time;
+
+vec4 center() {
+	return (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position) / 3;
+}
+
+void main() {
+    vec4 c = center();
+    float sin_time = sin(time * 2);
+    sin_time = sin_time * sin_time;
+    sin_time = 0.5 + 0.4 * sin_time;
+
+    gl_Position = c + (gl_in[0].gl_Position - c) * sin_time;
+    UV = in_data[0].uv;
+    EmitVertex();
+    gl_Position = c + (gl_in[1].gl_Position - c) * sin_time;
+    UV = in_data[1].uv;
+    EmitVertex();
+    gl_Position = c + (gl_in[2].gl_Position - c) * sin_time;
+    UV = in_data[2].uv;
+    EmitVertex();
+    EndPrimitive();
+}  

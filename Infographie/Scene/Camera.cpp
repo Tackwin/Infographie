@@ -20,7 +20,7 @@ Widget3* Camera::get_render_root() const noexcept {
 
 void Camera::update(float dt) noexcept {
 
-	if (debug_values["Rotate"].type() == typeid(float)) {
+	if (debug_values["Camera_Speed"].type() == typeid(float)) {
 		speed = std::any_cast<float>(debug_values["Camera_Speed"]);
 	}
 
@@ -61,10 +61,19 @@ void Camera::update(float dt) noexcept {
 	compute_view();
 
 	if (IM::isMouseJustPressed(sf::Mouse::Right)) {
+		// i don't know why this code is buggy ?? the ray projection is either off or it's
+		// the render ? There seem to be an off by a-factor-error.
+		// When the camera is straight looking and the object is at the center, it's ok
+		// When the camera is straight looking and the object is at an offset, it's not but on
+		//		the same trajectory
+		// and it's the same if the camera is at an angle.
+
+		// so just use the ui to select objects
+
 		Vector3f ray_origin = pos3;
 		Vector3f ray = {
-			(2.0f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.0f,
-			1.0f - (2.0f * IM::getMouseScreenPos().y) / Window_Info.size.y,
+			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
+			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y,
 			1
 		};
 		Vector4f ray_clip = { ray.x, ray.y, -1, 1 };
@@ -160,3 +169,6 @@ void Camera::compute_view() noexcept {
 	view = view * Matrix4f::translation(-1 * get_global_position3());
 }
 
+void Camera::set_speed(float s) noexcept {
+	speed = s;
+}

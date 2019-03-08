@@ -11,12 +11,13 @@
 #include "Scene/Model.hpp"
 
 #include "Managers/AssetsManager.hpp"
+#include "Managers/InputsManager.hpp"
 
 
 void update_geometries_settings(Geometries_Settings& settings) noexcept {
-	std::lock_guard{ settings.mutex };
+	std::lock_guard out_guard{ settings.mutex };
 	sf::ContextSettings context_settings = Window_Info.window.getSettings();
-
+	ImGui::Spacing(); ImGui::SameLine(); ImGui::Spacing(); ImGui::SameLine();
 	if (ImGui::CollapsingHeader("Opengl context")) {
 		ImGui::Text("Major version: %u", Window_Info.window.getSettings().majorVersion);
 		ImGui::Text("Minor version: %u", Window_Info.window.getSettings().minorVersion);
@@ -30,7 +31,7 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 
 	if (ImGui::Button("Load model")) {
 		open_file_async([&](Open_File_Result result) {
-			std::lock_guard{ settings.mutex };
+			std::lock_guard guard{ settings.mutex };
 			if (!result.succeded) return;
 
 			for (auto& f : settings.model_added_callback) {
@@ -52,22 +53,29 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	}
 
 	if (settings.root) {
-		static std::unordered_map<int, bool> selected_map;
+		thread_local std::unordered_map<Model*, bool> selected_map;
 		for (auto& m : settings.models_widget_id) {
 			ImGui::Columns(4);
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
-
-			selected_map[model->get_n()] = model->is_focus();
-			ImGui::Checkbox("X", &selected_map[model->get_n()]);
-			//model->set_focus(selected_map[model->get_n()]);
+			if (IM::isMouseJustPressed(sf::Mouse::Left)) {
+				int d{ 0 };
+				int a = d;
+			}
+			if (ImGui::Checkbox("Is focused", &selected_map[model])) {
+				model->set_focus(selected_map[model]);
+				model->lock_focus(selected_map[model]);
+			}
+			if (model->is_focus() != selected_map[model]) {
+				selected_map[model] = model->is_focus();
+			}
 			ImGui::NextColumn();
 			ImGui::Text("%u", model->get_n());
 			ImGui::NextColumn();
 			if (ImGui::Button("Main Texture")) {
 				open_file_async([&, m](Open_File_Result result) {
-					std::lock_guard{ settings.mutex };
+					std::lock_guard guard{ settings.mutex };
 					if (!result.succeded) return;
 
 					for (auto& f : settings.texture_callback) {
@@ -87,7 +95,7 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 
 			if (ImGui::Button("Alpha Texture")) {
 				open_file_async([&, m](Open_File_Result result) {
-					std::lock_guard{ settings.mutex };
+					std::lock_guard guard{ settings.mutex };
 					if (!result.succeded) return;
 
 					for (auto& f : settings.texture_callback) {

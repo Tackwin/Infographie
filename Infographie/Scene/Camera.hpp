@@ -13,6 +13,8 @@ public:
 
 	void update(float dt) noexcept override;
 
+	void set_speed(float speed) noexcept;
+
 	void set_viewport(Rectangle2u rec) noexcept;
 	void set_gl_view() noexcept;
 
@@ -31,6 +33,6 @@ private:
 	Matrix4f projection;
 	Rectangle2u viewport;
 	Vector3f look_dir{ 0, 0, 1 };
-	float speed = 5.f;
+	float speed{ 15 };
 };
 

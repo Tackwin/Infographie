@@ -7,7 +7,7 @@
 #include <Windows.h>
 
 std::optional<Object_File> Object_File::load_file(const std::filesystem::path& path) noexcept {
-	assert(std::filesystem::is_regular_file(path));
+	if (!std::filesystem::is_regular_file(path)) return std::nullopt;
 	constexpr auto Line_Comment_Char = '#';
 	constexpr auto Mtllib = std::array<char, 7>{ "mtllib" };
 	constexpr auto Usemtl = std::array<char, 7>{ "usemtl" };

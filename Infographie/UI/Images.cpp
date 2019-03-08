@@ -124,7 +124,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 
 			auto clicked = ImGui::ImageButton(
 				sprite,
-				{ Unit_Sample_Size, Unit_Sample_Size },
+				{ (float)Unit_Sample_Size, (float)Unit_Sample_Size },
 				-1,
 				sf::Color::Transparent,
 				sprite.getColor()

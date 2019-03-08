@@ -317,23 +317,155 @@ struct Matrix4f {
 	}
 
 	std::optional<Matrix4f> invert() const noexcept {
+		Matrix4f result;
+		float inv[16], det;
+		int i;
+
+		float* result_ptr = &result[{0, 0}];
+		const float* m = &rows[0].x;
+
+		inv[0] = m[5] * m[10] * m[15] -
+			m[5] * m[11] * m[14] -
+			m[9] * m[6] * m[15] +
+			m[9] * m[7] * m[14] +
+			m[13] * m[6] * m[11] -
+			m[13] * m[7] * m[10];
+
+		inv[4] = -m[4] * m[10] * m[15] +
+			m[4] * m[11] * m[14] +
+			m[8] * m[6] * m[15] -
+			m[8] * m[7] * m[14] -
+			m[12] * m[6] * m[11] +
+			m[12] * m[7] * m[10];
+
+		inv[8] = m[4] * m[9] * m[15] -
+			m[4] * m[11] * m[13] -
+			m[8] * m[5] * m[15] +
+			m[8] * m[7] * m[13] +
+			m[12] * m[5] * m[11] -
+			m[12] * m[7] * m[9];
+
+		inv[12] = -m[4] * m[9] * m[14] +
+			m[4] * m[10] * m[13] +
+			m[8] * m[5] * m[14] -
+			m[8] * m[6] * m[13] -
+			m[12] * m[5] * m[10] +
+			m[12] * m[6] * m[9];
+
+		inv[1] = -m[1] * m[10] * m[15] +
+			m[1] * m[11] * m[14] +
+			m[9] * m[2] * m[15] -
+			m[9] * m[3] * m[14] -
+			m[13] * m[2] * m[11] +
+			m[13] * m[3] * m[10];
+
+		inv[5] = m[0] * m[10] * m[15] -
+			m[0] * m[11] * m[14] -
+			m[8] * m[2] * m[15] +
+			m[8] * m[3] * m[14] +
+			m[12] * m[2] * m[11] -
+			m[12] * m[3] * m[10];
+
+		inv[9] = -m[0] * m[9] * m[15] +
+			m[0] * m[11] * m[13] +
+			m[8] * m[1] * m[15] -
+			m[8] * m[3] * m[13] -
+			m[12] * m[1] * m[11] +
+			m[12] * m[3] * m[9];
+
+		inv[13] = m[0] * m[9] * m[14] -
+			m[0] * m[10] * m[13] -
+			m[8] * m[1] * m[14] +
+			m[8] * m[2] * m[13] +
+			m[12] * m[1] * m[10] -
+			m[12] * m[2] * m[9];
+
+		inv[2] = m[1] * m[6] * m[15] -
+			m[1] * m[7] * m[14] -
+			m[5] * m[2] * m[15] +
+			m[5] * m[3] * m[14] +
+			m[13] * m[2] * m[7] -
+			m[13] * m[3] * m[6];
+
+		inv[6] = -m[0] * m[6] * m[15] +
+			m[0] * m[7] * m[14] +
+			m[4] * m[2] * m[15] -
+			m[4] * m[3] * m[14] -
+			m[12] * m[2] * m[7] +
+			m[12] * m[3] * m[6];
+
+		inv[10] = m[0] * m[5] * m[15] -
+			m[0] * m[7] * m[13] -
+			m[4] * m[1] * m[15] +
+			m[4] * m[3] * m[13] +
+			m[12] * m[1] * m[7] -
+			m[12] * m[3] * m[5];
+
+		inv[14] = -m[0] * m[5] * m[14] +
+			m[0] * m[6] * m[13] +
+			m[4] * m[1] * m[14] -
+			m[4] * m[2] * m[13] -
+			m[12] * m[1] * m[6] +
+			m[12] * m[2] * m[5];
+
+		inv[3] = -m[1] * m[6] * m[11] +
+			m[1] * m[7] * m[10] +
+			m[5] * m[2] * m[11] -
+			m[5] * m[3] * m[10] -
+			m[9] * m[2] * m[7] +
+			m[9] * m[3] * m[6];
+
+		inv[7] = m[0] * m[6] * m[11] -
+			m[0] * m[7] * m[10] -
+			m[4] * m[2] * m[11] +
+			m[4] * m[3] * m[10] +
+			m[8] * m[2] * m[7] -
+			m[8] * m[3] * m[6];
+
+		inv[11] = -m[0] * m[5] * m[11] +
+			m[0] * m[7] * m[9] +
+			m[4] * m[1] * m[11] -
+			m[4] * m[3] * m[9] -
+			m[8] * m[1] * m[7] +
+			m[8] * m[3] * m[5];
+
+		inv[15] = m[0] * m[5] * m[10] -
+			m[0] * m[6] * m[9] -
+			m[4] * m[1] * m[10] +
+			m[4] * m[2] * m[9] +
+			m[8] * m[1] * m[6] -
+			m[8] * m[2] * m[5];
+
+		det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+		if (det == 0)
+			return std::nullopt;
+
+		det = 1.f / det;
+
+		for (i = 0; i < 16; i++)
+			result_ptr[i] = inv[i] * det;
+
+		return result;
+
+		/*
 		auto get_cofactor = [](Matrix4f& A, size_t p, size_t q, size_t n) {
 			Matrix4f result;
 			size_t i = 0, j = 0;
 
-			// Looping for each element of the matrix 
+			// Looping for each element of the matrix
 			for (size_t row = 0; row < n; row++)
 			{
 				for (size_t col = 0; col < n; col++)
 				{
-					//  Copying into temporary matrix only those element 
-					//  which are not in given row and column 
+					//  Copying into temporary matrix only those element
+					//  which are not in given row and column
 					if (row != p && col != q)
 					{
 						result[i][j++] = A[row][col];
 
-						// Row is filled, so increase row index and 
-						// reset col index 
+						// Row is filled, so increase row index and
+						// reset col index
 						if (j + 1 == n)
 						{
 							j = 0;
@@ -347,23 +479,23 @@ struct Matrix4f {
 
 		std::function<float(Matrix4f, size_t)> determinant;
 		determinant = [&](Matrix4f A, size_t n) {
-			float D = 0; // Initialize result 
+			float D = 0; // Initialize result
 
-			//  Base case : if matrix contains single element 
+			//  Base case : if matrix contains single element
 			if (n == 1)
 				return A[0][0];
 
-			Matrix4f temp; // To store cofactors 
+			Matrix4f temp; // To store cofactors
 
-			int sign = 1;  // To store sign multiplier 
+			int sign = 1;  // To store sign multiplier
 
-				// Iterate for each element of first row 
+				// Iterate for each element of first row
 			for (size_t f = 0; f < n; f++) {
-				// Getting Cofactor of A[0][f] 
+				// Getting Cofactor of A[0][f]
 				temp = get_cofactor(A, 0, f, n);
 				D += sign * A[0][f] * determinant(temp, n - 1);
 
-				// terms are to be added with alternate sign 
+				// terms are to be added with alternate sign
 				sign = -sign;
 			}
 
@@ -371,43 +503,43 @@ struct Matrix4f {
 		};
 
 		auto adjoint = [&](Matrix4f A) {
-			// temp is used to store cofactors of A[][] 
+			// temp is used to store cofactors of A[][]
 			int sign = 1;
 			Matrix4f temp;
 			Matrix4f adj;
 
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++) {
-					// Get cofactor of A[i][j] 
+					// Get cofactor of A[i][j]
 					temp = get_cofactor(A, i, j, 4);
 
-					// sign of adj[j][i] positive if sum of row 
-					// and column indexes is even. 
+					// sign of adj[j][i] positive if sum of row
+					// and column indexes is even.
 					sign = ((i + j) % 2 == 0) ? 1 : -1;
 
-					// Interchanging rows and columns to get the 
-					// transpose of the cofactor matrix 
+					// Interchanging rows and columns to get the
+					// transpose of the cofactor matrix
 					adj[j][i] = (sign)*(determinant(temp, 4 - 1));
 				}
 			}
 			return adj;
 		};
 
-		// Find determinant of A[][] 
+		// Find determinant of A[][]
 		auto det = determinant(*this, 4);
 		if (det == 0) return std::nullopt;
 
-		// Find adjoint 
+		// Find adjoint
 		auto adj = adjoint(*this);
 		Matrix4f inverse;
 
-		// Find Inverse using formula "inverse(A) = adj(A)/det(A)" 
+		// Find Inverse using formula "inverse(A) = adj(A)/det(A)"
 		for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 4; j++)
 				inverse[i][j] = adj[i][j] / det;
 
 		return inverse;
+		*/
 	}
-
 };
 

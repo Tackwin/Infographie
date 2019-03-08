@@ -316,9 +316,8 @@ void Model::set_size(Vector3f s) noexcept {
 std::optional<Vector3f> Model::is_selected(Vector3f ray_origin, Vector3f ray) const noexcept {
 	Widget3::is_selected(ray_origin, ray);
 	if (!is_visible()) return std::nullopt;
-	auto& o = (object_file ? *object_file : object_file_copy);
 
-	auto sphere_center = get_global_position3() + (o.min + o.max) / 2;
+	auto sphere_center = get_global_position3();
 	return Vector3f::ray_intersect_sphere(sphere_center, picking_sphere_radius, ray_origin, ray);
 /*	std::optional<Vector3f> intersection;
 
