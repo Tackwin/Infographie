@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include "Geometries.hpp"
 
 #include "imgui/imgui.h"
@@ -22,6 +23,9 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 		ImGui::Text("Antialiasing level: %u", Window_Info.window.getSettings().antialiasingLevel);
 		ImGui::Text("Depth bits: %u", Window_Info.window.getSettings().depthBits);
 		ImGui::Text("Stencil bits: %u", Window_Info.window.getSettings().stencilBits);
+		int max_texture{ 0 };
+		glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture);
+		ImGui::Text("Max active texture: %u", max_texture);
 	}
 
 	if (ImGui::Button("Load model")) {
@@ -50,7 +54,7 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	if (settings.root) {
 		static std::unordered_map<int, bool> selected_map;
 		for (auto& m : settings.models_widget_id) {
-			ImGui::Columns(6);
+			ImGui::Columns(4);
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
@@ -61,29 +65,39 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			ImGui::NextColumn();
 			ImGui::Text("%u", model->get_n());
 			ImGui::NextColumn();
-			if (!model->get_texture()) {
-				if (ImGui::Button("Add texture")) {
-					open_file_async([&, m](Open_File_Result result) {
-						std::lock_guard{ settings.mutex };
-						if (!result.succeded) return;
+			if (ImGui::Button("Main Texture")) {
+				open_file_async([&, m](Open_File_Result result) {
+					std::lock_guard{ settings.mutex };
+					if (!result.succeded) return;
 
-						for (auto& f : settings.texture_added_callback) {
-							f(m, result.filepath);
-						}
-					});
-				}
-				ImGui::NextColumn();
-				if (ImGui::Button("Set generated texture")) {
-					for (auto& f : settings.texture_generated_set_callback) f(m);
-				}
-				ImGui::NextColumn();
+					for (auto& f : settings.texture_callback) {
+						f(m, result.filepath, Geometries_Settings::Texture_Type::Normal);
+					}
+				});
 			}
-			else {
-				ImGui::NextColumn();
-				ImGui::NextColumn();
+			ImGui::NextColumn();
+			if (ImGui::Button("Gradient Texture")) {
+				for (auto& f : settings.texture_generated_set_callback) f(m);
 			}
-			
-			if (ImGui::Button("Bounding box")) {
+			ImGui::NextColumn();
+
+			// We went over the line (that is 4 columns wide)
+			// We skip the first column of the new line to align with the last.
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Alpha Texture")) {
+				open_file_async([&, m](Open_File_Result result) {
+					std::lock_guard{ settings.mutex };
+					if (!result.succeded) return;
+
+					for (auto& f : settings.texture_callback) {
+						f(m, result.filepath, Geometries_Settings::Texture_Type::Alpha);
+					}
+				});
+			}
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Box")) {
 				model->set_render_checkbox(!model->does_render_checkbox());
 			}
 

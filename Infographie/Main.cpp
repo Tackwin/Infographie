@@ -93,7 +93,7 @@ int main() {
 	glewExperimental = true; // Needed for core profile
 	if (glewInit() != GLEW_OK) {
 		fprintf(stderr, "Failed to initialize GLEW\n");
-		getchar();
+		(void)getchar();
 		return -1;
 	}
 
@@ -174,15 +174,25 @@ int main() {
 		});
 	});
 
-	geo_settings.texture_added_callback.push_back(
-		[&](Uuid_t id, const std::filesystem::path& path) {
+	geo_settings.texture_callback.push_back(
+		[&](Uuid_t id, std::filesystem::path path, Geometries_Settings::Texture_Type type) {
 			if (!AM->load_texture(path.generic_string(), path)) return;
 			auto model_widget = (Model*)scene_root.find_child(id);
 
 			std::lock_guard guard{ function_from_another_thread_mutex };
-			function_from_another_thread.push_back([model_widget, path] {
-				model_widget->set_texture(AM->get_texture(path.generic_string()));
-				});
+			function_from_another_thread.push_back([model_widget, path, type] {
+				using Enum = Geometries_Settings::Texture_Type;
+				switch (type) {
+				case Enum::Normal :{
+					model_widget->set_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
+				case Enum::Alpha :{
+					model_widget->set_alpha_texture(AM->get_texture(path.generic_string()));
+				}
+				}
+
+			});
 		}
 	);
 	
@@ -255,7 +265,7 @@ int main() {
 		);
 
 		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
-		glClearDepth(0.0);
+		glClearDepth(1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 
 		{
@@ -265,7 +275,6 @@ int main() {
 			}
 			function_from_another_thread.clear();
 		}
-
 
 		render(scene_root, camera, tex_settings, texture_target, Window_Info.window);
 
@@ -334,7 +343,7 @@ void render(
 	texture_target.setActive();
 
 	glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
-	glClearDepth(0.0);
+	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 	Window_Info.active_camera = &camera;
 	root.propagate_opengl_render();
@@ -356,15 +365,11 @@ void render(
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
-
-		glFrontFace(GL_CW);
-		//glCullFace(GL_FRONT);
-		glDepthFunc(GL_GREATER);
+		glDepthFunc(GL_LESS);
 		target.setActive(false);
 	};
 
@@ -475,8 +480,7 @@ void load_shaders() noexcept {
 	AM->load_shader(
 		"Uniform_Glow",
 		"res/shaders/uniform_glow.vertex",
-		"res/shaders/uniform_glow.fragment",
-		"res/shaders/Explode.geometry"
+		"res/shaders/uniform_glow.fragment"
 	);
 	AM->load_shader(
 		"Explode",
@@ -487,38 +491,23 @@ void load_shaders() noexcept {
 }
 
 void update_debug_ui(Widget3&, Camera& camera) noexcept {
-	thread_local float rotation = 0;
 	thread_local float cam_speed = 5;
 	thread_local float cam_fov = 90;
-	thread_local Vector3f light_pos{};
 	thread_local bool use_identity{ false };
 	thread_local bool show_demo_window{ false };
 
-	ImGui::DragFloat("Rotate", &rotation, 0.02f, 0, 2 * PIf);
-	ImGui::DragFloat("Camera speed", &cam_speed, 0.1f, 0, 10);
+	ImGui::DragFloat("Camera speed", &cam_speed, 0.1f, 0, 50);
 	ImGui::DragFloat("Camera fov", &cam_fov, 1, 0, 180);
-	ImGui::Checkbox("Use Identity", &use_identity);
 
 	camera.set_perspective(
 		cam_fov / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
 	);
-
-	ImGui::Columns(3);
-	ImGui::DragFloat("Light X", &light_pos.x, 0.02f, -2, 2); ImGui::NextColumn();
-	ImGui::DragFloat("Light Y", &light_pos.y, 0.02f, -2, 2); ImGui::NextColumn();
-	ImGui::DragFloat("Light Z", &light_pos.z, 0.02f, -2, 2);
-
-	ImGui::Columns(1);
-	ImGui::Text("x: %.3f y: %.3f z: %.3f",
+	ImGui::Text("Camera pos; x: %.3f y: %.3f z: %.3f",
 		camera.get_global_position3().x,
 		camera.get_global_position3().y,
 		camera.get_global_position3().z
 	);
 
-	debug_values["Rotate"] = rotation;
-	debug_values["Light_X"] = light_pos.x;
-	debug_values["Light_Y"] = light_pos.y;
-	debug_values["Light_Z"] = light_pos.z;
 	debug_values["Camera_Speed"] = cam_speed;
 	debug_values["Use_Identity"] = use_identity;
 

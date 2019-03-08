@@ -52,8 +52,8 @@ struct Matrix4f {
 		Matrix4f matrix;
 		matrix[0] = Vector4f{ uw, 0, 0, 0 };
 		matrix[1] = Vector4f{ 0, uh, 0, 0 };
-		matrix[2] = Vector4f{ 0, 0, f / (f - n), 1 };
-		matrix[3] = Vector4f{ 0, 0, - f * n / (f - n), 0};
+		matrix[2] = Vector4f{ 0, 0, (f + n) / (n - f), -1 };
+		matrix[3] = Vector4f{ 0, 0, 2 * (f * n) / (n - f), 0};
 		return matrix;
 	}
 

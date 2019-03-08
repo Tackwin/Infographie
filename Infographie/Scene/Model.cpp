@@ -59,58 +59,42 @@ void Model::opengl_render() noexcept {
 		auto s = shader;
 		if (is_focus() && select_shader) s = select_shader;
 
-		float rotate = 0.f;
-		Vector3f light_pos;
-
-		if (debug_values["Rotate"].type() == typeid(float)) {
-			rotate = std::any_cast<float>(debug_values["Rotate"]);
-			set_rotation({ rotate, 0.f, 0.f });
-		}
-		if (debug_values["Light_X"].type() == typeid(float)) {
-			light_pos.x = std::any_cast<float>(debug_values["Light_X"]);
-		}
-		if (debug_values["Light_Y"].type() == typeid(float)) {
-			light_pos.y = std::any_cast<float>(debug_values["Light_Y"]);
-		}
-		if (debug_values["Light_Z"].type() == typeid(float)) {
-			light_pos.z = std::any_cast<float>(debug_values["Light_Z"]);
-		}
-
 		Matrix4f model =
 			Matrix4f::translation(get_global_position3()) *
 			Matrix4f::rotation(rotation3) *
 			Matrix4f::scale(scaling);
 		Matrix4f view = Window_Info.active_camera->get_view_matrix();
-		Matrix4f projection = Window_Info.active_camera->get_projection_matrix();
+		Matrix4f proj = Window_Info.active_camera->get_projection_matrix();
+		auto handle = s->getNativeHandle();
 
-		glUseProgram(s->getNativeHandle());
-
-		auto uni = glGetUniformLocation(s->getNativeHandle(), "model");
-		glUniformMatrix4fv(uni, 1, GL_FALSE, &model[0][0]);
-		uni = glGetUniformLocation(s->getNativeHandle(), "view");
-		glUniformMatrix4fv(uni, 1, GL_FALSE, &(view)[0][0]);
-		uni = glGetUniformLocation(s->getNativeHandle(), "projection");
-		glUniformMatrix4fv(uni, 1, GL_FALSE, &(projection)[0][0]);
-		uni = glGetUniformLocation(s->getNativeHandle(), "light_pos");
-		glUniform3f(uni, UNROLL_3(light_pos));
+		glUseProgram(handle);
+		glUniformMatrix4fv(glGetUniformLocation(handle, "model"), 1, GL_FALSE, (float*)&model);
+		glUniformMatrix4fv(glGetUniformLocation(handle, "view"), 1, GL_FALSE, (float*)&view);
+		glUniformMatrix4fv(glGetUniformLocation(handle, "projection"), 1, GL_FALSE, (float*)&proj);
+		glUniform1i(glGetUniformLocation(handle, "texture_main"), 0);
+		glUniform1i(glGetUniformLocation(handle, "texture_alpha"), 1);
+		glUniform1i(glGetUniformLocation(handle, "use_alpha"), 0);
+		glUniform1f(glGetUniformLocation(handle, "alpha_tolerance"), Alpha_Tolerance);
 
 		if (s == select_shader) {
-			uni = glGetUniformLocation(s->getNativeHandle(), "time");
 			float a = (get_milliseconds_epoch() % 500000) / 1000.f;
-			glUniform1f(uni, a);
-			check_gl_error();
+			glUniform1f(glGetUniformLocation(handle, "time"), a);
+		}
+		if (texture) {
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture->getNativeHandle());
+		}
+		if (alpha_texture) {
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, alpha_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_alpha"), 1);
 		}
 	}
-	defer{ if (shader) glUseProgram(0); };
-	if (texture) {
-		// Bind our texture in Texture Unit 0
+	defer{
+		if (shader) glUseProgram(0);
+		if (texture) glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture->getNativeHandle());
-		// Set our "myTextureSampler" sampler to use Texture Unit 0
-		if (shader)
-			glUniform1i(glGetUniformLocation(shader->getNativeHandle(), "my_texture"), 0);
-	}
-	defer{ if (texture) glBindTexture(GL_TEXTURE_2D, 0); };
+	};
 
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
@@ -156,6 +140,7 @@ void Model::opengl_render() noexcept {
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	check_gl_error();
 }
 
 void Model::set_object(const Object_File& o) noexcept {
@@ -283,6 +268,10 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 void Model::set_texture(const sf::Texture& t) noexcept {
 	texture = &t;
 }
+void Model::set_alpha_texture(const sf::Texture& t) noexcept {
+	alpha_texture = &t;
+}
+
 
 void Model::set_shader(sf::Shader& s) noexcept {
 	shader = &s;

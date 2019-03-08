@@ -24,6 +24,7 @@ public:
 	void set_object(const Object_File& object_file) noexcept;
 	void set_object_copy(const Object_File& object_file) noexcept;
 	void set_texture(const sf::Texture& texture) noexcept;
+	void set_alpha_texture(const sf::Texture& texture) noexcept;
 	void set_shader(sf::Shader& shader) noexcept;
 	void set_select_shader(sf::Shader& shader) noexcept;
 
@@ -48,6 +49,7 @@ private:
 	sf::Shader* shader{ nullptr };
 	sf::Shader* select_shader{ nullptr };
 	const sf::Texture* texture{ nullptr };
+	const sf::Texture* alpha_texture{ nullptr };
 
 	// For complexe object we take a reference from the Assets Manager
 	const Object_File* object_file{ nullptr };

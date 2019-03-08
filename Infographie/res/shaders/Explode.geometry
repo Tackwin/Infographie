@@ -8,13 +8,12 @@ in VS_OUT {
 
 out vec2 TexCoords; 
 
-uniform float time;,
-		"res/shaders/Explode.geometry"
+uniform float time;
 
 vec4 explode(vec4 position, vec3 normal) {
     float sin_time = sin(time);
     sin_time = sin_time * sin_time;
-    float magnitude = 2.0;
+    float magnitude = 0.5;
 
     vec3 direction = normal * sin_time * magnitude; 
     return position + vec4(direction, 0.0);

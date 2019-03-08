@@ -83,6 +83,7 @@ void update_texture_settings(Texture_Settings& settings) noexcept {
 	);
 
 	ImGui::Separator();
+	ImGui::DragFloat("Alpha tolerance", &Alpha_Tolerance, 0.01f, 0, 1);
 
 	switch (settings.current_tone)
 	{
@@ -132,4 +133,5 @@ void update_texture_settings(Texture_Settings& settings) noexcept {
 		settings.gradient_texture.update(settings.gradient_image.getPixelsPtr());
 	}
 	ImGui::Image(settings.gradient_texture, { 100, 100 });
+	ImGui::Separator();
 }

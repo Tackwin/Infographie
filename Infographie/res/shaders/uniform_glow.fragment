@@ -4,32 +4,50 @@
 in vec2 UV;
 
 // Values that stay constant for the whole mesh.
-uniform sampler2D myTextureSampler;
+uniform sampler2D texture_main;
+uniform sampler2D texture_alpha;
+
 uniform float time;
 
+uniform int use_alpha;
+uniform float alpha_tolerance;
+
 out vec4 frag_color;
-float near = 0.1; 
-float far  = 5.0; 
+float near = 0.1;
+float far  = 5.0;
   
-float LinearizeDepth(float depth) 
-{
+float LinearizeDepth(float depth)  {
     float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
+    return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-void main()
-{             
-    float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
-
+void main() {             
     float sin_time = sin(time);
     sin_time = sin_time * sin_time;
     sin_time = 0.1 + sin_time * 0.9;
+    vec4 final_sample;
 
-	// Output color = color of the texture at the specified UV
-	frag_color = texture( myTextureSampler, UV );
+    vec4 alpha_sample = texture(texture_alpha, UV);
+    vec4 main_sample = texture(texture_main, UV);
+
+    float avg = (alpha_sample.r + alpha_sample.g + alpha_sample.b) * 0.3;
+    if (use_alpha == 1 && avg <= alpha_tolerance) discard;
+    
+    final_sample.r = main_sample.r;
+    final_sample.g = main_sample.g;
+    final_sample.b = main_sample.b;
+    if (use_alpha == 1) {
+        final_sample.a = avg;
+    }
+    else {
+        final_sample.a = main_sample.a;
+    }
+
+    frag_color = final_sample;
 	frag_color.rgb = clamp((frag_color.rgb + vec3(0.1)) * sin_time * 2, vec3(0), vec3(1));
 
-	//frag_color = vec4(0, 1, 1, 1);
-
-	//frag_color = vec4(vec3(depth), 1);
+    
+    // float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
+    // frag_color = vec4(vec3(depth), 1);
+    // ^-- Debug
 }

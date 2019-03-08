@@ -15,7 +15,11 @@ Cube_Map::Cube_Map() noexcept : Widget3() {
 
 void Cube_Map::opengl_render() noexcept {
 	glDepthMask(GL_FALSE);
-	defer{ glDepthMask(GL_TRUE); };
+	glDisable(GL_CULL_FACE);
+	defer{
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+	};
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 
 	// we short circuit the normal cycle of render because a skybox doesn't have a position

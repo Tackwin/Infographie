@@ -33,6 +33,7 @@ struct Texture_Settings {
 	float bw_leakage{ 0.f };
 	float edge_threshold{ 0.5f };
 	float blur_radius{ 0.01f };
+
 	// i know, should be a matrix, but i don't want to templatize my Matrix4f just for that
 	Vector3<Vector3f> sepia_weights{
 		Vector3f{.393f, .769f, .189f},
@@ -48,7 +49,7 @@ struct Texture_Settings {
 	std::vector<Uuid_t> cubemap_ids;
 
 	Vector4f gradient_color_start{ 0, 0, 0, 0 };
-	Vector4f gradient_color_end{ 255, 255, 255, 255 };
+	Vector4f gradient_color_end{ 1, 1, 1, 1 };
 
 	sf::Texture gradient_texture;
 	sf::Image gradient_image;

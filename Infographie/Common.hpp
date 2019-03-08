@@ -131,6 +131,8 @@ namespace Common {
 	extern bool Is_In_Sfml_Context;
 	extern Matrix4f* View_Matrix;
 	extern Matrix4f* Projection_Matrix;
+
+	extern float Alpha_Tolerance;
 }
 using namespace Common;
 
