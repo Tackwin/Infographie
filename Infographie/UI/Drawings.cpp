@@ -25,7 +25,8 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 
 	ImGui::ColorPicker3("Background Color", reinterpret_cast<float*>(&Window_Info.clear_color));
 
-	auto& pt_texture = AM->get_texture("Primitives_Tool");
+	auto& pt_t
+		exture = AM->get_texture("Primitives_Tool");
 	sf::Vector2f pt_texture_size{ UNROLL_2_P(pt_texture.getSize(), float) };
 	auto& dt_texture = AM->get_texture("Drawings_Tool");
 	sf::Vector2f dt_texture_size{ UNROLL_2_P(dt_texture.getSize(), float) };
