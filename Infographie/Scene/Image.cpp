@@ -55,34 +55,20 @@ void Image::update_echantillon() noexcept {
 	ImGui::Separator();
 	ImGui::Checkbox("Echantillon", &taking_echantillon);
 
-	echantillon.pos.x = std::min(echantillon.pos.x, get_size().x);
-	echantillon.pos.y = std::min(echantillon.pos.y, get_size().y);
-
-	echantillon.size.x =
-		std::min(echantillon.size.x + echantillon.pos.x, get_size().x) - echantillon.pos.x;
-	echantillon.size.y = 
-		std::min(echantillon.size.y + echantillon.pos.y, get_size().y) - echantillon.pos.y;
-
 	if (taking_echantillon) {
 		ImGui::PushID("Echantillon");
 		defer{ ImGui::PopID(); };
+
+		auto max_x = get_size().x * (1 - 30.f / sprite.getTextureRect().width);
+		auto max_y = get_size().y * (1 - 30.f / sprite.getTextureRect().height);
 
 		ImGui::Columns(3);
 		ImGui::PushID("Pos");
 		ImGui::Text("Pos");
 		ImGui::NextColumn();
-		ImGui::DragFloat("##x", &echantillon.pos.x, 1, 0, get_size().x);
+		ImGui::DragFloat("##x", &echantillon.pos.x, 1, 0, max_x);
 		ImGui::NextColumn();
-		ImGui::DragFloat("##y", &echantillon.pos.y, 1, 0, get_size().y);
-		ImGui::NextColumn();
-		ImGui::PopID();
-
-		ImGui::PushID("Size");
-		ImGui::Text("Size");
-		ImGui::NextColumn();
-		ImGui::DragFloat("##x", &echantillon.size.x, 1, 0, get_size().x - echantillon.size.x);
-		ImGui::NextColumn();
-		ImGui::DragFloat("##y", &echantillon.size.y, 1, 0, get_size().y - echantillon.size.y);
+		ImGui::DragFloat("##y", &echantillon.pos.y, 1, 0, max_y);
 		ImGui::NextColumn();
 		ImGui::PopID();
 		ImGui::Columns(1);
@@ -230,7 +216,10 @@ void Image::render(sf::RenderTarget& target) noexcept {
 
 	if (taking_echantillon) {
 		auto echantillon_pos = echantillon.pos + get_global_position();
-		auto echantillon_size = echantillon.size;
+		Vector2f echantillon_size = {
+			get_size().x * (30.f / sprite.getTextureRect().width),
+			get_size().y * (30.f / sprite.getTextureRect().height)
+		};
 
 		sf::RectangleShape echantillon_border;
 		echantillon_border.setPosition(echantillon_pos);
@@ -255,8 +244,6 @@ std::optional<Image::Echantillon_Data> Image::get_echantillon() const noexcept {
 	Echantillon_Data d;
 	d.pos.x = (size_t)(image.getSize().x * (echantillon.pos.x / get_size().x));
 	d.pos.y = (size_t)(image.getSize().y * (echantillon.pos.y / get_size().y));
-	d.size.x = (size_t)(image.getSize().x * (echantillon.size.x / get_size().x));
-	d.size.y = (size_t)(image.getSize().y * (echantillon.size.y / get_size().y));
 	d.pixels = &image;
 	return d;
 }
@@ -267,11 +254,14 @@ std::optional<sf::Sprite> Image::get_echantillon_sprite() const noexcept {
 	sf::IntRect rec;
 	rec.left = (int)((echantillon.pos.x / get_size().x) * sprite.getTextureRect().width);
 	rec.top = (int)((echantillon.pos.y / get_size().y) * sprite.getTextureRect().height);
-	rec.width = (int)((echantillon.size.x / get_size().x) * sprite.getTextureRect().width);
-	rec.height = (int)((echantillon.size.x / get_size().y) * sprite.getTextureRect().height);
+	rec.width = 30;
+	rec.height = 30;
 
 	sf::Sprite sample = sprite;
 	sample.setTextureRect(rec);
 	return sample;
 }
 
+bool Image::size_ok_for_sampling() const noexcept {
+	return sprite.getTextureRect().width > 30 && sprite.getTextureRect().height > 30;
+}

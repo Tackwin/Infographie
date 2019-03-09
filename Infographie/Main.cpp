@@ -139,7 +139,13 @@ int main() {
 
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
-		auto img_widget = scene_root.make_child<Image>(AM->get_texture(path.generic_string()));
+		auto& texture = AM->get_texture(path.generic_string());
+		auto img_widget = scene_root.make_child<Image>(texture);
+		if (!img_widget->size_ok_for_sampling()) {
+			Log.push("Please note that the sampling feature take sample of 30 px from an image\n\
+				so you won't be able to sample this image");
+			Log.show = true;
+		}
 		img_settings.images_widget_id.push_back(img_widget->get_uuid());
 	});
 
@@ -147,7 +153,7 @@ int main() {
 		static size_t Counter{ 0 };
 		auto& texture = AM->create_texture(std::to_string(Counter++) + "_created_image___");
 		if (!texture.loadFromImage(image)) {
-			Log.push("Proble creating the texture from the sampled image.");
+			Log.push("Problem creating the texture from the sampled image.");
 			return;
 		}
 		auto img_widget = scene_root.make_child<Image>(texture);
@@ -503,7 +509,7 @@ void update_debug_ui(Widget3&, Camera& camera) noexcept {
 
 	ImGui::DragFloat("Camera speed", &Cam_Speed, 0.1f, 0, 50);
 	ImGui::DragFloat("Camera fov", &Cam_Fov, 1, 0, 180);
-	ImGui::DragFloat("Camera near", &Cam_Near, 0.001, 0, 10);
+	ImGui::DragFloat("Camera near", &Cam_Near, 0.001f, 0, 10);
 
 	camera.set_perspective(
 		Cam_Fov / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, Cam_Near

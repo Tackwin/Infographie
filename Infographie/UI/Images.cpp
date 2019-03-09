@@ -85,7 +85,9 @@ void update_image_settings(Images_Settings& settings) noexcept {
 	std::vector<Image*> possibles_samples_image;
 	for (auto& img_id : settings.images_widget_id) {
 		if (auto img_widget = (Image*)settings.root->find_child(img_id); img_widget) {
-			if (img_widget->get_echantillon()) possibles_samples_image.push_back(img_widget);
+			if (img_widget->get_echantillon() && img_widget->size_ok_for_sampling()) {
+				possibles_samples_image.push_back(img_widget);
+			}
 		}
 	}
 
@@ -102,8 +104,15 @@ void update_image_settings(Images_Settings& settings) noexcept {
 	ImGui::NextColumn();
 	ImGui::Columns(1);
 
-	for (size_t x = 0; x < (size_t)Layout_Width; ++x) {
-		for (size_t y = 0; y < (size_t)Layout_Height; ++y) {
+	for (size_t y = 0; y < (size_t)Layout_Height; ++y) {
+		for (size_t x = 0; x < (size_t)Layout_Width; ++x) {
+			ImGui::PushID("Layout");
+			ImGui::PushID(x + y * Layout_Width);
+			defer{
+				ImGui::PopID();
+				ImGui::PopID();
+			};
+
 			auto s = Layout_Sample[{x, y}];
 
 			sf::Sprite sprite;
@@ -114,7 +123,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 					(sf::Uint8)(255 * Color_Filler.y),
 					(sf::Uint8)(255 * Color_Filler.z),
 					255
-					});
+				});
 			}
 			else {
 				s = (s - 1) % possibles_samples_image.size();
@@ -132,7 +141,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 			if (clicked) {
 				++Layout_Sample[{x, y}];
 			}
-			if (y + 1 != (size_t)Layout_Height) ImGui::SameLine();
+			if (x + 1 != (size_t)Layout_Width) ImGui::SameLine();
 		}
 	}
 
@@ -166,8 +175,8 @@ void update_image_settings(Images_Settings& settings) noexcept {
 				auto ech = *possibles_samples_image[sample]->get_echantillon();
 
 				Vector2u ech_end;
-				ech_end.x = std::min(ech.size.x, Unit_Sample_Size) + ech.pos.x;
-				ech_end.y = std::min(ech.size.y, Unit_Sample_Size) + ech.pos.y;
+				ech_end.x = Unit_Sample_Size + ech.pos.x;
+				ech_end.y = Unit_Sample_Size + ech.pos.y;
 				for (size_t a = ech.pos.x; a < ech_end.x; ++a) {
 					for (size_t b = ech.pos.y; b < ech_end.y; ++b) {
 						auto color = ech.pixels->getPixel(a, b);

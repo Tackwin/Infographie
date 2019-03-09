@@ -23,6 +23,7 @@ public:
 	size_t get_n() const noexcept;
 private:
 
+
 	void fill_circle(Vector2u pos, size_t size, Vector4f color) noexcept;
 	void fill_square(Vector2u center, size_t size, Vector4f color) noexcept;
 	void fill_line(Vector2u A, Vector2u B, size_t thick, Vector4f color) noexcept;

@@ -7,16 +7,16 @@
 class Image : public Widget {
 public:
 	struct Echantillon_View {
-		Vector2f size;
-		Vector2f pos;
+		Vector2f pos{ 0, 0 };
 	};
 
 	// This is in pixels in contrast to the top one wich is in float pos (meaning that it's range
 	// take into account the scale
 	struct Echantillon_Data {
-		Vector2u pos;
-		Vector2u size;
-		const sf::Image* pixels; // <-- carefull this stuff will live only as far a the image live.
+		Vector2u pos{ 0, 0 };
+
+		const sf::Image* pixels{ nullptr };
+		// ^-- carefull this stuff will live only as far a the image live.
 	};
 
 public:
@@ -29,6 +29,8 @@ public:
 	void update_echantillon() noexcept;
 
 	void render(sf::RenderTarget& target) noexcept override;
+
+	bool size_ok_for_sampling() const noexcept;
 
 	void set_open(bool v) noexcept;
 	size_t get_n() const noexcept;
@@ -49,16 +51,16 @@ private:
 	struct Grey_Scale_Histogram {
 		bool cached{ false };
 		// 256 value and the last one is the max of the previous 256.
-		std::array<size_t, 257> data;
+		std::array<size_t, 257> data{};
 
 		void compute(const sf::Texture& texture) noexcept;
 	} grey_scale_histogram;
 	struct RGB_Histogram {
 		bool cached{ false };
 		// 256 value and the last one is the max of the previous 256.
-		std::array<size_t, 257> reds;
-		std::array<size_t, 257> greens;
-		std::array<size_t, 257> blues;
+		std::array<size_t, 257> reds{};
+		std::array<size_t, 257> greens{};
+		std::array<size_t, 257> blues{};
 
 		void compute(const sf::Texture& texture) noexcept;
 	} rgb_scale_histogram;
