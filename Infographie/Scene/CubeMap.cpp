@@ -15,14 +15,10 @@ Cube_Map::Cube_Map() noexcept : Widget3() {
 
 void Cube_Map::opengl_render() noexcept {
 	glDepthMask(GL_FALSE);
-	glDisable(GL_CULL_FACE);
-	defer{
-		glDepthMask(GL_TRUE);
-		glEnable(GL_CULL_FACE);
-	};
+	defer{ glDepthMask(GL_TRUE); };
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 
-	// we short circuit the normal cycle of render because a skybox doesn't have a position
+	// we short circuit the normal render cycle because a skybox doesn't have a position
 	// (or i guess, the camera position), doesn't rotate or in a general way transform
 	// but Model still has cool logic internally (it keep track of the VAO ...) so we still use
 	// the Model class. In the same vein we don't let it bind his texture because we use

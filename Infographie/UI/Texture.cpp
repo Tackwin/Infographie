@@ -6,6 +6,8 @@
 #include "OS/OpenFile.hpp"
 #include "Scene/CubeMap.hpp"
 
+#include "Window.hpp"
+
 std::pair<std::string, std::string> Texture_Settings::get_shader_path() const noexcept {
 	std::string fragment;
 	switch (current_tone)
@@ -40,14 +42,16 @@ void update_texture_settings(Texture_Settings& settings) noexcept {
 	}
 
 	if (ImGui::Button("Load Cubemap")) {
-		open_dir_async([&](std::optional<std::filesystem::path> opt_path) {
+		auto c = push_cursor(sf::Cursor::Wait);
+		open_dir_async([&, c](std::optional<std::filesystem::path> opt_path) {
+			pop_cursor(c);
 			if (!opt_path) return;
 			std::lock_guard guard{ settings.mutex };
 
 			for (auto& f : settings.cubemap_added) f(*opt_path);
 		});
 	}
-	if (settings.root) {
+	if (settings.root && !settings.cubemap_ids.empty()) {
 		ImGui::Separator();
 		
 		static int active_cubemap{ 0 };

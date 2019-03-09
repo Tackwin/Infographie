@@ -12,9 +12,7 @@ Canvas::Canvas(const Drawing_Settings& settings) noexcept : settings(settings) {
 	sprite.setTexture(texture);
 
 	on_click.began = [&]() {
-		sf::Cursor cursor;
-		cursor.loadFromSystem(sf::Cursor::Hand);
-		Window_Info.window.setMouseCursor(cursor);
+		click_cursor = push_cursor(sf::Cursor::Hand);
 		return true;
 	};
 	on_click.going = [&]() {
@@ -30,20 +28,13 @@ Canvas::Canvas(const Drawing_Settings& settings) noexcept : settings(settings) {
 		return false;
 	};
 	on_click.ended = [&]() {
-		sf::Cursor cursor;
-		if (get_global_bounding_box().in(IM::getMouseScreenPos()))
-			cursor.loadFromSystem(sf::Cursor::Cross);
-		else
-			cursor.loadFromSystem(sf::Cursor::Arrow);
-		Window_Info.window.setMouseCursor(cursor);
+		pop_cursor(click_cursor);
 		return true;
 	};
 
 	on_hover.began = [&]() {
 		mouse_is_in_canvas = true;
-		sf::Cursor cursor;
-		cursor.loadFromSystem(sf::Cursor::Cross);
-		Window_Info.window.setMouseCursor(cursor);
+		hover_cursor = push_cursor(sf::Cursor::Cross);
 		return true;
 	};
 	on_hover.going = [&]() {
@@ -51,9 +42,7 @@ Canvas::Canvas(const Drawing_Settings& settings) noexcept : settings(settings) {
 	};
 	on_hover.ended = [&]() {
 		mouse_is_in_canvas = false;
-		sf::Cursor cursor;
-		cursor.loadFromSystem(sf::Cursor::Arrow);
-		Window_Info.window.setMouseCursor(cursor);
+		pop_cursor(hover_cursor);
 		return true;
 	};
 }

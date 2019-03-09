@@ -10,6 +10,7 @@
 #include "Os/OpenFile.hpp"
 
 #include "Managers/AssetsManager.hpp"
+#include "Window.hpp"
 
 void update_image_settings(Images_Settings& settings) noexcept {
 	constexpr auto Max_Buffer_Size = 2048;
@@ -22,7 +23,9 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		opts.allow_multiple = false;
 		opts.dialog_title = "Infographie, Import";
 
-		open_file_async([&](Open_File_Result result) {
+		auto c = push_cursor(sf::Cursor::Wait);
+		open_file_async([&, c](Open_File_Result result) {
+			pop_cursor(c);
 			std::lock_guard guard{ settings.mutex };
 			if (!result.succeded) return;
 
@@ -44,7 +47,9 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		? std::string{ "Please select screenshot directory" }
 			: settings.screenshot_directory.generic_string();
 	if (ImGui::Button(screenshot_button_label.c_str())) {
-		open_dir_async([&](std::optional<std::filesystem::path> dir) {
+		auto c = push_cursor(sf::Cursor::Wait);
+		open_dir_async([&, c](std::optional<std::filesystem::path> dir) {
+			pop_cursor(c);
 			if (!dir) return;
 			std::lock_guard guard{ settings.mutex };
 			settings.screenshot_directory = *dir;

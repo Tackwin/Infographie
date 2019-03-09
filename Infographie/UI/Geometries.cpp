@@ -13,6 +13,8 @@
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 
+#include "Window.hpp"
+
 
 void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	std::lock_guard out_guard{ settings.mutex };
@@ -30,7 +32,9 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	}
 
 	if (ImGui::Button("Load model")) {
-		open_file_async([&](Open_File_Result result) {
+		auto c = push_cursor(sf::Cursor::Wait);
+		open_file_async([&, c](Open_File_Result result) {
+			pop_cursor(c);
 			std::lock_guard guard{ settings.mutex };
 			if (!result.succeded) return;
 
@@ -74,7 +78,9 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			ImGui::Text("%u", model->get_n());
 			ImGui::NextColumn();
 			if (ImGui::Button("Main Texture")) {
-				open_file_async([&, m](Open_File_Result result) {
+				auto c = push_cursor(sf::Cursor::Wait);
+				open_file_async([&, m, c](Open_File_Result result) {
+					pop_cursor(c);
 					std::lock_guard guard{ settings.mutex };
 					if (!result.succeded) return;
 
@@ -94,7 +100,9 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			ImGui::NextColumn();
 
 			if (ImGui::Button("Alpha Texture")) {
-				open_file_async([&, m](Open_File_Result result) {
+				auto c = push_cursor(sf::Cursor::Wait);
+				open_file_async([&, m, c](Open_File_Result result) {
+					pop_cursor(c);
 					std::lock_guard guard{ settings.mutex };
 					if (!result.succeded) return;
 

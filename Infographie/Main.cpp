@@ -89,6 +89,7 @@ int main() {
 		sf::Style::Default,
 		context_settings
 	);
+	push_cursor(sf::Cursor::Arrow);
 
 	glewExperimental = true; // Needed for core profile
 	if (glewInit() != GLEW_OK) {
@@ -301,13 +302,23 @@ void update(
 	sf::RenderTexture& texture_target,
 	float dt
 ) noexcept {
-
 	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
 	root.propagate_input();
 
 	list_all_logs_imgui();
 
-	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove);
+	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
+	ImGui::BeginMenuBar();
+	ImGui::MenuItem("Help");
+	static sf::Cursor* help_cursor{ nullptr };
+	auto hovered = ImGui::IsItemHovered();
+	if (hovered && !help_cursor) {
+		help_cursor = push_cursor(sf::Cursor::Help);
+	} else if (!hovered && help_cursor) {
+		pop_cursor(help_cursor);
+		help_cursor = nullptr;
+	}
+	ImGui::EndMenuBar();
 	ImGui::SetWindowPos({ 5, 5 });
 
 	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);

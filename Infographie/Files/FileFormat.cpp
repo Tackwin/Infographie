@@ -23,7 +23,6 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 	Object_File obj;
 	std::vector<Vector3<Vector3u>> faces;
 
-
 	for (size_t i = 0; i < bytes.size() - 1;) {
 		// skip the whole line we do nothing at the end of each iteration we go _past_ the '\n'
 		if (bytes[i] == Line_Comment_Char) {
