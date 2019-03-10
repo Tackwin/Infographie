@@ -12,6 +12,9 @@
 #include "Managers/AssetsManager.hpp"
 #include "Window.hpp"
 
+Vector3f rgb_to_hsv(Vector3i rgb) noexcept;
+Vector3i hsv_to_rgb(Vector3f hsv) noexcept;
+
 void update_image_settings(Images_Settings& settings) noexcept {
 	constexpr auto Max_Buffer_Size = 2048;
 	thread_local char buffer[Max_Buffer_Size];
@@ -55,6 +58,37 @@ void update_image_settings(Images_Settings& settings) noexcept {
 			settings.screenshot_directory = *dir;
 		});
 	}
+
+	ImGui::Separator();
+	ImGui::Text("Color space");
+	thread_local Vector3i Color_RGB;
+	thread_local Vector3f Color_HSV;
+	if (ImGui::DragInt3("In rgb", &Color_RGB.x, 1, 0, 255)) {
+		Color_HSV = rgb_to_hsv(Color_RGB);
+		Color_HSV.x /= 360.f;
+	}
+	if (ImGui::DragFloat3("In hsv", &Color_HSV.x, 1 / 255.f, 0, 1)) {
+		Color_HSV.x *= 360.f;
+		Color_RGB = hsv_to_rgb(Color_HSV);
+		Color_HSV.x /= 360.f;
+	}
+	ImGui::SameLine();
+	ImGui::Text("?");
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip(
+R"_(The h component is normally display in the range [0, 360],
+here it's normalized)_"
+		);
+	}
+
+	ImVec4 imgui_color = {
+		Color_RGB.x / 255.f,
+		Color_RGB.y / 255.f,
+		Color_RGB.z / 255.f,
+		1
+	};
+	ImGui::TextColored(imgui_color, "See :D");
+	ImGui::Separator();
 
 	if (!settings.root) return;
 
@@ -202,3 +236,93 @@ void update_image_settings(Images_Settings& settings) noexcept {
 
 }
 
+
+Vector3f rgb_to_hsv(Vector3i rgb_uint) noexcept {
+	Vector3f rgb = ((Vector3f)rgb_uint) / 255.f;
+	Vector3f out;
+	float min, max, delta;
+
+	min = rgb.x < rgb.y ? rgb.x : rgb.y;
+	min = min < rgb.z ? min : rgb.z;
+
+	max = rgb.x > rgb.y ? rgb.x : rgb.y;
+	max = max > rgb.z ? max : rgb.z;
+
+	out.z = max;
+	delta = max - min;
+	if (delta < 0.00001f) {
+		out.y = 0;
+		out.x = 0; // undefined, maybe nan?
+		return out;
+	}
+	if (max > 0.f) {
+		out.y = (delta / max);
+	}
+	else {
+		out.y = 0.f;
+		out.x = NAN;
+		return out;
+	}
+	if (rgb.x >= max) {
+		out.x = (rgb.y - rgb.z) / delta;
+	}
+	else {
+		if (rgb.y >= max) out.x = 2.f + (rgb.z - rgb.x) / delta;
+		else out.x = 4.f + (rgb.x - rgb.y) / delta;
+	}
+
+	out.x *= 60.f;
+	if (out.x < 0.f) out.x += 360.f;
+
+	return out;
+}
+
+Vector3i hsv_to_rgb(Vector3f hsv) noexcept {
+	float hh, p, q, t, ff;
+	int i;
+	Vector3f out;
+
+	hh = hsv.x;
+	if (hh >= 360.f) hh = 0.f;
+	hh /= 60.f;
+	i = (long)hh;
+	ff = hh - i;
+	p = hsv.z * (1.f - hsv.y);
+	q = hsv.z * (1.f - (hsv.y * ff));
+	t = hsv.z * (1.f - (hsv.y * (1.f - ff)));
+
+	switch (i) {
+	case 0:
+		out.x = hsv.z;
+		out.y = t;
+		out.z = p;
+		break;
+	case 1:
+		out.x = q;
+		out.y = hsv.z;
+		out.z = p;
+		break;
+	case 2:
+		out.x = p;
+		out.y = hsv.z;
+		out.z = t;
+		break;
+	case 3:
+		out.x = p;
+		out.y = q;
+		out.z = hsv.z;
+		break;
+	case 4:
+		out.x = t;
+		out.y = p;
+		out.z = hsv.z;
+		break;
+	default:
+		out.x = hsv.z;
+		out.y = p;
+		out.z = q;
+		break;
+	}
+
+	return (Vector3i)(out * 255);
+}
