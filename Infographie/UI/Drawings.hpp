@@ -47,9 +47,14 @@ struct Drawing_Settings {
 	};
 	struct PT_Arrow {
 		float thick{ 5 };
-		float theta{ 0.f };
 		float length{ 10 };
 		float outline_thick{ 0 };
+		Vector4f color{ 0, 0, 0, 1 };
+		Vector4f outline_color{ 1, 1, 1, 1 };
+	};
+	struct PT_Heart {
+		Vector2f size{ 50, 50 };
+		float thick{ 0 };
 		Vector4f color{ 0, 0, 0, 1 };
 		Vector4f outline_color{ 1, 1, 1, 1 };
 	};
@@ -63,7 +68,7 @@ struct Drawing_Settings {
 	std::vector<Uuid_t> primitives_widget_id;
 
 	std::variant<DT_Circle, DT_Fill, DT_Line, DT_Square> drawing_tool;
-	std::variant<PT_Rect, PT_Circle, PT_Arrow, PT_Polygon> primitive_tool;
+	std::variant<PT_Rect, PT_Circle, PT_Arrow, PT_Polygon, PT_Heart> primitive_tool;
 	std::vector<std::function<void(Vector2u)>> add_canvas_callback;
 	std::vector<std::function<void(std::unique_ptr<sf::Shape>)>> add_primitive_callback;
 	std::vector<std::function<void(std::unique_ptr<Complex_Shape>)>>

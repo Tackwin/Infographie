@@ -159,6 +159,8 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 	sf::Vector2f pt_circle_texture_size{ UNROLL_2_P(pt_circle_texture.getSize(), float) };
 	auto& pt_rect_texture = AM->get_texture("PT_Rect");
 	sf::Vector2f pt_rect_texture_size{ UNROLL_2_P(pt_rect_texture.getSize(), float) };
+	auto& pt_heart_texture = AM->get_texture("PT_Heart");
+	sf::Vector2f pt_heart_texture_size{ UNROLL_2_P(pt_heart_texture.getSize(), float) };
 
 	if (ImGui::ImageButton(pt_polygon_texture, pt_polygon_texture_size, Image_Button_Border)) {
 		settings.primitive_tool = Drawing_Settings::PT_Polygon{};
@@ -175,6 +177,10 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 	if (ImGui::ImageButton(pt_rect_texture, pt_rect_texture_size, Image_Button_Border)) {
 		settings.primitive_tool = Drawing_Settings::PT_Rect{};
 	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(pt_heart_texture, pt_heart_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Heart{};
+	}
 	ImGui::Separator();
 
 	std::visit([](auto&& x) {
@@ -188,7 +194,8 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			thread_local float Outline_Thickness{ 0 };
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
-
+			
+			ImGui::PushID("Polygon");
 			ImGui::DragInt("Number of faces", &Faces, 1, 3, 20);
 			ImGui::DragFloat("Radius", &Radius, 0.5, 5, 200);
 			ImGui::DragFloat("Outline thickness", &Outline_Thickness, 0.5, 0, Radius);
@@ -198,6 +205,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			ImGui::SameLine();
 			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
 			ImGui::PopItemWidth();
+			ImGui::PopID();
 
 			x.n = Faces;
 			x.radius = Radius;
@@ -216,6 +224,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
 
+			ImGui::PushID("Arrow");
 			ImGui::DragFloat("Length", &Length, 1, 10, 200);
 			ImGui::DragFloat("Thickness", &Thickness, 1, 5, 200);
 			ImGui::DragFloat("Outline thickness", &Outline_Thickness, 1, 0, Thickness);
@@ -224,6 +233,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			ImGui::SameLine();
 			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
 			ImGui::PopItemWidth();
+			ImGui::PopID();
 
 			x.length = Length;
 			x.thick = Thickness;
@@ -236,7 +246,8 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			thread_local float Thickness{ 0 };
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
-			
+
+			ImGui::PushID("Circle");
 			ImGui::DragFloat("Radius", &Radius, 0.1f, 1, 200);
 			ImGui::DragFloat("Thickness", &Thickness, 0.1f, 0, Radius);
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
@@ -244,6 +255,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			ImGui::SameLine();
 			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
 			ImGui::PopItemWidth();
+			ImGui::PopID();
 
 			x.radius = Radius;
 			x.thick = Thickness;
@@ -256,6 +268,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
 
+			ImGui::PushID("Rect");
 			ImGui::DragFloat("Thickness", &Thickness, 0.1f, 0, std::min(Size.x, Size.y) / 2);
 			ImGui::DragFloat2("Size", &Size.x, 0.1f, 1, 200);
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
@@ -263,6 +276,28 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			ImGui::SameLine();
 			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
 			ImGui::PopItemWidth();
+			ImGui::PopID();
+
+			x.size = Size;
+			x.thick = Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Heart>) {
+			thread_local Vector2f Size{ 100, 50 };
+			thread_local float Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+
+			ImGui::PushID("Heart");
+			ImGui::DragFloat("Thickness", &Thickness, 0.1f, 0, std::min(Size.x, Size.y) / 2);
+			ImGui::DragFloat2("Size", &Size.x, 0.1f, 1, 200);
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+			ImGui::PopID();
 
 			x.size = Size;
 			x.thick = Thickness;
@@ -339,5 +374,18 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 				f(std::move(ptr));
 			}
 		}
-		}, settings.primitive_tool);
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Heart>) {
+			auto shape = std::make_unique<Heart_Shape>();
+			shape->outline_color = x.outline_color;
+			shape->color = x.color;
+			shape->thick = x.thick;
+			shape->size = x.size;
+
+			for (auto& f : settings.add_complex_primitive_callback) {
+				// copy construct a new entity to move it to the callback.
+				auto ptr = std::make_unique<Heart_Shape>(*shape);
+				f(std::move(ptr));
+			}
+		}
+	}, settings.primitive_tool);
 }

@@ -20,3 +20,13 @@ struct Arrow_Shape : public Complex_Shape {
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates state) const noexcept override;
 	virtual Vector2f get_size() const noexcept override;
 };
+
+struct Heart_Shape : public Complex_Shape {
+	float thick{ 0 };
+	Vector4f color{ 0, 0, 0, 1 };
+	Vector4f outline_color{ 1, 1, 1, 0 };
+	Vector2f size{ 0, 0 };
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates state) const noexcept override;
+	virtual Vector2f get_size() const noexcept override;
+};

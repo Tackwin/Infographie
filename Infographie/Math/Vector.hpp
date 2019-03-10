@@ -729,6 +729,15 @@ struct Vector : public __vec_member<D, T> {
 		if (t < 0.0f) t = 0.0f;
 		return ray_pos + t * ray_dir;
 	}
+
+	//From https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+	template<size_t Dp = D>
+	std::enable_if_t<Dp == 2, T> dist_from_line(Vector2<T> A, Vector2<T> dir) const noexcept {
+		auto B = A + dir;
+		
+		return (Vector2f{ this->x, -this->y }.dot(B - A) + Vector2f{ A.x, -A.y }.dot(B)) /
+				(B - A).length();
+	}
 };
 
 template<size_t D, typename T, typename U>
