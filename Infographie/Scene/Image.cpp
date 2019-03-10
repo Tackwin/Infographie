@@ -235,6 +235,10 @@ void Image::render(sf::RenderTarget& target) noexcept {
 void Image::set_open(bool v) noexcept {
 	open = v;
 }
+bool Image::is_open() const noexcept {
+	return open;
+}
+
 size_t Image::get_n() const noexcept {
 	return n;
 }

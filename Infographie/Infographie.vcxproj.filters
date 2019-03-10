@@ -113,6 +113,12 @@
     <ClCompile Include="imgui\imgui_demo.cpp">
       <Filter>extern</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Primitive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphic\ArrowShape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -221,6 +227,10 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\CubeMap.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Primitive.hpp" />
+    <ClInclude Include="Graphic\ArrowShape.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,0 +1,40 @@
+#include "Primitive.hpp"
+
+#include "Managers/InputsManager.hpp"
+#include "Window.hpp"
+
+Primitive::Primitive(std::unique_ptr<sf::Shape> s) noexcept : shape(std::move(s)) {
+	on_click.began = [&] {
+		if (IM::isMouseJustPressed(sf::Mouse::Button::Middle)) {
+			click_cursor = push_cursor(sf::Cursor::Hand);
+		}
+		return true;
+	};
+	on_click.going = [&] {
+		if (IM::isMousePressed(sf::Mouse::Button::Middle)) {
+			auto dt = IM::getMouseScreenDelta();
+			set_global_position(get_global_position() + dt);
+			return true;
+		}
+		return false;
+	};
+
+	on_hover.ended = [&] {
+		// >SEE canvas.cpp Canvas::Canvas to know why we do that here instead of on_click.ended.
+		if (click_cursor) {
+			pop_cursor(click_cursor);
+			click_cursor = nullptr;
+		}
+		return false;
+	};
+
+	set_size({ shape->getGlobalBounds().width, shape->getGlobalBounds().height });
+	set_origin({ 0.5f, 0.5f });
+};
+void Primitive::render(sf::RenderTarget& target) noexcept {
+	shape->setPosition(get_global_position());
+	target.draw(*shape);
+}
+
+void Primitive::update(float) noexcept {
+}

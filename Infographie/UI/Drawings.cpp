@@ -1,6 +1,9 @@
+#include <SFML/Graphics.hpp>
+
 #include "Drawings.hpp"
 #include <type_traits>
 #include <variant>
+
 
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
@@ -150,23 +153,28 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 
 	auto& pt_polygon_texture = AM->get_texture("PT_Polygon");
 	sf::Vector2f pt_polygon_texture_size{ UNROLL_2_P(pt_polygon_texture.getSize(), float) };
-	auto& pt_star_texture = AM->get_texture("PT_Star");
-	sf::Vector2f pt_star_texture_size{ UNROLL_2_P(pt_star_texture.getSize(), float) };
 	auto& pt_arrow_texture = AM->get_texture("PT_Arrow");
-	sf::Vector2f pt_arrow_texture_size{ UNROLL_2_P(pt_star_texture.getSize(), float) };
+	sf::Vector2f pt_arrow_texture_size{ UNROLL_2_P(pt_arrow_texture.getSize(), float) };
+	auto& pt_circle_texture = AM->get_texture("DT_Circle");
+	sf::Vector2f pt_circle_texture_size{ UNROLL_2_P(pt_circle_texture.getSize(), float) };
+	auto& pt_rect_texture = AM->get_texture("PT_Rect");
+	sf::Vector2f pt_rect_texture_size{ UNROLL_2_P(pt_rect_texture.getSize(), float) };
 
 	if (ImGui::ImageButton(pt_polygon_texture, pt_polygon_texture_size, Image_Button_Border)) {
 		settings.primitive_tool = Drawing_Settings::PT_Polygon{};
 	}
 	ImGui::SameLine();
-	if (ImGui::ImageButton(pt_star_texture, pt_star_texture_size, Image_Button_Border)) {
-		settings.primitive_tool = Drawing_Settings::PT_Star{};
-	}
-	ImGui::SameLine();
 	if (ImGui::ImageButton(pt_arrow_texture, pt_arrow_texture_size, Image_Button_Border)) {
 		settings.primitive_tool = Drawing_Settings::PT_Arrow{};
 	}
-	
+	ImGui::SameLine();
+	if (ImGui::ImageButton(pt_circle_texture, pt_circle_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Circle{};
+	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(pt_rect_texture, pt_rect_texture_size, Image_Button_Border)) {
+		settings.primitive_tool = Drawing_Settings::PT_Rect{};
+	}
 	ImGui::Separator();
 
 	std::visit([](auto&& x) {
@@ -176,14 +184,14 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			// with my types (uses unsigned where it makes sense etc...)
 			// but imgui interface with only int for instance.
 			thread_local int Faces{ 3 };
-			thread_local int Radius{ 10 };
-			thread_local int Outline_Thickness{ 0 };
+			thread_local float Radius{ 10 };
+			thread_local float Outline_Thickness{ 0 };
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
 
-			ImGui::DragInt("Number of faces", &Faces, 1, 3, 10);
-			ImGui::DragInt("Radius", &Radius, 1, 5, 20);
-			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Radius);
+			ImGui::DragInt("Number of faces", &Faces, 1, 3, 20);
+			ImGui::DragFloat("Radius", &Radius, 0.5, 5, 200);
+			ImGui::DragFloat("Outline thickness", &Outline_Thickness, 0.5, 0, Radius);
 			
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
 			ImGui::ColorPicker4("Fill Color", &Color.x);
@@ -197,47 +205,20 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 			x.color = Color;
 			x.outline_color = Outline_Color;
 		}
-		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Star>) {
-			// I need to do those thread_local/static variables because i like to be restrictive
-			// with my types (uses unsigned where it makes sense etc...)
-			// but imgui interface with only int for instance.
-			thread_local int Branches{ 3 };
-			thread_local int Radius{ 10 };
-			thread_local int Outline_Thickness{ 0 };
-			thread_local Vector4f Color{ 0, 0, 0, 1 };
-			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
-
-			ImGui::DragInt("Number of branches", &Branches, 1, 3, 10);
-			ImGui::DragInt("Radius", &Radius, 1, 5, 20);
-			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Radius);
-			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
-			ImGui::ColorPicker4("Fill Color", &Color.x);
-			ImGui::SameLine();
-			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
-			ImGui::PopItemWidth();
-
-			x.n = Branches;
-			x.radius = Radius;
-			x.thick = Outline_Thickness;
-			x.color = Color;
-			x.outline_color = Outline_Color;
-		}
 		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Arrow>) {
 			// I need to do those thread_local/static variables because i like to be restrictive
 			// with my types (uses unsigned where it makes sense etc...)
 			// but imgui interface with only int for instance.
 			// here i do a deg to rad conversion
-			thread_local int Length{ 3 };
-			thread_local float Theta{ 0.f };
-			thread_local int Thickness{ 0 };
-			thread_local int Outline_Thickness{ 0 };
+			thread_local float Length{ 3 };
+			thread_local float Thickness{ 0 };
+			thread_local float Outline_Thickness{ 0 };
 			thread_local Vector4f Color{ 0, 0, 0, 1 };
 			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
 
-			ImGui::DragInt("Length", &Length, 1, 10, 100);
-			ImGui::DragInt("Thickness", &Thickness, 1, 5, 30);
-			ImGui::DragInt("Outline thickness", &Outline_Thickness, 1, 0, Thickness);
-			ImGui::DragFloat("Theta", &Theta, 1, 0, 360);
+			ImGui::DragFloat("Length", &Length, 1, 10, 200);
+			ImGui::DragFloat("Thickness", &Thickness, 1, 5, 200);
+			ImGui::DragFloat("Outline thickness", &Outline_Thickness, 1, 0, Thickness);
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
 			ImGui::ColorPicker4("Fill Color", &Color.x);
 			ImGui::SameLine();
@@ -246,10 +227,117 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 
 			x.length = Length;
 			x.thick = Thickness;
-			x.thick = Outline_Thickness;
+			x.outline_thick = Outline_Thickness;
 			x.color = Color;
 			x.outline_color = Outline_Color;
-			x.theta = Theta;
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Circle>) {
+			thread_local float Radius{ 20 };
+			thread_local float Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+			
+			ImGui::DragFloat("Radius", &Radius, 0.1f, 1, 200);
+			ImGui::DragFloat("Thickness", &Thickness, 0.1f, 0, Radius);
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+
+			x.radius = Radius;
+			x.thick = Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Rect>) {
+			thread_local Vector2f Size{ 100, 50 };
+			thread_local float Thickness{ 0 };
+			thread_local Vector4f Color{ 0, 0, 0, 1 };
+			thread_local Vector4f Outline_Color{ 1, 1, 1, 1 };
+
+			ImGui::DragFloat("Thickness", &Thickness, 0.1f, 0, std::min(Size.x, Size.y) / 2);
+			ImGui::DragFloat2("Size", &Size.x, 0.1f, 1, 200);
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() / 3);
+			ImGui::ColorPicker4("Fill Color", &Color.x);
+			ImGui::SameLine();
+			ImGui::ColorPicker4("Outline Color", &Outline_Color.x);
+			ImGui::PopItemWidth();
+
+			x.size = Size;
+			x.thick = Thickness;
+			x.color = Color;
+			x.outline_color = Outline_Color;
 		}
 	}, settings.primitive_tool);
+
+	if (!ImGui::Button("Add")) return;
+
+	std::visit([&](auto&& x) {
+		using T = std::decay_t<decltype(x)>;
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Polygon>) {
+			auto shape = std::make_unique<sf::ConvexShape>();
+			shape->setPointCount(x.n);
+			shape->setOutlineColor((sf::Color)x.outline_color);
+			shape->setFillColor((sf::Color)x.color);
+			shape->setOutlineThickness(x.thick);
+
+			// >SEE is this necessary ?
+			//shape->setOrigin(a.radius, a.radius);
+
+			for (size_t i = 0; i < x.n; ++i) {
+				auto t = 2 * PIf * (float)i / x.n;
+				shape->setPoint(i, Vector2f::createUnitVector(t) * x.radius);
+			}
+
+			for (auto& f : settings.add_primitive_callback) {
+				// copy construct a new entity to move it to the callback.
+				auto ptr = std::make_unique<sf::ConvexShape>(*shape);
+				f(std::move(ptr));
+			}
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Arrow>) {
+			auto shape = std::make_unique<Arrow_Shape>();
+			shape->length = x.length;
+			shape->thick = x.thick;
+			shape->outline_thick = x.outline_thick;
+			shape->color = x.color;
+			shape->outline_color = x.outline_color;
+
+			for (auto& f : settings.add_complex_primitive_callback) {
+				// copy construct a new entity to move it to the callback.
+				auto ptr = std::make_unique<Arrow_Shape>(*shape);
+				f(std::move(ptr));
+			}
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Circle>) {
+			Drawing_Settings::PT_Circle& a = x;
+
+			auto shape = std::make_unique<sf::CircleShape>();
+			shape->setOutlineColor((sf::Color)a.outline_color);
+			shape->setFillColor((sf::Color)a.color);
+			shape->setOutlineThickness(a.thick);
+			shape->setOrigin(a.radius / 2, a.radius / 2);
+
+			for (auto& f : settings.add_primitive_callback) {
+				// copy construct a new entity to move it to the callback.
+				auto ptr = std::make_unique<sf::CircleShape>(*shape);
+				f(std::move(ptr));
+			}
+		}
+		if constexpr (std::is_same_v<T, Drawing_Settings::PT_Rect>) {
+			auto shape = std::make_unique<sf::RectangleShape>();
+			shape->setOutlineColor((sf::Color)x.outline_color);
+			shape->setFillColor((sf::Color)x.color);
+			shape->setOutlineThickness(x.thick);
+			shape->setOrigin(x.size / 2);
+			shape->setSize(x.size);
+
+			for (auto& f : settings.add_primitive_callback) {
+				// copy construct a new entity to move it to the callback.
+				auto ptr = std::make_unique<sf::RectangleShape>(*shape);
+				f(std::move(ptr));
+			}
+		}
+		}, settings.primitive_tool);
 }

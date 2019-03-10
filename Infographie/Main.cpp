@@ -19,6 +19,7 @@
 #include "Scene/Camera.hpp"
 #include "Scene/Canvas.hpp"
 #include "Scene/CubeMap.hpp"
+#include "Scene/Primitive.hpp"
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 #include "Utils/TimeInfo.hpp"
@@ -39,7 +40,6 @@ void update(
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
-	sf::RenderTexture& texture_target,
 	float dt
 ) noexcept;
 
@@ -50,7 +50,7 @@ void render(
 	Texture_Settings& tex_settings,
 	sf::RenderTexture& texture_target,
 	sf::RenderTarget& target,
-	bool with_imgui = true
+	std::optional<std::filesystem::path> screenshot
 ) noexcept;
 
 void render_postprocessing(
@@ -165,6 +165,10 @@ int main() {
 		auto canvas_widget = scene_root.make_child<Canvas>(draw_settings);
 		canvas_widget->set_size(size);
 		draw_settings.canvases_widget_id.push_back(canvas_widget->get_uuid());
+		});
+	draw_settings.add_primitive_callback.push_back([&](std::unique_ptr<sf::Shape> shape) {
+		auto primitive_widget = scene_root.make_child<Primitive>(std::move(shape));
+		draw_settings.primitives_widget_id.push_back(primitive_widget->get_uuid());
 	});
 
 	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
@@ -260,6 +264,10 @@ int main() {
 		IM::update(Window_Info.window);
 		if (!Window_Info.window.isOpen()) break;
 
+		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
+		glClearDepth(1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
+
 		update(
 			scene_root,
 			camera,
@@ -268,13 +276,8 @@ int main() {
 			tran_settings,
 			geo_settings,
 			tex_settings,
-			texture_target,
 			dt
 		);
-
-		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
-		glClearDepth(1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 
 		{
 			std::lock_guard guard{ function_from_another_thread_mutex };
@@ -284,7 +287,19 @@ int main() {
 			function_from_another_thread.clear();
 		}
 
-		render(scene_root, camera, tex_settings, texture_target, Window_Info.window);
+		std::optional<std::filesystem::path> screenshot;
+		if (img_settings.take_screenshot) {
+			img_settings.take_screenshot = false;
+			auto n_files = std::filesystem::hard_link_count(img_settings.screenshot_directory);
+			auto file_name =
+				img_settings.screenshot_directory /
+				("screenshot_" + std::to_string(n_files) + ".png");
+
+			screenshot = file_name;
+		}
+
+
+		render(scene_root, camera, tex_settings, texture_target, Window_Info.window, screenshot);
 
 		Window_Info.window.display();
 	}
@@ -299,7 +314,6 @@ void update(
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
-	sf::RenderTexture& texture_target,
 	float dt
 ) noexcept {
 	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
@@ -330,23 +344,6 @@ void update(
 
 	root.propagate_update(dt);
 	ImGui::End();
-
-	if (img_settings.take_screenshot) {
-		defer{ img_settings.take_screenshot = false; };
-
-		sf::RenderTexture render_texture;
-		render_texture.create(UNROLL_2(Window_Info.size));
-		render_texture.clear();
-		render(root, camera, tex_settings, texture_target, render_texture, false);
-		render_texture.display();
-
-		auto number_of_files = std::filesystem::hard_link_count(img_settings.screenshot_directory);
-		auto file_name =
-			img_settings.screenshot_directory /
-			("screenshot_" + std::to_string(number_of_files) + ".png");
-
-		render_texture.getTexture().copyToImage().saveToFile(file_name.generic_string());
-	}
 }
 
 void render(
@@ -355,7 +352,7 @@ void render(
 	Texture_Settings& tex_settings,
 	sf::RenderTexture& texture_target,
 	sf::RenderTarget& target,
-	bool with_imgui
+	std::optional<std::filesystem::path> screenshot
 ) noexcept {
 	texture_target.setActive();
 
@@ -366,11 +363,13 @@ void render(
 	root.propagate_opengl_render();
 	Window_Info.active_camera = nullptr;
 	texture_target.display();
-
+	check_gl_error();
 
 	target.setActive();
+	check_gl_error();
 
 	glPopAttrib();
+	check_gl_error();
 
 	Is_In_Sfml_Context = true;
 	target.pushGLStates();
@@ -390,9 +389,18 @@ void render(
 		target.setActive(false);
 	};
 
-
+	if (screenshot) {
+		sf::RenderTexture render_texture;
+		render_texture.create(UNROLL_2(Window_Info.size));
+		render_texture.clear();
+		render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
+		ImGui::SFML::Render(render_texture);
+		root.propagate_render(render_texture);
+		render_texture.display();
+		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
+	}
 	render_postprocessing(tex_settings, texture_target.getTexture(), target);
-	if (with_imgui) ImGui::SFML::Render(target);
+	ImGui::SFML::Render(target);
 	root.propagate_render(target);
 }
 
@@ -463,6 +471,8 @@ void load_textures() noexcept {
 	AM->load_texture("PT_Polygon", "res/PT_Polygon.png");
 	AM->load_texture("PT_Arrow", "res/PT_Arrow.png");
 	AM->load_texture("PT_Star", "res/PT_Star.png");
+	AM->load_texture("PT_Heart", "res/PT_Heart.png");
+	AM->load_texture("PT_Rect", "res/PT_Rect.png");
 	AM->load_texture("PT_Heart", "res/PT_Heart.png");
 }
 

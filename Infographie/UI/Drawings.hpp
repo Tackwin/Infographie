@@ -4,6 +4,7 @@
 #include <functional>
 #include "Math/Vector.hpp"
 #include "Utils/UUID.hpp"
+#include "Graphic/ArrowShape.hpp"
 
 class Widget;
 struct Drawing_Settings {
@@ -25,34 +26,30 @@ struct Drawing_Settings {
 		bool strip;
 	};
 
-	struct PT_Point {
+	struct PT_Rect {
+		Vector2f size{ 100, 50 };
 		Vector4f color{ 0, 0, 0, 1 };
+		Vector4f outline_color{ 1, 1, 1, 1 };
+		float thick{ 0 };
 	};
 	struct PT_Circle {
-		size_t size;
+		float radius{ 10 };
 		Vector4f color{ 0, 0, 0, 1 };
-		size_t thick;
-		Vector4f outline_color;
+		float thick{ 10 };
+		Vector4f outline_color{ 1, 1, 1, 1 };
 	};
 	struct PT_Polygon {
 		size_t n{ 3 };
-		size_t radius{ 5 };
+		float radius{ 5 };
 		Vector4f color{ 0, 0, 0, 1 };
-		size_t thick{ 0 };
-		Vector4f outline_color{ 1, 1, 1, 1 };
-	};
-	struct PT_Star {
-		size_t n{ 3 };
-		size_t radius{ 5 };
-		Vector4f color{ 0, 0, 0, 1 };
-		size_t thick{ 0 };
+		float thick{ 0 };
 		Vector4f outline_color{ 1, 1, 1, 1 };
 	};
 	struct PT_Arrow {
-		size_t thick{ 5 };
+		float thick{ 5 };
 		float theta{ 0.f };
-		size_t length{ 10 };
-		size_t outline_thick{ 0 };
+		float length{ 10 };
+		float outline_thick{ 0 };
 		Vector4f color{ 0, 0, 0, 1 };
 		Vector4f outline_color{ 1, 1, 1, 1 };
 	};
@@ -63,9 +60,14 @@ struct Drawing_Settings {
 	bool drawing_tools_selected{ false };
 
 	std::vector<Uuid_t> canvases_widget_id;
+	std::vector<Uuid_t> primitives_widget_id;
+
 	std::variant<DT_Circle, DT_Fill, DT_Line, DT_Square> drawing_tool;
-	std::variant<PT_Point, PT_Circle, PT_Arrow, PT_Polygon, PT_Star> primitive_tool;
+	std::variant<PT_Rect, PT_Circle, PT_Arrow, PT_Polygon> primitive_tool;
 	std::vector<std::function<void(Vector2u)>> add_canvas_callback;
+	std::vector<std::function<void(std::unique_ptr<sf::Shape>)>> add_primitive_callback;
+	std::vector<std::function<void(std::unique_ptr<Drawable_Transform>)>>
+		add_complex_primitive_callback;
 };
 
 extern void update_drawing_settings(Drawing_Settings& sett) noexcept;

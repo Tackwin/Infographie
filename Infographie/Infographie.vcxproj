@@ -179,6 +179,7 @@
     <ClCompile Include="Containers\Graph.cpp" />
     <ClCompile Include="Containers\QuadTree.cpp" />
     <ClCompile Include="Files\FileFormat.cpp" />
+    <ClCompile Include="Graphic\ArrowShape.cpp" />
     <ClCompile Include="imgui\imgui-SFML.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -197,6 +198,7 @@
     <ClCompile Include="Scene\CubeMap.cpp" />
     <ClCompile Include="Scene\Image.cpp" />
     <ClCompile Include="Scene\Model.cpp" />
+    <ClCompile Include="Scene\Primitive.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
     <ClCompile Include="UI\Drawings.cpp" />
     <ClCompile Include="UI\Geometries.cpp" />
@@ -213,6 +215,7 @@
     <ClInclude Include="Containers\Graph.hpp" />
     <ClInclude Include="Containers\QuadTree.hpp" />
     <ClInclude Include="Files\FileFormat.hpp" />
+    <ClInclude Include="Graphic\ArrowShape.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui-SFML.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -235,6 +238,7 @@
     <ClInclude Include="Scene\CubeMap.hpp" />
     <ClInclude Include="Scene\Image.hpp" />
     <ClInclude Include="Scene\Model.hpp" />
+    <ClInclude Include="Scene\Primitive.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
     <ClInclude Include="UI\Drawings.hpp" />
     <ClInclude Include="UI\Geometries.hpp" />

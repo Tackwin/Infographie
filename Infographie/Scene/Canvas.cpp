@@ -11,11 +11,11 @@ Canvas::Canvas(const Drawing_Settings& settings) noexcept : settings(settings) {
 
 	sprite.setTexture(texture);
 
-	on_click.began = [&]() {
+	on_click.began = [&] {
 		click_cursor = push_cursor(sf::Cursor::Hand);
 		return true;
 	};
-	on_click.going = [&]() {
+	on_click.going = [&] {
 		if (IM::isMousePressed(sf::Mouse::Button::Middle)) {
 			auto dt = IM::getMouseScreenDelta();
 			set_global_position(get_global_position() + dt);
@@ -27,22 +27,29 @@ Canvas::Canvas(const Drawing_Settings& settings) noexcept : settings(settings) {
 		}
 		return false;
 	};
-	on_click.ended = [&]() {
-		pop_cursor(click_cursor);
+	on_click.ended = [&] {
 		return true;
 	};
 
-	on_hover.began = [&]() {
+	on_hover.began = [&] {
 		mouse_is_in_canvas = true;
 		hover_cursor = push_cursor(sf::Cursor::Cross);
 		return true;
 	};
-	on_hover.going = [&]() {
+	on_hover.going = [&] {
 		return true;
 	};
-	on_hover.ended = [&]() {
+	on_hover.ended = [&] {
 		mouse_is_in_canvas = false;
 		pop_cursor(hover_cursor);
+
+		// we do that here because we can't exit a click without trigering the widget callback
+		// think about the way you don't click a button after pressing it, you just move the cursor
+		// outside before releasing.
+		if (click_cursor) {
+			pop_cursor(click_cursor);
+			click_cursor = nullptr;
+		}
 		return true;
 	};
 }

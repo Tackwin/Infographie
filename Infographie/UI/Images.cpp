@@ -66,8 +66,8 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		if (auto img_widget = (Image*)settings.root->find_child(img_widget_id); img_widget) {
 			ImGui::Text("%u", img_widget->get_n());
 			ImGui::NextColumn();
-			if (ImGui::Button("Open")) {
-				img_widget->set_open(true);
+			if (ImGui::Button(img_widget->is_open() ? "Close" : "Open")) {
+				img_widget->set_open(!img_widget->is_open());
 			}
 			ImGui::NextColumn();
 		}
@@ -150,7 +150,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 		}
 	}
 
-	thread_local Vector2i Image_Size;
+	thread_local Vector2i Image_Size{ 1, 1 };
 
 	ImGui::Columns(3);
 	ImGui::Text("Image size(in samples)");

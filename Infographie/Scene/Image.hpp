@@ -33,6 +33,8 @@ public:
 	bool size_ok_for_sampling() const noexcept;
 
 	void set_open(bool v) noexcept;
+	bool is_open() const noexcept;
+
 	size_t get_n() const noexcept;
 
 	std::optional<sf::Sprite> get_echantillon_sprite() const noexcept;
