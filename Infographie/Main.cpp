@@ -121,7 +121,7 @@ int main() {
 	auto& camera = *scene_root.make_child<Camera>();
 	camera.set_viewport({ 0, 0, UNROLL_2(Window_Info.size) });
 	camera.set_perspective(
-		90 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+		70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
 	);
 	camera.set_global_position({ 0, 0, -10 });
 	camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
@@ -327,6 +327,8 @@ void update(
 	Texture_Settings& tex_settings,
 	float dt
 ) noexcept {
+	static constexpr auto Help_Popup_Title = "Help - Hestia";
+
 	ImGui::SFML::Update(Window_Info.window, sf::seconds(dt));
 	root.propagate_input();
 
@@ -334,7 +336,31 @@ void update(
 
 	ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
 	ImGui::BeginMenuBar();
-	ImGui::MenuItem("Help");
+	if (ImGui::MenuItem("Help")) {
+		ImGui::OpenPopup(Help_Popup_Title);
+	}
+
+	if (ImGui::BeginPopup(Help_Popup_Title)) {
+		ImGui::Text(R"__(
+Projet Hestia
+
+
+
+Ce projet est une application permettant de développer sa créativité en faisant une multitude de choses, on peut y :
+
+
+importer des images et observer la composition de ses pixels grâce à des histogrammes de plusieurs domaines de couleurs
+Créer des images et les exporter à partir de différents échantillons, provenant d'autres images ou créées à partir de palettes de couleurs.
+Dessiner dans des endroits prévus à cet effet, de dimension variable, de couleur variable et avec des outils variables.
+Faire apparaître des formes à partir d'une liste, de taille et couleur variable, avec des contours de taille et couleurs variables.
+Charger des modèles 3D dans un espace que l'on peut parcourir en se déplaçant soit même et en tournant la caméra, et donner des textures à ces modèles, autant en transparence qu'en couleur.
+Modifier des modèles 3D, en les déplaçant, tournant et en changeant leur échelles suivant différents axes, on peut revenir en arrière ou revenir en avant à notre guise.
+Naviguer dans des cubemaps sur lequel on peut appliquer des filtres, filtres sur lesquels on peut agir, en modifiant leurs caractéristiques.
+Créer des textures à appliquer sur des objets.
+Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler à tout moment tout élément et en pouvant aller le rechercher plus tard.
+	)__");
+		ImGui::EndPopup();
+	}
 	static sf::Cursor* help_cursor{ nullptr };
 	auto hovered = ImGui::IsItemHovered();
 	if (hovered && !help_cursor) {

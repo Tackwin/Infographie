@@ -76,7 +76,7 @@ void update_image_settings(Images_Settings& settings) noexcept {
 	ImGui::Text("?");
 	if (ImGui::IsItemHovered()) {
 		ImGui::SetTooltip(
-R"_(The h component is normally display in the range [0, 360],
+R"_(The h component is normally displayed in the range [0, 360],
 here it's normalized)_"
 		);
 	}
