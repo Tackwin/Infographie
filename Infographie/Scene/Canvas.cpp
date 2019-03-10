@@ -133,34 +133,21 @@ size_t Canvas::get_n() const noexcept {
 	return n;
 }
 
-// Algorithm from https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
 void Canvas::fill_circle(Vector2u p, size_t radius, Vector4f color) noexcept {
-	int x = (int)radius - 1;
-	int y = 0;
-	int dx = 1;
-	int dy = 1;
-	int err = dx - (radius << 1);
+	Vector2u start;
+	Vector2u end;
 
-	while (x >= y) {
-		fill_line(p, {p.x + x, p.y + y}, 1, color);
-		fill_line(p, {p.x + y, p.y + x}, 1, color);
-		fill_line(p, {p.x - y, p.y + x}, 1, color);
-		fill_line(p, {p.x - x, p.y + y}, 1, color);
-		fill_line(p, {p.x - x, p.y - y}, 1, color);
-		fill_line(p, {p.x - y, p.y - x}, 1, color);
-		fill_line(p, {p.x + y, p.y - x}, 1, color);
-		fill_line(p, {p.x + x, p.y - y}, 1, color);
+	start.x = std::max(radius, p.x) - radius;
+	start.y = std::max(radius, p.y) - radius;
 
-		if (err <= 0) {
-			y++;
-			err += dy;
-			dy += 2;
-		}
+	end.x = std::min(p.x + radius, image.getSize().x);
+	end.y = std::min(p.y + radius, image.getSize().y);
 
-		if (err > 0) {
-			x--;
-			dx += 2;
-			err += dx - (radius << 1);
+	for (size_t x = start.x; x < end.x; ++x) {
+		for (size_t y = start.y; y < end.y; ++y) {
+			if ((x - p.x) * (x - p.x) + (y - p.y) * (y - p.y) < radius * radius) {
+				image.setPixel(x, y, (sf::Color)color);
+			}
 		}
 	}
 }
