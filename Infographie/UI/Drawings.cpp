@@ -350,6 +350,7 @@ void update_primitive_tools(Drawing_Settings& settings) noexcept {
 
 			auto shape = std::make_unique<sf::CircleShape>();
 			shape->setOutlineColor((sf::Color)a.outline_color);
+			shape->setRadius(a.radius);
 			shape->setFillColor((sf::Color)a.color);
 			shape->setOutlineThickness(a.thick);
 			shape->setOrigin(a.radius / 2, a.radius / 2);
