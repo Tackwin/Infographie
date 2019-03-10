@@ -179,7 +179,7 @@
     <ClCompile Include="Containers\Graph.cpp" />
     <ClCompile Include="Containers\QuadTree.cpp" />
     <ClCompile Include="Files\FileFormat.cpp" />
-    <ClCompile Include="Graphic\ArrowShape.cpp" />
+    <ClCompile Include="Graphic\ComplexShape.cpp" />
     <ClCompile Include="imgui\imgui-SFML.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -215,7 +215,7 @@
     <ClInclude Include="Containers\Graph.hpp" />
     <ClInclude Include="Containers\QuadTree.hpp" />
     <ClInclude Include="Files\FileFormat.hpp" />
-    <ClInclude Include="Graphic\ArrowShape.hpp" />
+    <ClInclude Include="Graphic\ComplexShape.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui-SFML.h" />
     <ClInclude Include="imgui\imgui.h" />

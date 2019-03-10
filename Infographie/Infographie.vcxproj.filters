@@ -116,7 +116,7 @@
     <ClCompile Include="Scene\Primitive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Graphic\ArrowShape.cpp">
+    <ClCompile Include="Graphic\ComplexShape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -230,7 +230,7 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Primitive.hpp" />
-    <ClInclude Include="Graphic\ArrowShape.hpp">
+    <ClInclude Include="Graphic\ComplexShape.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

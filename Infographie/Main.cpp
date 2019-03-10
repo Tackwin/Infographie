@@ -142,6 +142,7 @@ int main() {
 		if (!AM->load_texture(path.generic_string(), path)) return;
 		auto& texture = AM->get_texture(path.generic_string());
 		auto img_widget = scene_root.make_child<Image>(texture);
+		img_widget->set_global_position((Vector2f)Window_Info.size / 2);
 		if (!img_widget->size_ok_for_sampling()) {
 			Log.push("Please note that the sampling feature take sample of 30 px from an image\n\
 				so you won't be able to sample this image");
@@ -158,18 +159,28 @@ int main() {
 			return;
 		}
 		auto img_widget = scene_root.make_child<Image>(texture);
+		img_widget->set_global_position((Vector2f)Window_Info.size / 2);
 		img_settings.images_widget_id.push_back(img_widget->get_uuid());
 	});
 
 	draw_settings.add_canvas_callback.push_back([&](Vector2u size) {
 		auto canvas_widget = scene_root.make_child<Canvas>(draw_settings);
 		canvas_widget->set_size(size);
+		canvas_widget->set_global_position((Vector2f)Window_Info.size / 2);
 		draw_settings.canvases_widget_id.push_back(canvas_widget->get_uuid());
-		});
+	});
 	draw_settings.add_primitive_callback.push_back([&](std::unique_ptr<sf::Shape> shape) {
 		auto primitive_widget = scene_root.make_child<Primitive>(std::move(shape));
+		primitive_widget->set_global_position((Vector2f)Window_Info.size / 2);
 		draw_settings.primitives_widget_id.push_back(primitive_widget->get_uuid());
 	});
+	draw_settings.add_complex_primitive_callback.push_back(
+		[&](std::unique_ptr<Complex_Shape> shape) {
+			auto primitive_widget = scene_root.make_child<Primitive>(std::move(shape));
+			primitive_widget->set_global_position((Vector2f)Window_Info.size / 2);
+			draw_settings.primitives_widget_id.push_back(primitive_widget->get_uuid());
+		}
+	);
 
 	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_object_file(path.generic_string(), path)) return;

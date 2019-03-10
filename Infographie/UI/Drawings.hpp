@@ -4,7 +4,7 @@
 #include <functional>
 #include "Math/Vector.hpp"
 #include "Utils/UUID.hpp"
-#include "Graphic/ArrowShape.hpp"
+#include "Graphic/ComplexShape.hpp"
 
 class Widget;
 struct Drawing_Settings {
@@ -66,7 +66,7 @@ struct Drawing_Settings {
 	std::variant<PT_Rect, PT_Circle, PT_Arrow, PT_Polygon> primitive_tool;
 	std::vector<std::function<void(Vector2u)>> add_canvas_callback;
 	std::vector<std::function<void(std::unique_ptr<sf::Shape>)>> add_primitive_callback;
-	std::vector<std::function<void(std::unique_ptr<Drawable_Transform>)>>
+	std::vector<std::function<void(std::unique_ptr<Complex_Shape>)>>
 		add_complex_primitive_callback;
 };
 
