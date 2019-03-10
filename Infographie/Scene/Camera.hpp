@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common.hpp"
 #include "Widget.hpp"
 
 #include "Math/Matrix.hpp"
@@ -18,7 +19,7 @@ public:
 	void set_viewport(Rectangle2u rec) noexcept;
 	void set_gl_view() noexcept;
 
-	void look_at(Vector3f target) noexcept;
+	void look_at(Vector3f target, Vector3f up) noexcept;
 	void set_perspective(float fov, float ratio, float f, float n) noexcept;
 
 	const Matrix4f& get_view_matrix() noexcept;
@@ -33,6 +34,12 @@ private:
 	Matrix4f projection;
 	Rectangle2u viewport;
 	Vector3f look_dir{ 0, 0, 1 };
+	Vector3f right{ 1, 0, 0 };
+	Vector3f up{ 0, 1, 0 };
+
+	float pitch{ 0 };
+	float yaw{ PIf };
+
 	float speed{ 15 };
 };
 

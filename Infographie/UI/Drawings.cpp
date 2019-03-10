@@ -9,6 +9,7 @@
 #include "imgui/imgui-SFML.h"
 
 #include "Scene/Canvas.hpp"
+#include "Scene/Primitive.hpp"
 #include "Window.hpp"
 
 #include "Managers/AssetsManager.hpp"
@@ -54,15 +55,38 @@ void update_drawing_settings(Drawing_Settings& settings) noexcept {
 		auto& img_widget_id = settings.canvases_widget_id[i];
 		if (auto canvas_widget = (Canvas*)settings.root->find_child(img_widget_id); canvas_widget)
 		{
+			ImGui::PushID(canvas_widget);
 			ImGui::Text("%u", canvas_widget->get_n());
 			ImGui::NextColumn();
 			if (ImGui::Button(canvas_widget->is_visible() ? "Close" : "Open")) {
 				canvas_widget->set_visible(!canvas_widget->is_visible());
 			}
 			ImGui::NextColumn();
+			ImGui::PopID();
 		}
 		else {
 			settings.canvases_widget_id.erase(std::begin(settings.canvases_widget_id) + i);
+		}
+	}
+	ImGui::Columns(1);
+
+	ImGui::Separator();
+	ImGui::Columns(2);
+	for (size_t i = settings.primitives_widget_id.size() - 1; i + 1 > 0; --i) {
+		auto& pri_widget_id = settings.primitives_widget_id[i];
+		if (auto prim_widget = (Primitive*)settings.root->find_child(pri_widget_id); prim_widget)
+		{
+			ImGui::PushID(prim_widget);
+			ImGui::Text("%u", prim_widget->get_n());
+			ImGui::NextColumn();
+			if (ImGui::Button(prim_widget->is_visible() ? "Close" : "Open")) {
+				prim_widget->set_visible(!prim_widget->is_visible());
+			}
+			ImGui::NextColumn();
+			ImGui::PopID();
+		}
+		else {
+			settings.primitives_widget_id.erase(std::begin(settings.primitives_widget_id) + i);
 		}
 	}
 	ImGui::Columns(1);

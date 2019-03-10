@@ -63,10 +63,6 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
-			if (IM::isMouseJustPressed(sf::Mouse::Left)) {
-				int d{ 0 };
-				int a = d;
-			}
 			if (ImGui::Checkbox("Is focused", &selected_map[model])) {
 				model->set_focus(selected_map[model]);
 				model->lock_focus(selected_map[model]);

@@ -3,8 +3,11 @@
 #include "Managers/InputsManager.hpp"
 #include "Window.hpp"
 
-Primitive::Primitive(std::unique_ptr<Complex_Shape> s) noexcept : complex_shape(std::move(s))
-{
+size_t Primitive::N{ 0 };
+
+Primitive::Primitive(std::unique_ptr<Complex_Shape> s) noexcept : complex_shape(std::move(s)) {
+	n = N;
+	N++;
 	on_click.began = [&] {
 		if (IM::isMouseJustPressed(sf::Mouse::Button::Middle)) {
 			click_cursor = push_cursor(sf::Cursor::Hand);
@@ -34,6 +37,8 @@ Primitive::Primitive(std::unique_ptr<Complex_Shape> s) noexcept : complex_shape(
 };
 
 Primitive::Primitive(std::unique_ptr<sf::Shape> s) noexcept : shape(std::move(s)) {
+	n = N;
+	N++;
 	on_click.began = [&] {
 		if (IM::isMouseJustPressed(sf::Mouse::Button::Middle)) {
 			click_cursor = push_cursor(sf::Cursor::Hand);
@@ -62,6 +67,7 @@ Primitive::Primitive(std::unique_ptr<sf::Shape> s) noexcept : shape(std::move(s)
 	set_origin({ 0.5f, 0.5f });
 };
 void Primitive::render(sf::RenderTarget& target) noexcept {
+	if (!is_visible()) return;
 	if (shape) {
 		shape->setPosition(get_global_position());
 		target.draw(*shape);
@@ -72,5 +78,8 @@ void Primitive::render(sf::RenderTarget& target) noexcept {
 	}
 }
 
-void Primitive::update(float) noexcept {
+void Primitive::update(float) noexcept { }
+
+size_t Primitive::get_n() const noexcept {
+	return n;
 }

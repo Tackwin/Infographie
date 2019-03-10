@@ -123,8 +123,8 @@ int main() {
 	camera.set_perspective(
 		90 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
 	);
-	camera.set_global_position({ 0, 0, -5 });
-	camera.look_at({ 0, 0, 0 });
+	camera.set_global_position({ 0, 0, -10 });
+	camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
 	// it's ok to render from the parent all it's going to do is that the camera will try to call
 	// it's propagate_opengl_render method. But a camera doesn't render anything, it's just
 	// a simple class to hold the different transformation matrix. So it's going to be a no op

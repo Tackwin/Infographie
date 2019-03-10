@@ -6,6 +6,7 @@
 
 class Primitive : public Widget {
 public:
+	static size_t N;
 
 	// I didn't put much thinking into this but i think that thanks to the weird sfml class
 	// hierarchy (namely there is no sf::Draw&Transform) and since shape is only for convex
@@ -17,7 +18,10 @@ public:
 	virtual void render(sf::RenderTarget& target) noexcept override;
 	virtual void update(float dt) noexcept override;
 
+	size_t get_n() const noexcept;
+
 private:
+	size_t n{ 0 };
 	std::unique_ptr<sf::Shape> shape;
 	std::unique_ptr<Complex_Shape> complex_shape;
 	sf::Cursor* click_cursor{ nullptr };

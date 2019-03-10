@@ -25,21 +25,15 @@ void Camera::update(float dt) noexcept {
 	}
 
 	if (IM::isKeyPressed(sf::Keyboard::Q)) {
-		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		pos3 -= speed * dt * right;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::D)) {
-		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
 		pos3 += speed * dt * right;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::Z)) {
-		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
-		auto up = look_dir.cross(right);
 		pos3 += speed * dt * up;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::S)) {
-		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
-		auto up = look_dir.cross(right);
 		pos3 -= speed * dt * up;
 	}
 	if (IM::isKeyPressed(sf::Keyboard::LShift)) {
@@ -49,12 +43,29 @@ void Camera::update(float dt) noexcept {
 		pos3 -= speed * dt * look_dir;
 	}
 	if (IM::isMousePressed(sf::Mouse::Middle)) {
-		auto right = Vector3f{ 0, 1, 0 }.cross(look_dir);
-		auto up = look_dir.cross(right);
-
 		auto mouse_dt = IM::getMouseScreenDelta().normalize();
 		look_dir += (0.01f) * (right * mouse_dt.x + up * mouse_dt.y);
 		look_dir = look_dir.normalize();
+
+		yaw += 0.3f * speed * mouse_dt.x * dt;
+		pitch -= 0.3f * speed * mouse_dt.y * dt;
+
+		if (pitch > PIf / 2) pitch = PIf / 2 - 0.001f;
+		if (pitch < -PIf / 2) pitch = -PIf / 2 + 0.001f;
+
+		look_dir.x = -sin(yaw) * cos(pitch);
+		look_dir.y = -sin(pitch);
+		look_dir.z = -cos(yaw) * cos(pitch);
+
+		right.x = -cos(yaw);
+		right.y = 0.0;
+		right.z = sin(yaw);
+
+		up = look_dir.cross(right);
+
+		look_dir = look_dir.normalize();
+		right = right.normalize();
+		up = up.normalize();
 	}
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
@@ -137,8 +148,10 @@ void Camera::set_viewport(Rectangle2u rec) noexcept {
 	viewport = rec;
 }
 
-void Camera::look_at(Vector3f target) noexcept {
-	look_dir = (get_global_position3() - target).normalize();
+void Camera::look_at(Vector3f target, Vector3f u) noexcept {
+	look_dir = (target - get_global_position3()).normalize();
+	right = look_dir.cross(u).normalize();
+	up = right.cross(look_dir).normalize();
 }
 
 void Camera::set_perspective(float fov, float ratio, float f, float n) noexcept {
@@ -153,9 +166,9 @@ const Matrix4f& Camera::get_projection_matrix() noexcept {
 }
 
 void Camera::compute_view() noexcept {
-	auto zaxis = look_dir;    // The "forward" vector.
-	auto xaxis = Vector3f{ 0, 1, 0 }.cross(zaxis).normalize();// The "right" vector.
-	auto yaxis = zaxis.cross(xaxis);     // The "up" vector.
+	auto xaxis = right;// The "right" vector.
+	auto yaxis = up;     // The "up" vector.
+	auto zaxis = -1 * look_dir;    // The "forward" vector.
 
 	// Create a 4x4 view matrix from the right, up, forward and eye position vectors
 	float mat_comp[]{
