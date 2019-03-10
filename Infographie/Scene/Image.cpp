@@ -3,6 +3,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
 
+#include "OS/OpenFile.hpp"
+
 size_t Image::Total_N = 0;
 
 Image::Image(sf::Texture& texture) noexcept {
@@ -39,6 +41,17 @@ void Image::update(float dt) noexcept {
 
 	if (histogram_open) update_histogram();
 	update_echantillon();
+
+	if (ImGui::Button("Export")) {
+		sf::Image img_to_save = image;
+		open_dir_async([img = std::move(img_to_save)](std::optional<std::filesystem::path> path) {
+			if (!path) return;
+
+			auto n_files = std::filesystem::hard_link_count(*path);
+			auto file_name = *path / ("screenshot_" + std::to_string(n_files) + ".png");
+			img.saveToFile(file_name.generic_string());
+		});
+	}
 
 	ImGui::SetWindowSize({
 		std::max(ImGui::GetWindowSize().x, 100.f),
