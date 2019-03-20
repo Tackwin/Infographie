@@ -151,7 +151,7 @@ void Canvas::fill_circle(Vector2u p, size_t radius, Vector4f color) noexcept {
 		}
 	}
 }
-void Canvas::fill_line(Vector2u A, Vector2u B, size_t thick, Vector4f color) noexcept {
+void Canvas::fill_line(Vector2u A, Vector2u B, Vector4f color) noexcept {
 	auto low = [&](Vector2u A, Vector2u B, Vector4f color) {
 		auto dt = (Vector2i)B - (Vector2i)A;
 		auto yi = 1;
@@ -275,7 +275,7 @@ void Canvas::action_on_canvas() noexcept {
 				line_start_point = mouse_canvas_pos;
 			}
 			else {
-				fill_line(*line_start_point, mouse_canvas_pos, 1, x.color);
+				fill_line(*line_start_point, mouse_canvas_pos, x.color);
 				texture_cached = false;
 				line_start_point.reset();
 			}

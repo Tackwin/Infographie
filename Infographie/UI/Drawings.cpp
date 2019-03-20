@@ -159,11 +159,7 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 		}
 
 		if constexpr (std::is_same_v<T, Drawing_Settings::DT_Line>) {
-			static int Line_Thick_Int{ 0 };
-
 			ImGui::Text("Line parameters");
-			ImGui::InputInt("Thickness", &Line_Thick_Int, 1, 5);
-			ImGui::Checkbox("Strip", &x.strip);
 		}
 		ImGui::ColorPicker4("Color", reinterpret_cast<float*>(&x.color));
 

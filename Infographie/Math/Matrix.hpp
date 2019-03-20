@@ -52,8 +52,8 @@ struct Matrix4f {
 		Matrix4f matrix;
 		matrix[0] = Vector4f{ uw, 0, 0, 0 };
 		matrix[1] = Vector4f{ 0, uh, 0, 0 };
-		matrix[2] = Vector4f{ 0, 0, (f + n) / (n - f), -1 };
-		matrix[3] = Vector4f{ 0, 0, 2 * (f * n) / (n - f), 0};
+		matrix[2] = Vector4f{ 0, 0, (f + n) / (n - f), 2 * (f * n) / (n - f) };
+		matrix[3] = Vector4f{ 0, 0, -1, 0};
 		return matrix;
 	}
 
@@ -300,10 +300,10 @@ struct Matrix4f {
 	}
 
 	float operator[](const Vector<2, unsigned int>& idx) const {
-		return rows[idx.x][idx.y];
+		return rows[idx.y][idx.x];
 	}
 	float& operator[](const Vector<2, unsigned int>& idx) {
-		return rows[idx.x][idx.y];
+		return rows[idx.y][idx.x];
 	}
 
 	Matrix4f to_col() noexcept {
@@ -321,7 +321,7 @@ struct Matrix4f {
 		float inv[16], det;
 		int i;
 
-		float* result_ptr = &result[{0, 0}];
+		float* result_ptr = &result[0][0];
 		const float* m = &rows[0].x;
 
 		inv[0] = m[5] * m[10] * m[15] -

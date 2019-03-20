@@ -9,7 +9,7 @@ Cube_Map::Cube_Map() noexcept : Widget3() {
 	glGenTextures(1, &texture_id);
 	check_gl_error();
 
-	cube_model.set_object_copy(Object_File::cube({ 100000, 100000, 100000 }));
+	cube_model.set_object_copy(Object_File::cube({ 1, 1, 1 }));
 	cube_model.set_shader(AM->get_shader("Skybox"));
 }
 

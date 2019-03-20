@@ -44,14 +44,9 @@ void Camera::update(float dt) noexcept {
 	}
 	if (IM::isMousePressed(sf::Mouse::Middle)) {
 		auto mouse_dt = IM::getMouseScreenDelta().normalize();
-		look_dir += (0.01f) * (right * mouse_dt.x + up * mouse_dt.y);
-		look_dir = look_dir.normalize();
 
 		yaw += 0.3f * speed * mouse_dt.x * dt;
-		pitch -= 0.3f * speed * mouse_dt.y * dt;
-
-		if (pitch > PIf / 2) pitch = PIf / 2 - 0.001f;
-		if (pitch < -PIf / 2) pitch = -PIf / 2 + 0.001f;
+		pitch += 0.3f * speed * mouse_dt.y * dt;
 
 		look_dir.x = -sin(yaw) * cos(pitch);
 		look_dir.y = -sin(pitch);
@@ -72,14 +67,21 @@ void Camera::update(float dt) noexcept {
 	compute_view();
 
 	if (IM::isMouseJustPressed(sf::Mouse::Right)) {
-		// i don't know why this code is buggy ?? the ray projection is either off or it's
-		// the render ? There seem to be an off by a-factor-error.
-		// When the camera is straight looking and the object is at the center, it's ok
-		// When the camera is straight looking and the object is at an offset, it's not but on
-		//		the same trajectory
-		// and it's the same if the camera is at an angle.
+		// >TP1
+			// i don't know why this code is buggy ?? the ray projection is either off or it's
+			// the render ? There seem to be an off by a-factor-error.
+			// When the camera is straight looking and the object is at the center, it's ok
+			// When the camera is straight looking and the object is at an offset, it's not but on
+			//		the same trajectory
+			// and it's the same if the camera is at an angle.
+			// so just use the ui to select objects
 
-		// so just use the ui to select objects
+		// >TP2
+		// Turn out my view and proection matrix were wrong all along, they needed to be
+		// transposed, damn you linear algebra and your non obvious graphical bug argh....
+
+		// My god i was doing	Vector3f{ ray4.x, ray4.y, ray.z } instead of
+		//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
 
 		Vector3f ray_origin = pos3;
 		Vector3f ray = {
@@ -92,7 +94,7 @@ void Camera::update(float dt) noexcept {
 		ray_eye.z = -1;
 		ray_eye.w = 0;
 		auto ray4 = (*view.invert()) * ray_eye;
-		ray = Vector3f{ ray4.x, ray4.y, ray.z }.normalize();
+		ray = Vector3f{ ray4.x, ray4.y, ray4.z }.normalize();
 
 		Widget3* selected{ nullptr };
 		Vector3f intersection;
@@ -172,9 +174,9 @@ void Camera::compute_view() noexcept {
 
 	// Create a 4x4 view matrix from the right, up, forward and eye position vectors
 	float mat_comp[]{
-		xaxis.x,            xaxis.y,            xaxis.z,       0.f,
-		yaxis.x,            yaxis.y,            yaxis.z,       0.f,
-		zaxis.x,            zaxis.y,            zaxis.z,       0.f,
+		xaxis.x,            yaxis.x,            zaxis.x,       0.f,
+		xaxis.y,            yaxis.y,            zaxis.y,       0.f,
+		xaxis.z,            yaxis.z,            zaxis.z,       0.f,
 		0,                        0,                  0,       1.f
 	};
 

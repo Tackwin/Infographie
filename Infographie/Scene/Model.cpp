@@ -65,11 +65,21 @@ void Model::opengl_render() noexcept {
 			Matrix4f::scale(scaling);
 		Matrix4f view = Window_Info.active_camera->get_view_matrix();
 		Matrix4f proj = Window_Info.active_camera->get_projection_matrix();
+		Matrix4f view_wo_pos = view;
+
+		view_wo_pos[{3, 0}] = 0;
+		view_wo_pos[{3, 1}] = 0;
+		view_wo_pos[{3, 2}] = 0;
+		view_wo_pos[{3, 3}] = 1;
+
 		auto handle = s->getNativeHandle();
 
 		glUseProgram(handle);
 		glUniformMatrix4fv(glGetUniformLocation(handle, "model"), 1, GL_FALSE, (float*)&model);
 		glUniformMatrix4fv(glGetUniformLocation(handle, "view"), 1, GL_FALSE, (float*)&view);
+		glUniformMatrix4fv(
+			glGetUniformLocation(handle, "view_wo_pos"), 1, GL_FALSE, (float*)&view_wo_pos
+		);
 		glUniformMatrix4fv(glGetUniformLocation(handle, "projection"), 1, GL_FALSE, (float*)&proj);
 		glUniform1i(glGetUniformLocation(handle, "texture_main"), 0);
 		glUniform1i(glGetUniformLocation(handle, "texture_alpha"), 1);

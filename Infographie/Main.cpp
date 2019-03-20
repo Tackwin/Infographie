@@ -510,12 +510,9 @@ void load_textures() noexcept {
 	AM->load_texture("PT_Star", "res/PT_Star.png");
 	AM->load_texture("PT_Heart", "res/PT_Heart.png");
 	AM->load_texture("PT_Rect", "res/PT_Rect.png");
-	AM->load_texture("PT_Heart", "res/PT_Heart.png");
 }
 
-void load_objects() noexcept {
-	AM->load_object_file("Bill", "res/models/BillCipher.obj");
-}
+void load_objects() noexcept {}
 
 void load_shaders() noexcept {
 	AM->load_shader(

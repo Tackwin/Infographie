@@ -21,9 +21,7 @@ struct Drawing_Settings {
 		Vector4f color{ 0, 0, 0, 1 };
 	};
 	struct DT_Line {
-		size_t thick;
 		Vector4f color{ 0, 0, 0, 1 };
-		bool strip;
 	};
 
 	struct PT_Rect {

@@ -4,9 +4,10 @@ layout (location = 0) in vec3 pos;
 out vec3 text_coord;
 
 uniform mat4 projection;
-uniform mat4 view;
+uniform mat4 view_wo_pos;
 
 void main() {
     text_coord = pos;
-    gl_Position = vec4(pos, 1.0) * view * projection;
+    gl_Position = vec4(pos, 1.0) * view_wo_pos * projection;
+    gl_Position.z = gl_Position.w - 0.0001;
 } 
