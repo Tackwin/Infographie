@@ -25,6 +25,8 @@
 #include "Utils/TimeInfo.hpp"
 #include "Utils/Logs.hpp"
 
+static bool Show_Render_Debug{ false };
+
 void load_textures() noexcept;
 void load_objects() noexcept;
 void load_shaders() noexcept;
@@ -42,7 +44,6 @@ void update(
 	Texture_Settings& tex_settings,
 	float dt
 ) noexcept;
-
 
 void render(
 	Widget3& root,
@@ -397,8 +398,12 @@ void render(
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
 	Window_Info.active_camera = &camera;
+
+	ImGui::Begin("Debug render info", &Show_Render_Debug);
 	root.propagate_opengl_render();
-	Window_Info.active_camera = nullptr;
+	root.propagate_last_opengl_render();
+	ImGui::End();
+
 	texture_target.display();
 	check_gl_error();
 
@@ -576,6 +581,7 @@ void update_debug_ui(Widget3&, Camera& camera) noexcept {
 		camera.get_global_position3().z
 	);
 
+	ImGui::Checkbox("Show render debug", &Show_Render_Debug);
 
 	if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
 	ImGui::Checkbox("Demo", &show_demo_window);

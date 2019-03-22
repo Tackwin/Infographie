@@ -2,6 +2,7 @@
 #include <SFML/OpenGl.hpp>
 
 #include "Managers/InputsManager.hpp"
+#include "Math/algorithms.hpp"
 
 #include "Model.hpp"
 
@@ -83,18 +84,15 @@ void Camera::update(float dt) noexcept {
 		// My god i was doing	Vector3f{ ray4.x, ray4.y, ray.z } instead of
 		//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
 
-		Vector3f ray_origin = pos3;
-		Vector3f ray = {
-			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
-			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y,
-			1
-		};
-		Vector4f ray_clip = { ray.x, ray.y, -1, 1 };
-		auto ray_eye = (*projection.invert()) * ray_clip;
-		ray_eye.z = -1;
-		ray_eye.w = 0;
-		auto ray4 = (*view.invert()) * ray_eye;
-		ray = Vector3f{ ray4.x, ray4.y, ray4.z }.normalize();
+		auto ray_origin = pos3;
+		auto ray = get_ray_from_graphic_matrices(
+			{
+				(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
+				1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
+			},
+			projection,
+			view
+		);
 
 		Widget3* selected{ nullptr };
 		Vector3f intersection;

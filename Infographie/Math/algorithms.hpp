@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "Vector.hpp"
+#include "Matrix.hpp"
 #include "Segment.hpp"
 #include "Rectangle.hpp"
 #include "Circle.hpp"
@@ -39,7 +40,10 @@ std::optional<Vector2f> ray_circle(const Rayf& ray, const Circlef& c) noexcept;
 extern
 std::optional<Vector2f> ray_rectangle(const Rayf& seg, const Rectangle2f& c) noexcept;
 extern std::optional<Vector2f> ray_segment(const Rayf& A, const Segment2f& B) noexcept;
-
 extern std::vector<Vector2f> poisson_disc_sampling(
 	float r, Vector2f size, const std::vector<Vector2f>& initial_pool = {}
 ) noexcept;
+extern Vector3f get_ray_from_graphic_matrices(Vector2f pos, Matrix4f proj, Matrix4f view) noexcept;
+extern std::optional<Vector3f> ray_plane(Ray3f ray, Vector3f center, Vector3f normal) noexcept;
+extern bool ray_box(Ray3f ray, Vector3f pos, Vector3f size) noexcept;
+

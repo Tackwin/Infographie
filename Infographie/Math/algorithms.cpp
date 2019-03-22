@@ -157,3 +157,83 @@ std::vector<Vector2f> poisson_disc_sampling(
 	return poisson;
 }
 
+extern Vector3f get_ray_from_graphic_matrices(Vector2f p, Matrix4f proj, Matrix4f view) noexcept {
+	Vector3f ray = {
+		p.x, // (2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
+		p.y, // 1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y,
+		1
+	};
+	Vector4f ray_clip = { ray.x, ray.y, -1, 1 };
+	auto ray_eye = (*proj.invert()) * ray_clip;
+	ray_eye.z = -1;
+	ray_eye.w = 0;
+	auto ray4 = (*view.invert()) * ray_eye;
+	ray = Vector3f{ ray4.x, ray4.y, ray4.z }.normalize();
+	return ray;
+}
+
+bool ray_box(Ray3f ray, Vector3f pos, Vector3f size) noexcept {
+	bool inside = true;
+	bool quadrant[3];
+	int i;
+	int which_plane;
+	double max_t[3];
+	double candidate_plane[3];
+
+	/* Find candidate planes; this loop can be avoided if
+	rays cast all from the eye(assume perpsective view) */
+	for (i = 0; i < 3; i++)
+		if (ray.pos[i] < pos[i]) {
+			quadrant[i] = true;
+			candidate_plane[i] = pos[i];
+			inside = false;
+		}
+		else if (ray.pos[i] > (pos + size)[i]) {
+			quadrant[i] = true;
+			candidate_plane[i] = (pos + size)[i];
+			inside = false;
+		}
+		else {
+			quadrant[i] = false;
+		}
+
+	/* Ray origin inside bounding box */
+	if (inside) return true;
+
+
+	/* Calculate T distances to candidate planes */
+	for (i = 0; i < 3; i++)
+		if (quadrant[i] && ray.dir[i] != 0.)
+			max_t[i] = (candidate_plane[i] - ray.pos[i]) / ray.dir[i];
+		else
+			max_t[i] = -1.;
+
+	/* Get largest of the max_t's for final choice of intersection */
+	which_plane = 0;
+	for (i = 1; i < 3; i++)
+		if (max_t[which_plane] < max_t[i])
+			which_plane = i;
+
+	/* Check final candidate actually inside box */
+	if (max_t[which_plane] < 0.) return false;
+
+	Vector3f coord;
+	for (i = 0; i < 3; i++) {
+		if (which_plane != i) {
+			coord[i] = ray.pos[i] + max_t[which_plane] * ray.dir[i];
+			if (coord[i] < pos[i] || coord[i] > (pos + size)[i])
+				return false;
+		}
+	}
+	return true;
+}
+
+std::optional<Vector3f> ray_plane(Ray3f ray, Vector3f center, Vector3f normal) noexcept {
+	float denom = normal.dot(ray.dir);
+	if (std::fabsf(denom) > 0.0001f) {
+		float t = (center - ray.pos).dot(normal) / denom;
+		if (t >= 0) return ray.pos + t * ray.dir;
+	}
+	return std::nullopt;
+}
+

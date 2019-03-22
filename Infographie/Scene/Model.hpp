@@ -38,10 +38,18 @@ public:
 	virtual std::optional<Vector3f>
 	is_selected(Vector3f ray_origin, Vector3f ray) const noexcept override;
 
+	virtual void set_focus(bool v) noexcept override;
+
 	void set_scaling(Vector3f s) noexcept;
 	Vector3f get_scaling() const noexcept;
 
+	void set_selectable(bool v) noexcept;
+
 private:
+	void toggle_picker() noexcept;
+	void push_picker() noexcept;
+	void pop_picker() noexcept;
+
 	float picking_sphere_radius{ 0.f };
 
 	size_t n;
@@ -58,6 +66,8 @@ private:
 	// we use a local copy
 	Object_File object_file_copy;
 
+	bool selectable{ true };
+
 	bool render_checkbox{ false };
 	bool without_bounding_box{ false };
 
@@ -67,6 +77,28 @@ private:
 	std::optional<GLuint> normal_buffer_id;
 
 	Model* boundingbox_child{ nullptr };
+
+	struct Picker : public Widget3 {
+		std::unique_ptr<Model> xy_plan;
+		std::unique_ptr<Model> yz_plan;
+		std::unique_ptr<Model> zx_plan;
+
+		enum class Plan_List {
+			None = 0,
+			XY,
+			YZ,
+			ZX,
+			Count
+		} selected_plan = Plan_List::None;
+		Vector3f initial_pos;
+
+		Picker() noexcept;
+
+		virtual void update(float) noexcept override;
+
+		virtual void last_opengl_render() noexcept override;
+	};
+	Picker* picker{ nullptr };
 
 	Vector3f scaling{ 1, 1, 1 };
 };

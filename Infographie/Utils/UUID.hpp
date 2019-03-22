@@ -29,6 +29,10 @@ public:
 		return uuid < other.uuid;
 	}
 
+	constexpr explicit operator unsigned long long() const noexcept {
+		return uuid;
+	}
+
 private:
 	constexpr Uuid_t(unsigned long long n) noexcept : uuid(n) {}
 

@@ -59,7 +59,7 @@ void Widget::kill_every_childs() noexcept {
 }
 void Widget::kill_direct_child(Uuid_t id) noexcept {
 	auto it = std::find_if(std::begin(childs), std::end(childs), [id](const auto& x) {
-		return x->get_uuid() = id;
+		return x->get_uuid() == id;
 	});
 
 	if (it != std::end(childs)) {
@@ -416,13 +416,39 @@ void Widget::for_every_childs(std::function<void(Widget*)>&& f) noexcept {
 
 
 void Widget3::opengl_render() noexcept {}
+void Widget3::last_opengl_render() noexcept {}
 
 void Widget3::propagate_opengl_render() noexcept {
+	size_t i = 0;
+
+	for (; i < childs.size(); ++i) {
+		if (childs[i]->get_z_index() >= 0) break;
+		if (auto c3 = dynamic_cast<Widget3*>(childs[i].get())) c3->propagate_opengl_render();
+	}
+
 	if (!is_visible()) return;
+
 	opengl_render();
 
-	for (const auto& c : childs) {
-		if (auto c3 = dynamic_cast<Widget3*>(c.get())) c3->propagate_opengl_render();
+	for (; i < childs.size(); ++i) {
+		if (auto c3 = dynamic_cast<Widget3*>(childs[i].get())) c3->propagate_opengl_render();
+	}
+}
+
+void Widget3::propagate_last_opengl_render() noexcept {
+	size_t i = 0;
+
+	for (; i < childs.size(); ++i) {
+		if (childs[i]->get_z_index() >= 0) break;
+		if (auto c3 = dynamic_cast<Widget3*>(childs[i].get())) c3->propagate_last_opengl_render();
+	}
+
+	if (!is_visible()) return;
+
+	last_opengl_render();
+
+	for (; i < childs.size(); ++i) {
+		if (auto c3 = dynamic_cast<Widget3*>(childs[i].get())) c3->propagate_last_opengl_render();
 	}
 }
 

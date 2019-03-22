@@ -378,6 +378,11 @@ struct Vector : public __vec_member<D, T> {
 		return this->components[i];
 	}
 
+	Vector<D, T> hamilton(Vector<D, T> other) noexcept {
+		Vector<D, T> result = *this;
+		for (size_t i = 0; i < D; ++i) result[i] *= other[i];
+		return result;
+	}
 
 	template<typename U>
 	Vector<D, T> operator*(const U& scalaire) const {

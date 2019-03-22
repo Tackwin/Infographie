@@ -13,6 +13,10 @@
 #include "Window.hpp"
 
 #include "Managers/AssetsManager.hpp"
+#include "Managers/InputsManager.hpp"
+#include "Math/algorithms.hpp"
+
+#include "imgui/imgui.h"
 
 size_t Model::Total_N = 0;
 constexpr auto Plain_Cube_Boundingbox_Texture_Key = "plain_cube_boundingbox";
@@ -136,6 +140,7 @@ void Model::opengl_render() noexcept {
 	);
 
 	glBindBuffer(GL_ARRAY_BUFFER, *normal_buffer_id);
+	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
 	glVertexAttribPointer(
 		2,                                // attribute
 		3,                                // size
@@ -145,11 +150,13 @@ void Model::opengl_render() noexcept {
 		(void*)0                          // array buffer offset
 	);
 
+	check_gl_error();
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, obj_to_use.vertices.size());
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
 	check_gl_error();
 }
 
@@ -346,6 +353,15 @@ std::optional<Vector3f> Model::is_selected(Vector3f ray_origin, Vector3f ray) co
 	return intersection;
 */}
 
+void Model::set_focus(bool v) noexcept {
+	Widget::set_focus(v);
+
+	if (!selectable) return;
+
+	if (!picker && v) push_picker();
+	if (picker && !v) pop_picker();
+}
+
 void Model::set_scaling(Vector3f s) noexcept {
 	scaling = s;
 	if (boundingbox_child) {
@@ -354,4 +370,170 @@ void Model::set_scaling(Vector3f s) noexcept {
 }
 Vector3f Model::get_scaling() const noexcept {
 	return scaling;
+}
+
+Model::Picker::Picker() noexcept {
+	xy_plan = std::make_unique<Model>(true);
+	yz_plan = std::make_unique<Model>(true);
+	zx_plan = std::make_unique<Model>(true);
+
+	xy_plan->set_object_copy(Object_File::cube({ 1, 1, 0.1f }));
+	yz_plan->set_object_copy(Object_File::cube({ 0.1f, 1, 1 }));
+	zx_plan->set_object_copy(Object_File::cube({ 1, 0.1f, 1 }));
+
+	xy_plan->set_texture(AM->get_texture(Plain_Cube_Boundingbox_Texture_Key));
+	yz_plan->set_texture(AM->get_texture(Plain_Cube_Boundingbox_Texture_Key));
+	zx_plan->set_texture(AM->get_texture(Plain_Cube_Boundingbox_Texture_Key));
+
+	xy_plan->set_shader(AM->get_shader("Simple"));
+	yz_plan->set_shader(AM->get_shader("Simple"));
+	zx_plan->set_shader(AM->get_shader("Simple"));
+
+	xy_plan->set_position({ 0, 0, 0.6f });
+	yz_plan->set_position({ 0.6f, 0, 0 });
+	zx_plan->set_position({ 0, -0.6f, 0 });
+
+	xy_plan->set_selectable(false);
+	yz_plan->set_selectable(false);
+	zx_plan->set_selectable(false);
+}
+
+void Model::Picker::update(float) noexcept {
+	if (IM::isMouseJustReleased(sf::Mouse::Left)) {
+		selected_plan = Plan_List::None;
+		return;
+	}
+
+
+	Ray3f ray;
+	ray.pos = Window_Info.active_camera->get_global_position3();
+	ray.dir = get_ray_from_graphic_matrices(
+		{
+			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
+			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
+		},
+		Window_Info.active_camera->get_projection_matrix(),
+		Window_Info.active_camera->get_view_matrix()
+	);
+	if (IM::isMouseJustPressed(sf::Mouse::Left)) {
+		auto p = xy_plan->get_global_position3();
+		auto s = xy_plan->get_scaling().hamilton(xy_plan->get_size3());
+
+		auto xy_intersection = ray_plane(
+			ray,
+			xy_plan->get_global_position3(),
+			{0, 0, 1}
+		);
+		if (xy_intersection &&
+			p.x - s.x / 2.f < xy_intersection->x && xy_intersection->x < p.x + s.x / 2.f &&
+			p.y - s.y / 2.f < xy_intersection->y && xy_intersection->y < p.y + s.y / 2.f
+		) {
+			selected_plan = Plan_List::XY;
+		}
+
+		p = yz_plan->get_global_position3();
+		s = yz_plan->get_scaling().hamilton(yz_plan->get_size3());
+
+		auto yz_intersection = ray_plane(
+			ray,
+			yz_plan->get_global_position3(),
+			{ 1, 0, 0 }
+		);
+		if (yz_intersection &&
+			p.y - s.y / 2.f < yz_intersection->y && yz_intersection->y < p.y + s.y / 2.f &&
+			p.z - s.z / 2.f < yz_intersection->z && yz_intersection->z < p.z + s.z / 2.f
+		) {
+			selected_plan = Plan_List::YZ;
+		}
+
+		p = zx_plan->get_global_position3();
+		s = zx_plan->get_scaling().hamilton(zx_plan->get_size3());
+
+		auto zx_intersection = ray_plane(
+			ray,
+			zx_plan->get_global_position3(),
+			{ 0, 1, 0 }
+		);
+		if (zx_intersection &&
+			p.z - s.z / 2.f < zx_intersection->z && zx_intersection->z < p.z + s.z / 2.f &&
+			p.x - s.x / 2.f < zx_intersection->x && zx_intersection->x < p.x + s.x / 2.f
+		) {
+			selected_plan = Plan_List::ZX;
+		}
+
+		initial_pos = get_global_position3();
+	}
+
+	switch (selected_plan) {
+	case Plan_List::XY: {
+		float t = (initial_pos.z - ray.pos.z) / ray.dir.z;
+		((Model*)parent)->set_global_position(ray.pos + t * ray.dir);
+		break;
+	}
+	case Plan_List::YZ: {
+		float t = (initial_pos.x - ray.pos.x) / ray.dir.x;
+		((Model*)parent)->set_global_position(ray.pos + t * ray.dir);
+		break;
+	}
+	case Plan_List::ZX: {
+		float t = (initial_pos.y - ray.pos.y) / ray.dir.y;
+		((Model*)parent)->set_global_position(ray.pos + t * ray.dir);
+		break;
+	}
+	}
+
+
+}
+
+void Model::Picker::last_opengl_render() noexcept {
+	ImGui::Text(
+		"x: %3.3f, y: %3.3f, z: %3.3f",
+		get_global_position3().x,
+		get_global_position3().y,
+		get_global_position3().z
+	);
+
+	auto dist =
+		(Window_Info.active_camera->get_global_position3() - get_global_position3()).length();
+
+	// It's crazy we can make constant screen size just by scaling world woordinate by camera
+	// distance.
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	Vector3f scale{ dist / 20, dist / 20, dist / 20 };
+
+	xy_plan->set_position(get_global_position3() + scale.x * Vector3f{ 0, 0, 0.6f });
+	yz_plan->set_position(get_global_position3() + scale.x * Vector3f{ 0.6f, 0, 0 });
+	zx_plan->set_position(get_global_position3() + scale.x * Vector3f{ 0, -0.6f, 0 });
+
+	xy_plan->set_scaling(scale);
+	yz_plan->set_scaling(scale);
+	zx_plan->set_scaling(scale);
+
+	xy_plan->opengl_render();
+	yz_plan->opengl_render();
+	zx_plan->opengl_render();
+}
+
+
+void Model::toggle_picker() noexcept {
+	if (picker) pop_picker();
+	else push_picker();
+}
+
+
+void Model::push_picker() noexcept {
+	assert(!picker);
+	picker = new Picker();
+	add_child(picker, -1);
+}
+
+void Model::pop_picker() noexcept {
+	assert(picker);
+	kill_direct_child(picker->get_uuid());
+	picker = nullptr;
+}
+
+void Model::set_selectable(bool v) noexcept {
+	selectable = v;
 }

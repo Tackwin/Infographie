@@ -147,6 +147,9 @@ public:
 
 	virtual void opengl_render() noexcept;
 	virtual void propagate_opengl_render() noexcept;
+	
+	virtual void last_opengl_render() noexcept;
+	virtual void propagate_last_opengl_render() noexcept;
 
 	virtual void set_size(Vector3f size) noexcept;
 	void set_position(Vector3f pos) noexcept;
