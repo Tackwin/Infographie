@@ -13,6 +13,7 @@
 #include "UI/Geometries.hpp"
 #include "UI/Transform.hpp"
 #include "UI/Texture.hpp"
+#include "UI/Cameras.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
 #include "Scene/Widget.hpp"
@@ -42,6 +43,7 @@ void update(
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
+	Camera_Settings& cam_settings,
 	float dt
 ) noexcept;
 
@@ -110,6 +112,7 @@ int main() {
 	);
 
 	Images_Settings img_settings;
+	Camera_Settings cam_settings;
 	Texture_Settings tex_settings;
 	Drawing_Settings draw_settings;
 	Transform_Settings tran_settings;
@@ -131,13 +134,15 @@ int main() {
 	// a simple class to hold the different transformation matrix. So it's going to be a no op
 	// and pass to his siblings.
 	camera.render_from(&scene_root);
-	
 
 	img_settings.root = &scene_root;
 	geo_settings.root = &scene_root;
 	tex_settings.root = &scene_root;
+	cam_settings.root = &scene_root;
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
+
+	cam_settings.camera_ids.push_back(camera.get_uuid());
 
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
@@ -288,6 +293,7 @@ int main() {
 			tran_settings,
 			geo_settings,
 			tex_settings,
+			cam_settings,
 			dt
 		);
 
@@ -326,6 +332,7 @@ void update(
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
+	Camera_Settings& cam_settings,
 	float dt
 ) noexcept {
 	static constexpr auto Help_Popup_Title = "Help - Hestia";
@@ -378,6 +385,7 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 	if (ImGui::CollapsingHeader("Transform")) update_transform_settings(tran_settings);
 	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
 	if (ImGui::CollapsingHeader("Texture")) update_texture_settings(tex_settings);
+	if (ImGui::CollapsingHeader("Camera")) update_camera_settings(cam_settings);
 	if (ImGui::CollapsingHeader("Debug")) update_debug_ui(root, camera);
 
 	root.propagate_update(dt);

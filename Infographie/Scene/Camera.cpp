@@ -25,6 +25,32 @@ void Camera::update(float dt) noexcept {
 		speed = std::any_cast<float>(debug_values["Camera_Speed"]);
 	}
 
+	Vector3f min;
+	Vector3f max;
+	bool tracking{ false };
+	for (auto& id : ids_to_lock) {
+		auto it = render_root->find_child(id);
+		if (!it) continue;
+		if (auto p = dynamic_cast<Widget3*>(it); p) {
+			if (id == ids_to_lock.front()) {
+				min = p->get_global_position3();
+				max = p->get_global_position3();
+				tracking = true;
+			}
+			else {
+				auto x = p->get_global_position3();
+
+				min.x = min.x > x.x ? x.x : min.x;
+				min.y = min.y > x.y ? x.y : min.y;
+				min.z = min.z > x.z ? x.z : min.z;
+
+				max.x = max.x < x.x ? x.x : max.x;
+				max.y = max.y < x.y ? x.y : max.y;
+				max.z = max.z < x.z ? x.z : max.z;
+			}
+		}
+	}
+
 	if (IM::isKeyPressed(sf::Keyboard::Q)) {
 		pos3 -= speed * dt * right;
 	}
@@ -43,7 +69,7 @@ void Camera::update(float dt) noexcept {
 	if (IM::isKeyPressed(sf::Keyboard::LControl)) {
 		pos3 -= speed * dt * look_dir;
 	}
-	if (IM::isMousePressed(sf::Mouse::Middle)) {
+	if (!tracking && IM::isMousePressed(sf::Mouse::Middle)) {
 		auto mouse_dt = IM::getMouseScreenDelta().normalize();
 
 		yaw += 0.3f * speed * mouse_dt.x * dt;
@@ -63,12 +89,17 @@ void Camera::update(float dt) noexcept {
 		right = right.normalize();
 		up = up.normalize();
 	}
+	else if (tracking) {
+		look_at((max + min) / 2, up);
+	}
+	if (IM::isMouseJustPressed(sf::Mouse::Right)) select_ray_cast();
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
 	compute_view();
+}
 
-	if (IM::isMouseJustPressed(sf::Mouse::Right)) {
-		// >TP1
+void Camera::select_ray_cast() noexcept {
+	// >TP1
 			// i don't know why this code is buggy ?? the ray projection is either off or it's
 			// the render ? There seem to be an off by a-factor-error.
 			// When the camera is straight looking and the object is at the center, it's ok
@@ -84,64 +115,62 @@ void Camera::update(float dt) noexcept {
 		// My god i was doing	Vector3f{ ray4.x, ray4.y, ray.z } instead of
 		//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
 
-		auto ray_origin = pos3;
-		auto ray = get_ray_from_graphic_matrices(
-			{
-				(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
-				1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
-			},
-			projection,
-			view
-		);
+	auto ray_origin = pos3;
+	auto ray = get_ray_from_graphic_matrices(
+		{
+			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
+			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
+		},
+		projection,
+		view
+	);
 
-		Widget3* selected{ nullptr };
-		Vector3f intersection;
+	Widget3 * selected{ nullptr };
+	Vector3f intersection;
 
-		std::vector<Widget*> all_child;
+	std::vector<Widget*> all_child;
+	all_child.push_back(render_root);
+
+	while (!all_child.empty()) {
+		auto& w = all_child.back();
+		all_child.pop_back();
+
+		if (auto w3 = dynamic_cast<Widget3*>(w); w3) {
+			if (auto opt = w3->is_selected(ray_origin, ray)) {
+				if (
+					!selected ||
+					(intersection - ray_origin).length2() < (*opt - ray_origin).length2()
+					) {
+					selected = w3;
+					intersection = *opt;
+				}
+				continue;
+			}
+		}
+
+		for (auto& c : w->get_childs()) {
+			all_child.push_back(c.get());
+		}
+	}
+
+	// if we are not multi selcting we take away the focus.
+	if (!IM::is_one_of_pressed({ sf::Keyboard::LShift, sf::Keyboard::RShift })) {
+		all_child.clear();
 		all_child.push_back(render_root);
-
 		while (!all_child.empty()) {
 			auto& w = all_child.back();
 			all_child.pop_back();
 
-			if (auto w3 = dynamic_cast<Widget3*>(w); w3) {
-				if (auto opt = w3->is_selected(ray_origin, ray)) {
-					if (
-						!selected ||
-						(intersection - ray_origin).length2() < (*opt - ray_origin).length2()
-					) {
-						selected = w3;
-						intersection = *opt;
-					}
-					continue;
-				}
-			}
+			w->set_focus(false);
+			w->lock_focus(false);
 
-			for (auto& c : w->get_childs()) {
-				all_child.push_back(c.get());
-			}
-		}
-
-		// if we are not multi selcting we take away the focus.
-		if (!IM::is_one_of_pressed({ sf::Keyboard::LShift, sf::Keyboard::RShift })) {
-			all_child.clear();
-			all_child.push_back(render_root);
-			while (!all_child.empty()) {
-				auto& w = all_child.back();
-				all_child.pop_back();
-
-				w->set_focus(false);
-				w->lock_focus(false);
-
-				for (auto& c : w->get_childs()) all_child.push_back(c.get());
-			}
-		}
-		if (selected) {
-			selected->set_focus(true);
-			selected->lock_focus(true);
+			for (auto& c : w->get_childs()) all_child.push_back(c.get());
 		}
 	}
-
+	if (selected) {
+		selected->set_focus(true);
+		selected->lock_focus(true);
+	}
 }
 
 void Camera::set_viewport(Rectangle2u rec) noexcept {
@@ -184,4 +213,8 @@ void Camera::compute_view() noexcept {
 
 void Camera::set_speed(float s) noexcept {
 	speed = s;
+}
+
+void Camera::lock(std::vector<Uuid_t> ids) noexcept {
+	ids_to_lock = std::move(ids);
 }

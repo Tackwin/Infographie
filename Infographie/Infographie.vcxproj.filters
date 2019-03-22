@@ -119,6 +119,9 @@
     <ClCompile Include="Graphic\ComplexShape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\Cameras.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -233,6 +236,7 @@
     <ClInclude Include="Graphic\ComplexShape.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Cameras.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

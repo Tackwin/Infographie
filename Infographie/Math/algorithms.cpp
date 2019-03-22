@@ -220,7 +220,7 @@ bool ray_box(Ray3f ray, Vector3f pos, Vector3f size) noexcept {
 	Vector3f coord;
 	for (i = 0; i < 3; i++) {
 		if (which_plane != i) {
-			coord[i] = ray.pos[i] + max_t[which_plane] * ray.dir[i];
+			coord[i] = (float)(ray.pos[i] + max_t[which_plane] * ray.dir[i]);
 			if (coord[i] < pos[i] || coord[i] > (pos + size)[i])
 				return false;
 		}

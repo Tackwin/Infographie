@@ -22,10 +22,15 @@ public:
 	void look_at(Vector3f target, Vector3f up) noexcept;
 	void set_perspective(float fov, float ratio, float f, float n) noexcept;
 
+	// Lock view to those widgets, they must be a child of render_root.
+	// we simply take the (max + min) / 2 point to lock.
+	void lock(std::vector<Uuid_t> id) noexcept;
+
 	const Matrix4f& get_view_matrix() noexcept;
 	const Matrix4f& get_projection_matrix() noexcept;
 private:
 
+	void select_ray_cast() noexcept;
 	void compute_view() noexcept;
 
 	Widget3* render_root{ nullptr };
@@ -41,5 +46,7 @@ private:
 	float yaw{ PIf };
 
 	float speed{ 15 };
+
+	std::vector<Uuid_t> ids_to_lock;
 };
 

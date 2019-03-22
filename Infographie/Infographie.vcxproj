@@ -45,12 +45,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(MSBuildProjectDirectory)\..\..\GLEW\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\..\SFML\include;$(MSBuildProjectDirectory)\..\..\GLEW\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(MSBuildProjectDirectory)\..\..\SFML\lib;$(MSBuildProjectDirectory)\..\..\GLEW\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -66,6 +66,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>4201</DisableSpecificWarnings>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -89,6 +90,7 @@
       <DisableSpecificWarnings>4201</DisableSpecificWarnings>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +127,7 @@
     <ClCompile Include="Scene\Model.cpp" />
     <ClCompile Include="Scene\Primitive.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
+    <ClCompile Include="UI\Cameras.cpp" />
     <ClCompile Include="UI\Drawings.cpp" />
     <ClCompile Include="UI\Geometries.cpp" />
     <ClCompile Include="UI\Images.cpp" />
@@ -165,6 +168,7 @@
     <ClInclude Include="Scene\Model.hpp" />
     <ClInclude Include="Scene\Primitive.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
+    <ClInclude Include="UI\Cameras.hpp" />
     <ClInclude Include="UI\Drawings.hpp" />
     <ClInclude Include="UI\Geometries.hpp" />
     <ClInclude Include="UI\Images.hpp" />
