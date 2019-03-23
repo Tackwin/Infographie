@@ -21,6 +21,7 @@ public:
 
 	void look_at(Vector3f target, Vector3f up) noexcept;
 	void set_perspective(float fov, float ratio, float f, float n) noexcept;
+	void set_orthographic(float scale, float ratio, float f, float n) noexcept;
 
 	// Lock view to those widgets, they must be a child of render_root.
 	// we simply take the (max + min) / 2 point to lock.

@@ -187,6 +187,10 @@ void Camera::set_perspective(float fov, float ratio, float f, float n) noexcept 
 	projection = Matrix4f::perspective(fov, ratio, f, n);
 }
 
+void Camera::set_orthographic(float scale, float ratio, float f, float n) noexcept {
+	projection = Matrix4f::orthographic(scale, ratio, f, n);
+}
+
 const Matrix4f& Camera::get_view_matrix() noexcept {
 	return view;
 }

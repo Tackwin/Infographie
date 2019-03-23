@@ -57,6 +57,14 @@ struct Matrix4f {
 		return matrix;
 	}
 
+	static Matrix4f orthographic(float scale, float ratio, float f, float n) noexcept {
+		Matrix4f matrix;
+		matrix[0] = Vector4f{ 1 / scale, 0, 0, 0 };
+		matrix[1] = Vector4f{ 0, ratio / scale , 0, 0 };
+		matrix[2] = Vector4f{ 0, 0, -2 / (f - n), - (f + n) / (f - n) };
+		matrix[3] = Vector4f{ 0, 0, 0, 1 };
+		return matrix;
+	}
 
 	static Matrix4f look_at(Vector3f eye, Vector3f center, Vector3f up) noexcept {
 		Vector3f f = (center - eye).normalize();

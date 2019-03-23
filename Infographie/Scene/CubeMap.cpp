@@ -9,13 +9,15 @@ Cube_Map::Cube_Map() noexcept : Widget3() {
 	glGenTextures(1, &texture_id);
 	check_gl_error();
 
-	cube_model.set_object_copy(Object_File::cube({ 1, 1, 1 }));
+	cube_model.set_object_copy(Object_File::cube({ 5, 5, 5 }));
 	cube_model.set_shader(AM->get_shader("Skybox"));
 }
 
 void Cube_Map::opengl_render() noexcept {
 	glDepthMask(GL_FALSE);
-	defer{ glDepthMask(GL_TRUE); };
+	defer{
+		glDepthMask(GL_TRUE);
+	};
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 
 	// we short circuit the normal render cycle because a skybox doesn't have a position
