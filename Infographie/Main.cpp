@@ -123,17 +123,25 @@ int main() {
 
 	Widget3 scene_root;
 	auto& camera = *scene_root.make_child<Camera>();
-	camera.set_viewport({ 0, 0, UNROLL_2(Window_Info.size) });
+	auto& camera2 = *scene_root.make_child<Camera>();
+	camera.set_viewport({ {0, 0}, {Window_Info.size.x / 2, Window_Info.size.y } });
+	camera2.set_viewport({ { Window_Info.size.x / 2, 0 }, { Window_Info.size.x / 2, 1 * Window_Info.size.y } });
 	camera.set_perspective(
 		70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
 	);
+	camera2.set_perspective(
+		70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+	);
 	camera.set_global_position({ 0, 0, -10 });
+	camera2.set_global_position({ 0, 0, -10 });
 	camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
+	camera2.look_at({ 0, 0, 0 }, { 0, 1, 0 });
 	// it's ok to render from the parent all it's going to do is that the camera will try to call
 	// it's propagate_opengl_render method. But a camera doesn't render anything, it's just
 	// a simple class to hold the different transformation matrix. So it's going to be a no op
 	// and pass to his siblings.
 	camera.render_from(&scene_root);
+	camera2.render_from(&scene_root);
 
 	img_settings.root = &scene_root;
 	geo_settings.root = &scene_root;
@@ -143,6 +151,7 @@ int main() {
 	tran_settings.root = &scene_root;
 
 	cam_settings.camera_ids.push_back(camera.get_uuid());
+	cam_settings.camera_ids.push_back(camera2.get_uuid());
 
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
@@ -405,11 +414,9 @@ void render(
 	glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
-	Window_Info.active_camera = &camera;
 
 	ImGui::Begin("Debug render info", &Show_Render_Debug);
-	root.propagate_opengl_render();
-	root.propagate_last_opengl_render();
+	root.propagate_render(texture_target);
 	ImGui::End();
 
 	texture_target.display();
@@ -443,15 +450,16 @@ void render(
 		sf::RenderTexture render_texture;
 		render_texture.create(UNROLL_2(Window_Info.size));
 		render_texture.clear();
+		
+		root.propagate_render(render_texture);
+
 		render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
 		ImGui::SFML::Render(render_texture);
-		root.propagate_render(render_texture);
 		render_texture.display();
 		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
 	}
 	render_postprocessing(tex_settings, texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
-	root.propagate_render(target);
 }
 
 void render_postprocessing(

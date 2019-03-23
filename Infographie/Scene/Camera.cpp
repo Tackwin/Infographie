@@ -19,7 +19,20 @@ Widget3* Camera::get_render_root() const noexcept {
 	return render_root;
 }
 
+void Camera::render(sf::RenderTarget& target) noexcept {
+	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
+	compute_view();
+
+	if (!render_root) return;
+
+	Window_Info.active_camera = this;
+
+	render_root->propagate_opengl_render();
+	render_root->propagate_last_opengl_render();
+}
+
 void Camera::update(float dt) noexcept {
+	if (!input_active) return;
 
 	if (debug_values["Camera_Speed"].type() == typeid(float)) {
 		speed = std::any_cast<float>(debug_values["Camera_Speed"]);
@@ -93,9 +106,6 @@ void Camera::update(float dt) noexcept {
 		look_at((max + min) / 2, up);
 	}
 	if (IM::isMouseJustPressed(sf::Mouse::Right)) select_ray_cast();
-
-	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
-	compute_view();
 }
 
 void Camera::select_ray_cast() noexcept {
@@ -116,14 +126,7 @@ void Camera::select_ray_cast() noexcept {
 		//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
 
 	auto ray_origin = pos3;
-	auto ray = get_ray_from_graphic_matrices(
-		{
-			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
-			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
-		},
-		projection,
-		view
-	);
+	auto ray = get_ray_from_graphic_matrices(get_mouse_viewport(), projection, view);
 
 	Widget3 * selected{ nullptr };
 	Vector3f intersection;
@@ -221,4 +224,19 @@ void Camera::set_speed(float s) noexcept {
 
 void Camera::lock(std::vector<Uuid_t> ids) noexcept {
 	ids_to_lock = std::move(ids);
+}
+
+Vector2f Camera::get_mouse_viewport() const noexcept {
+	return {
+		(2.f * (IM::getMouseScreenPos().x - viewport.x)) / viewport.w - 1.f,
+		1.f - (2.f * IM::getMouseScreenPos().y - viewport.y) / viewport.h
+	};
+}
+
+bool Camera::is_input_active() const noexcept {
+	return input_active;
+}
+
+void Camera::set_input_active(bool v) noexcept {
+	input_active = v;
 }

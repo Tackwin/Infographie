@@ -12,6 +12,8 @@ public:
 	void render_from(Widget3* root) noexcept;
 	Widget3* get_render_root() const noexcept;
 
+	virtual void render(sf::RenderTarget& target) noexcept override;
+
 	void update(float dt) noexcept override;
 
 	void set_speed(float speed) noexcept;
@@ -29,6 +31,11 @@ public:
 
 	const Matrix4f& get_view_matrix() noexcept;
 	const Matrix4f& get_projection_matrix() noexcept;
+
+	Vector2f get_mouse_viewport() const noexcept;
+
+	bool is_input_active() const noexcept;
+	void set_input_active(bool v) noexcept;
 private:
 
 	void select_ray_cast() noexcept;
@@ -47,6 +54,8 @@ private:
 	float yaw{ PIf };
 
 	float speed{ 15 };
+
+	bool input_active{ false };
 
 	std::vector<Uuid_t> ids_to_lock;
 };

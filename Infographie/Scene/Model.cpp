@@ -408,10 +408,7 @@ void Model::Picker::update(float) noexcept {
 	Ray3f ray;
 	ray.pos = Window_Info.active_camera->get_global_position3();
 	ray.dir = get_ray_from_graphic_matrices(
-		{
-			(2.f * IM::getMouseScreenPos().x) / Window_Info.size.x - 1.f,
-			1.f - (2.f * IM::getMouseScreenPos().y) / Window_Info.size.y
-		},
+		Window_Info.active_camera->get_mouse_viewport(),
 		Window_Info.active_camera->get_projection_matrix(),
 		Window_Info.active_camera->get_view_matrix()
 	);

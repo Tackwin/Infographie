@@ -14,6 +14,7 @@ void update_camera_settings(Camera_Settings& settings) noexcept {
 		bool selected = Cam_Selected == settings.camera_ids[i];
 		ImGui::Selectable(str.c_str(), &selected);
 		Cam_Selected = selected ? settings.camera_ids[i] : Cam_Selected;
+		((Camera*)settings.root->find_child(settings.camera_ids[i]))->set_input_active(selected);
 	}
 
 	if (Cam_Selected == Uuid_t::zero()) return;
