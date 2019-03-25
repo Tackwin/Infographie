@@ -44,11 +44,12 @@ std::optional<Vector2f> segment_segment(const Segment2f& A, const Segment2f& B) 
 	return A.A + t * s1;
 }
 
-std::optional<Vector2f> ray_circle(const Rayf& ray, const Circlef& c) noexcept {
+std::optional<Vector2f> ray_circle(const Rayf& ray, const Circle2f& c) noexcept {
 	auto e = Vector2f::createUnitVector(ray.angle);
 	auto h = c.c - ray.pos;
 	auto lf = e.dot(h);
 	auto s = (c.r * c.r) - h.dot(h) + lf * lf;
+
 
 	if (s < 0.0)	return std::nullopt;
 	else			return e * (lf - std::sqrt(s)) + ray.pos;

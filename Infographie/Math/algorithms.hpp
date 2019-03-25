@@ -36,7 +36,7 @@ std::optional<Vector2f> segment_rec(const Segment2f& seg, const Rectangle2f& rec
 extern
 std::optional<Vector2f> segment_segment(const Segment2f& A, const Segment2f& B) noexcept;
 extern
-std::optional<Vector2f> ray_circle(const Rayf& ray, const Circlef& c) noexcept;
+std::optional<Vector2f> ray_circle(const Rayf& ray, const Circle2f& c) noexcept;
 extern
 std::optional<Vector2f> ray_rectangle(const Rayf& seg, const Rectangle2f& c) noexcept;
 extern std::optional<Vector2f> ray_segment(const Rayf& A, const Segment2f& B) noexcept;

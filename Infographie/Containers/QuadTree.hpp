@@ -5,9 +5,13 @@
 #include <algorithm>
 #include <iostream>
 #include <functional>
+#include "Common.hpp"
 #include "Math/Circle.hpp"
 #include "Math/Vector.hpp"
 #include "Math/Rectangle.hpp"
+
+// So that started as a simple QuadTree for my game, i've tried extending it to 2^N-Tree
+// with compile time template so it's a little clunky.
 
 // S is the bucket size,
 // T is the type holded by the tree
@@ -18,17 +22,20 @@ template<
 	size_t S,
 	typename T,
 	typename Body = T,
-	typename F = double
+	typename F = double,
+	size_t D = 2
 >
 class QuadTree {
 public:
-	using ThisQuadTree = QuadTree<S, T, Body, F>;
+	static constexpr size_t pow_d = xstd::constexpr_pow2(D);
+
+	using ThisQuadTree = QuadTree<S, T, Body, F, D>;
 	using Predicat = std::function<Body(T)>;
 	using _T = T;
 	static constexpr size_t bucket_size = S;
 
 	using vector = std::vector<T>;
-	using rec = Rectangle_t<F>;
+	using rec = Rectangle_t<D, F>;
 
 
 	QuadTree() = default;
@@ -38,63 +45,42 @@ public:
 	QuadTree(const ThisQuadTree& that) {
 		this->operator=(that);
 	}
-	QuadTree(const ThisQuadTree&& that) {
+	QuadTree(ThisQuadTree&& that) {
 		this->operator=(that);
 	}
 	~QuadTree() {
-		if (!leaf()) {
-			delete a_;
-			delete b_;
-			delete c_;
-			delete d_;
-		}
+		if (!leaf()) for (auto& x : cells) delete x;
 	}
 
 	ThisQuadTree& operator=(const ThisQuadTree& that) {
-		if (a_) {
-			delete a_;
-			delete b_;
-			delete c_;
-			delete d_;
-		}
+		if (cells[0]) for (auto& x : cells) delete x;
 		scope_ = that.scope_;
 
 		if (that.leaf()) {
 			size_ = that.size_;
-			std::memcpy(items, that.items, sizeof(T) * that.size_);
+			std::memcpy(items.data(), that.items.data(), sizeof(T) * that.size_);
 			return *this;
 		}
 
-		a_ = new ThisQuadTree(that.a_, pred);
-		b_ = new ThisQuadTree(that.b_, pred);
-		c_ = new ThisQuadTree(that.c_, pred);
-		d_ = new ThisQuadTree(that.d_, pred);
+		for (size_t i = 0; i < pow_d; ++i)
+			cells[i] = new ThisQuadTree(that.cells[i]->scope(), pred);
 		return *this;
 	}
-	ThisQuadTree& operator=(const ThisQuadTree&& that) {
-		if (a_) {
-			delete a_;
-			delete b_;
-			delete c_;
-			delete d_;
-		}
+	ThisQuadTree& operator=(ThisQuadTree&& that) {
+		if (this == &that) return;
+
+		if (cells[0]) for (auto& x : cells) delete x;
 		scope_ = that.scope_;
 
 		if (that.leaf()) {
 			size_ = that.size_;
-			std::memcpy(items, that.items, sizeof(T) * that.size_);
+			std::memcpy(items.data(), that.items.data(), sizeof(T) * that.size_);
 			return *this;
 		}
 
-		a_ = that.a_;
-		b_ = that.b_;
-		c_ = that.c_;
-		d_ = that.d_;
+		for (size_t i = 0; i < pow_d; ++i) cells[i] = that.cells[i];
 
-		that.a_ = nullptr; // just to be extra sure...
-		that.b_ = nullptr; // just to be extra sure...
-		that.c_ = nullptr; // just to be extra sure...
-		that.d_ = nullptr; // just to be extra sure...
+		for (size_t i = 0; i < pow_d; ++i) that.cells[i] = nullptr; // just to be extra sure...
 		return *this;
 	}
 
@@ -110,27 +96,18 @@ public:
 			}
 			size_ = 0;
 
-			auto[a, b, c, d] = scope_.divide();
-			a_ = new ThisQuadTree(a, pred);
-			b_ = new ThisQuadTree(b, pred);
-			c_ = new ThisQuadTree(c, pred);
-			d_ = new ThisQuadTree(d, pred);
+			auto new_cells = scope_.divide();
+			for (size_t i = 0; i < pow_d; ++i)
+				cells[i] = new ThisQuadTree(new_cells[i], pred);
 
-			for (size_t i = 0u; i < S; ++i) {
-				a_->add(items[i]);
-				b_->add(items[i]);
-				c_->add(items[i]);
-				d_->add(items[i]);
-			}
+			for (size_t i = 0u; i < S; ++i)
+				for (size_t j = 0; j < pow_d; ++j) cells[j]->add(items[i]);
 
 			add(t);
 			return;
 		}
 
-		a_->add(t);
-		b_->add(t);
-		c_->add(t);
-		d_->add(t);
+		for (size_t i = 0; i < pow_d; ++i) cells[i]->add(t);
 	}
 
 	ThisQuadTree& getLeafAt(T p) {
@@ -138,10 +115,7 @@ public:
 			return *this;
 		}
 
-		if (a_->scope_().in(p)) return a_->getLeafAt(p);
-		if (b_->scope_().in(p)) return b_->getLeafAt(p);
-		if (c_->scope_().in(p)) return b_->getLeafAt(p);
-		if (d_->scope_().in(p)) return d_->getLeafAt(p);
+		for (auto& x : cells) if (x->scope_.in(p)) return x->getLeafAt(p);
 
 		//you shoud _not_ make it here
 		_ASSERT(0);
@@ -155,12 +129,10 @@ public:
 			return;
 		}
 
-		delete a_;
-		delete b_;
-		delete c_;
-		delete d_;
-
-		a_ = b_ = c_ = d_ = nullptr;
+		for (auto& x : cells) {
+			delete x;
+			x = nullptr;
+		}
 		size_ = 0u;
 	}
 
@@ -170,28 +142,20 @@ public:
 
 		vector results(sizeElems());
 
-		auto A = a_->get();
-		results.insert(std::begin(results), std::begin(A), std::end(A));
-
-		auto B = b_->get();
-		results.insert(std::begin(results) + A.size(), std::begin(B), std::end(B));
-
-		auto C = c_->get();
-		results.insert(
-			std::begin(results) + A.size() + B.size(), std::begin(C), std::end(C)
-		);
-
-		auto D = d_->get();
-		results.insert(
-			std::begin(results) + A.size() + B.size() + C.size(),
-			std::begin(D), std::end(D)
-		);
-
+		size_t offset{ 0 };
+		for (auto& x : cells) {
+			results.insert(
+				std::begin(results) + offset,
+				std::begin(x->get()),
+				std::end(x->get())
+			);
+			offset += x->get().size();
+		}
 		return results;
 	}
 
 	void noAllocQueryCircle(
-		const Circle<F>& c, vector& result, std::vector<const ThisQuadTree*>& open
+		const Circle<D, F>& c, vector& result, std::vector<const ThisQuadTree*>& open
 	) const {
 		auto point = pred(c.c);
 		
@@ -208,33 +172,14 @@ public:
 			open.pop_back();
 
 			if (!q->leaf()) {
-				if (is_fully_in(q->a()->scope(), c)) {
-					const auto& res = q->a()->get();
-					result.insert(std::end(result), std::begin(res), std::end(res));
-				}
-				else if (is_in(q->a()->scope(), c)) {
-					open.push_back(q->a());
-				}
-				if (is_fully_in(q->b()->scope(), c)) {
-					const auto& res = q->b()->get();
-					result.insert(std::end(result), std::begin(res), std::end(res));
-				}
-				else if (is_in(q->b()->scope(), c)) {
-					open.push_back(q->b());
-				}
-				if (is_fully_in(q->c()->scope(), c)) {
-					const auto& res = q->c()->get();
-					result.insert(std::end(result), std::begin(res), std::end(res));
-				}
-				else if (is_in(q->c()->scope(), c)) {
-					open.push_back(q->c());
-				}
-				if (is_fully_in(q->d()->scope(), c)) {
-					const auto& res = q->d()->get();
-					result.insert(std::end(result), std::begin(res), std::end(res));
-				}
-				else if (is_in(q->d()->scope(), c)) {
-					open.push_back(q->d());
+				for (const auto& x : q->get_cells()) {
+					if (is_fully_in(x->scope(), c)) {
+						const auto& res = x->get();
+						result.insert(std::end(result), std::begin(res), std::end(res));
+					}
+					else if (is_in(x->scope(), c)) {
+						open.push_back(x);
+					}
 				}
 			}
 			else if (is_in(q->scope(), c)) {
@@ -244,18 +189,20 @@ public:
 		}
 	}
 
-	void queryCircle(T p, double r) const {
+	vector queryCircle(T p, double r) const {
 		vector re;
 		std::vector<const ThisQuadTree*> op;
 		op.reserve(nNodes());
 		re.reserve(S * nLeafs());
-		noAllocQueryCircle(p, r, re, op);
+		noAllocQueryCircle({ p, r }, re, op);
 		return re;
 	}
 
 	size_t sizeElems() const {
-		if (!a_) return size_;
-		return a_->sizeElems() + b_->sizeElems() + c_->sizeElems() + d_->sizeElems();
+		if (!cells[0]) return size_;
+		size_t sum{ 0 };
+		for (auto& x : cells) sum += x->sizeElems();
+		return sum;
 	}
 
 	std::array<T, S> array() const {
@@ -267,7 +214,7 @@ public:
 	}
 
 	bool leaf() const {
-		return !a_;
+		return !cells[0];
 	}
 
 	rec scope() const {
@@ -275,49 +222,48 @@ public:
 	}
 
 	size_t nLeafs() const {
-		if (!a_) return 1;
-		return a_->nLeafs() + b_->nLeafs() + c_->nLeafs() + d_->nLeafs();
+		if (!cells[0]) return 1;
+		size_t n{ 0 };
+
+		for (auto& x : cells) n += x->nLeafs();
+		return n;
 	}
 
 	size_t nNodes() const {
-		if (!a_) return 1;
-		return 1 + a_->nNodes() + b_->nNodes() + c_->nNodes() + d_->nNodes();
+		size_t n{ 1 };
+		if (!cells[0]) return n;
+		for (auto& x : cells) n += x->nNodes();
+		return n;
 	}
 
 	size_t maxDepth() const {
-		if (!a_) return 0;
+		if (!cells[0]) return 0;
 
-		return 1 + std::max({
-			a_->maxDepth(),
-			b_->maxDepth(),
-			c_->maxDepth(),
-			d_->maxDepth()
-			});
+		size_t child_d = cells[0]->maxDepth();
+
+		for (auto& x : cells) child_d = std::max(child_d, x->maxDepth());
+
+		return 1 + child_d;
 	}
 
-	ThisQuadTree* a() const { return a_; };
-	ThisQuadTree* b() const { return b_; };
-	ThisQuadTree* c() const { return c_; };
-	ThisQuadTree* d() const { return d_; };
+	const ThisQuadTree* get_cell(size_t i) const noexcept { return cells[i]; }
+	ThisQuadTree* get_cell(size_t i) noexcept { return cells[i]; }
+	const std::array<ThisQuadTree*, pow_d>& get_cells() const noexcept { return cells; }
+	std::array<ThisQuadTree*, pow_d>& get_cells() noexcept { return cells; }
 
 	void print(std::string pre = "") const {
 		printf("%s %u\n", pre.c_str(), sizeElems());
-		if (!leaf()) {
-			a_->print(pre + "  ");
-			b_->print(pre + "  ");
-			c_->print(pre + "  ");
-			d_->print(pre + "  ");
-		}
+		if (!leaf()) for (auto& x : cells) x->print(pre + " ");
 	}
 
 private:
+
+	std::array<ThisQuadTree*, pow_d> cells;
+
 	std::array<T, S> items;
 	size_t size_{ 0u };
 
-	rec scope_{ 0, 0, 0, 0 };
+	rec scope_{};
 
 	Predicat pred{ [](auto x) { return x; } };
-
-	ThisQuadTree* a_ = nullptr, *b_ = nullptr;
-	ThisQuadTree* c_ = nullptr, *d_ = nullptr;
 };

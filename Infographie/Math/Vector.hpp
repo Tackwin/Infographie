@@ -500,6 +500,17 @@ struct Vector : public __vec_member<D, T> {
 #pragma endregion
 
 	//SFML compatibility stuff
+#ifdef SFML_VECTOR3_HPP
+	template<typename U>
+	explicit operator const std::enable_if_t<D == 3, sf::Vector3<U>>() const {
+		return {
+			static_cast<U>(this->x),
+			static_cast<U>(this->y),
+			static_cast<U>(this->z)
+		};
+	}
+#endif
+
 #ifdef SFML_VECTOR2_HPP
 	template<typename U, size_t Dp = D>
 	constexpr Vector(const sf::Vector2<U>& p, std::enable_if_t<Dp == 2, T>* = nullptr) :
@@ -561,79 +572,6 @@ struct Vector : public __vec_member<D, T> {
 	}
 #endif
 #ifdef SFML_GRAPHICS_HPP
-
-	static void renderLine(
-		sf::RenderTarget& target,
-		Vector<2U, T> A,
-		Vector<2U, T> B,
-		Vector4d colorA,
-		Vector4d colorB
-	) {
-		sf::Vertex vertex[2]{
-			sf::Vertex(A, (sf::Color)colorA),
-			sf::Vertex(B, (sf::Color)colorB)
-		};
-
-		target.draw(vertex, 2, sf::Lines);
-	}
-	static void renderLine(
-		sf::RenderTarget& target,
-		Vector<2U, T> A,
-		Vector<2U, T> B,
-		Vector4d colorA
-	) {
-		Vector<2U, T>::renderLine(target, A, B, colorA, colorA);
-	}
-
-	void render(
-		sf::RenderTarget& target, Vector4d colorA, Vector4d colorB = colorA
-	) const {
-		Vector<2U, T>::renderLine(target, { (T)0, (T)0 }, *this, colorA, colorB);
-	}
-	void render(sf::RenderTarget& target, Vector4d colorA) const {
-		render(target, colorA, colorA);
-	}
-
-	void plot(
-		sf::RenderTarget& target,
-		float r,
-		Vector4d fill,
-		Vector4d outline,
-		float thick
-	) const {
-		sf::CircleShape circle(r);
-		circle.setOrigin(r, r);
-		circle.setPosition((float)this->x, (float)this->y);
-		circle.setFillColor(fill);
-		circle.setOutlineColor(outline);
-		circle.setOutlineThickness(thick);
-		target.draw(circle);
-	}
-
-	void drawArrow(
-		sf::RenderTarget& target, float thick, Vector4d color, Vector2<T> offset = { 0, 0 }
-	) const noexcept {
-		sf::RectangleShape stick{ sf::Vector2f{ (float)length() * 0.9f, thick * 2 } };
-		stick.setOrigin(0, thick);
-		stick.setPosition(offset);
-		stick.setRotation((float)(angleX() * Common::RAD_2_DEG));
-
-		sf::CircleShape triangle{ 3 * thick * std::tanf((float)Common::PI / 3.f), 3 };
-		triangle.setOrigin(triangle.getRadius(), triangle.getRadius());
-		triangle.setRotation(stick.getRotation() + 90);
-		triangle.setPosition(
-			(Vector2f)offset +
-			(Vector2f::createUnitVector(angleX()) *
-			((float)length() * 0.9f - triangle.getRadius() * (1 - 1 / 3.f)))
-		);
-
-		stick.setFillColor(color);
-		triangle.setFillColor(color);
-
-		target.draw(stick);
-		target.draw(triangle);
-	}
-
 #endif
 
 	template<size_t Dp = D>

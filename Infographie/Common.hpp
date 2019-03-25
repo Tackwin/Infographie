@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <any>
 
+#include <GL/glew.h>
+#include <GL/GL.h>
+
 namespace details {
 	struct Defer {
 	private:
@@ -28,6 +31,12 @@ namespace details {
 #define defer details::Defer _CONCAT(defer_, __COUNTER__) = [&]
 
 namespace xstd {
+	constexpr size_t constexpr_pow2(size_t D) noexcept {
+		size_t p = 1;
+		for (size_t i = 0; i < D; ++i, p *= 2);
+		return p;
+	}
+
 	template<typename T>
 	constexpr int sign(T x) noexcept {
 		return (T(0) < x) - (x < T(0));
@@ -125,6 +134,15 @@ namespace Common {
 		return seed;
 	}
 	extern void check_gl_error();
+	extern void GLAPIENTRY verbose_opengl_error(
+		GLenum source,
+		GLenum type,
+		GLuint id,
+		GLenum severity,
+		GLsizei length,
+		const char* message,
+		GLvoid* userParam
+	) noexcept;
 
 	extern std::unordered_map<std::string, std::any> debug_values;
 

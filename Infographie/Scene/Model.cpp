@@ -483,19 +483,10 @@ void Model::Picker::update(float) noexcept {
 }
 
 void Model::Picker::last_opengl_render() noexcept {
-	ImGui::Text(
-		"x: %3.3f, y: %3.3f, z: %3.3f",
-		get_global_position3().x,
-		get_global_position3().y,
-		get_global_position3().z
-	);
-
-	auto dist =
-		(Window_Info.active_camera->get_global_position3() - get_global_position3()).length();
-
 	// It's crazy we can make constant screen size just by scaling world woordinate by camera
 	// distance.
-	glClear(GL_DEPTH_BUFFER_BIT);
+	auto dist =
+		(Window_Info.active_camera->get_global_position3() - get_global_position3()).length();
 
 	Vector3f scale{ dist / 20, dist / 20, dist / 20 };
 
@@ -507,6 +498,10 @@ void Model::Picker::last_opengl_render() noexcept {
 	yz_plan->set_scaling(scale);
 	zx_plan->set_scaling(scale);
 
+	glDisable(GL_DEPTH_TEST);
+	defer{
+		glEnable(GL_DEPTH_TEST);
+	};
 	xy_plan->opengl_render();
 	yz_plan->opengl_render();
 	zx_plan->opengl_render();
@@ -522,7 +517,7 @@ void Model::toggle_picker() noexcept {
 void Model::push_picker() noexcept {
 	assert(!picker);
 	picker = new Picker();
-	add_child(picker, -1);
+	add_child(picker, 1);
 }
 
 void Model::pop_picker() noexcept {

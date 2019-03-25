@@ -2,13 +2,16 @@
 #include <SFML/OpenGl.hpp>
 
 #include "Managers/InputsManager.hpp"
+#include "Managers/AssetsManager.hpp"
 #include "Math/algorithms.hpp"
+
+#include "UI/Illumination.hpp"
 
 #include "Model.hpp"
 
 #include "Window.hpp"
 
-Camera::Camera() noexcept {
+Camera::Camera() noexcept : g_buffer(Window_Info.size) {
 	pos3 = { 0, 0, 0 };
 }
 
@@ -27,9 +30,36 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 
 	Window_Info.active_camera = this;
 
+	// Geometry phase
+	g_buffer.set_active();
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	render_root->propagate_opengl_render();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// the lighting phase
+	g_buffer.set_active_texture();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	auto& shader = AM->get_shader("Deferred_Light");
+
+	shader.setUniform("gPosition", 0);
+	shader.setUniform("gNormal", 1);
+	shader.setUniform("gAlbedoSpec", 2);
+	shader.setUniform("viewPos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
+	sf::Shader::bind(&shader);
+
+	g_buffer.render_quad();
+
+	// The last phase
+
+	g_buffer.copy_depth();
+
 	render_root->propagate_last_opengl_render();
 }
+
 
 void Camera::update(float dt) noexcept {
 	if (!input_active) return;

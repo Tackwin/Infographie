@@ -122,6 +122,15 @@
     <ClCompile Include="UI\Cameras.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\Illumination.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphic\FrameBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\LightPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -237,8 +246,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="UI\Cameras.hpp" />
+    <ClInclude Include="UI\Illumination.hpp" />
+    <ClInclude Include="Graphic\FrameBuffer.hpp" />
+    <ClInclude Include="Scene\LightPoint.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="Scene\Model.cpp~RF274221f.TMP" />
   </ItemGroup>
 </Project>

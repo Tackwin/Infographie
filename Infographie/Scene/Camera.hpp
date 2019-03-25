@@ -5,6 +5,8 @@
 
 #include "Math/Matrix.hpp"
 
+#include "Graphic/FrameBuffer.hpp"
+
 class Camera : public Widget3 {
 public:
 	Camera() noexcept;
@@ -36,6 +38,7 @@ public:
 
 	bool is_input_active() const noexcept;
 	void set_input_active(bool v) noexcept;
+
 private:
 
 	void select_ray_cast() noexcept;
@@ -58,5 +61,7 @@ private:
 	bool input_active{ false };
 
 	std::vector<Uuid_t> ids_to_lock;
+
+	G_Buffer g_buffer;
 };
 

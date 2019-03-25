@@ -1,12 +1,50 @@
 #pragma once
 #include "Vector.hpp"
 
-template<typename T>
+template<size_t D, typename T>
 struct Rectangle_t {
+	Vector<D, T> pos;
+	Vector<D, T> size;
+
+	constexpr Rectangle_t() noexcept {}
+
+	constexpr Rectangle_t(const Vector<D, T>& pos, const Vector<D, T>& size) noexcept :
+		pos(pos),
+		size(size)
+	{}
+
+	template<typename U>
+	bool in(const Vector<D, U>& p) const {
+		return p.inRect(pos, size);
+	}
+
+	// for now i'll just make a special case for 3d, i don't really know hot to express
+	// divide in arbitrary dimensions.
+	constexpr std::enable_if_t<D == 3, std::array<Rectangle_t, xstd::constexpr_pow2(D)>>
+	divide() const noexcept {
+		std::array<Rectangle_t, xstd::constexpr_pow2(D)> result;
+
+		return {
+			Rectangle_t<D, T>{pos, size / 2},
+			Rectangle_t<D, T>{ {pos.x + size.x / 2, pos.y, pos.z}, size / 2 },
+			Rectangle_t<D, T>{ {pos.x, pos.y + size.y / 2, pos.z}, size / 2 },
+			Rectangle_t<D, T>{ {pos.x, pos.y, pos.z + size.z / 2}, size / 2 },
+			Rectangle_t<D, T>{ {pos.x, pos.y + size.y / 2, pos.z + size.z / 2}, size / 2 },
+			Rectangle_t<D, T>{ {pos.x + size.x / 2, pos.y + size.y / 2, pos.z}, size / 2 },
+			Rectangle_t<D, T>{ {pos.x + size.x / 2, pos.y, pos.z + size.z / 2}, size / 2 },
+			Rectangle_t<D, T>{pos + size / 2, size / 2}
+		};
+	}
+};
+
+template<typename T>
+struct Rectangle_t<2, T> {
+	static constexpr size_t D = 2;
+
 	union {
 		struct {
-			Vector<2, T> pos;
-			Vector<2, T> size;
+			Vector<D, T> pos;
+			Vector<D, T> size;
 		};
 		struct {
 			T x;
@@ -20,7 +58,7 @@ struct Rectangle_t {
 
 	constexpr Rectangle_t(T x, T y, T w, T h) noexcept : x(x), y(y), w(w), h(h) {}
 
-	constexpr Rectangle_t(const Vector<2, T>& pos, const Vector<2, T>& size) noexcept :
+	constexpr Rectangle_t(const Vector<D, T>& pos, const Vector<D, T>& size) noexcept :
 		pos(pos),
 		size(size) 
 	{}
@@ -32,7 +70,7 @@ struct Rectangle_t {
 
 #endif
 
-	bool intersect(const Rectangle_t<T>& other) const {
+	bool intersect(const Rectangle_t& other) const {
 		return !(
 				pos.x + size.x < other.pos.x || pos.x > other.pos.x + other.size.x ||
 				pos.y + size.y < other.pos.y || pos.y > other.pos.y + other.size.y
@@ -40,25 +78,25 @@ struct Rectangle_t {
 	}
 
 	// works only for top down y
-	bool isOnTopOf(Rectangle_t<T> other) const {
+	bool isOnTopOf(Rectangle_t other) const {
 		T distEdgeToEdge = std::max(other.x + other.w - x, x + w - other.x);
 		T sumOfWidth = w + other.w;
 
 		return y < other.y && distEdgeToEdge < sumOfWidth;
 	}
-	bool isFullyOnTopOf(Rectangle_t<T> other, T tolerance = FLT_EPSILON) const noexcept {
+	bool isFullyOnTopOf(Rectangle_t other, T tolerance = FLT_EPSILON) const noexcept {
 		return y + h < other.y + tolerance;
 	}
 
 	// works only for top down y
-	bool isOnBotOf(Rectangle_t<T> other) const {
+	bool isOnBotOf(Rectangle_t other) const {
 		T distEdgeToEdge = std::max(other.x + other.w - x, x + w - other.x);
 		T sumOfWidth = w + other.w;
 
 		return y > other.y && distEdgeToEdge < sumOfWidth;
 	}
 
-	Vector<2, T> center() const {
+	Vector<D, T> center() const {
 		return pos + size / 2;
 	}
 
@@ -70,37 +108,35 @@ struct Rectangle_t {
 		return pos.y + size.y;
 	}
 
-	std::tuple<
-		Rectangle_t<T>, Rectangle_t<T>, Rectangle_t<T>, Rectangle_t<T>
-	> divide() const noexcept {
+	std::array<Rectangle_t, 4> divide() const noexcept {
 		return {
-			Rectangle_t<T>{pos, size / 2},
-			Rectangle_t<T>{ {pos.x + size.x / 2, pos.y}, size / 2 },
-			Rectangle_t<T>{ {pos.x, pos.y + size.y / 2}, size / 2 },
-			Rectangle_t<T>{pos + size / 2, size / 2},
+			Rectangle_t{pos, size / 2},
+			Rectangle_t{ {pos.x + size.x / 2, pos.y}, size / 2 },
+			Rectangle_t{ {pos.x, pos.y + size.y / 2}, size / 2 },
+			Rectangle_t{pos + size / 2, size / 2},
 		};
 	}
 
 	// >TODO: implement this, for now we treat this as if it were the support
 	// of a circle of radius max(w, h) / 2
-	Vector2<T> support(T a, T d) const noexcept {
-		return Vector2<T>::createUnitVector((double)a) * (d + std::max({ w, h }) / 2);
+	Vector<D, T> support(T a, T d) const noexcept {
+		return Vector<D, T>::createUnitVector((double)a) * (d + std::max({ w, h }) / 2);
 	}
 
-	Vector2<T> topLeft() const noexcept {
+	Vector<D, T> topLeft() const noexcept {
 		return pos;
 	}
-	Vector2<T> topRight() const noexcept {
+	Vector<D, T> topRight() const noexcept {
 		return { x + w, y };
 	}
-	Vector2<T> botLeft() const noexcept {
+	Vector<D, T> botLeft() const noexcept {
 		return { x, y + h };
 	}
 	Vector2<T> botRight() const noexcept {
 		return pos + size;
 	}
 
-	Rectangle_t<T> fitUpRatio(double ratio) const noexcept {
+	Rectangle_t fitUpRatio(double ratio) const noexcept {
 		if (w > h) {
 			return { pos,{ w, (T)(w / ratio) } };
 		}
@@ -108,7 +144,7 @@ struct Rectangle_t {
 			return { pos,{ (T)(h * ratio), h } };
 		}
 	}
-	Rectangle_t<T> fitDownRatio(double ratio) const noexcept {
+	Rectangle_t fitDownRatio(double ratio) const noexcept {
 		if (w < h) {
 			return { pos,{ w, (T)(w / ratio) } };
 		}
@@ -117,8 +153,8 @@ struct Rectangle_t {
 		}
 	}
 
-	Rectangle_t<T> restrictIn(Rectangle_t<T> area) const noexcept {
-		Rectangle_t<T> result = *this;
+	Rectangle_t restrictIn(Rectangle_t area) const noexcept {
+		Rectangle_t result = *this;
 
 		if (w > area.w) {
 			result.x = area.center().x - result.size.x / 2;
@@ -178,8 +214,8 @@ struct Rectangle_t {
 
 #endif
 
-	static Rectangle_t<T> hull(std::vector<Rectangle_t<T>> recs) noexcept {
-		Rectangle_t<T> hull = recs[0];
+	static Rectangle_t hull(std::vector<Rectangle_t> recs) noexcept {
+		Rectangle_t hull = recs[0];
 
 		for (auto rec : recs) {
 			hull.x = std::min(rec.x, hull.x);
@@ -193,9 +229,7 @@ struct Rectangle_t {
 	}
 
 };
-
-template<typename T>
-using Rectangle2 = Rectangle_t<T>;
+template<typename T> using Rectangle2 = Rectangle_t<2, T>;
 using Rectangle2f = Rectangle2<float>;
 using Rectangle2u = Rectangle2<size_t>;
 using Rectangle2d = Rectangle2<double>;

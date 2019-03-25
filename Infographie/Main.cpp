@@ -13,6 +13,7 @@
 #include "UI/Geometries.hpp"
 #include "UI/Transform.hpp"
 #include "UI/Texture.hpp"
+#include "UI/Illumination.hpp"
 #include "UI/Cameras.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
@@ -26,6 +27,8 @@
 #include "Utils/TimeInfo.hpp"
 #include "Utils/Logs.hpp"
 
+#include "Graphic/FrameBuffer.hpp"
+
 static bool Show_Render_Debug{ false };
 
 void load_textures() noexcept;
@@ -37,21 +40,20 @@ void destroy_managers() noexcept;
 
 void update(
 	Widget3& root,
-	Camera& camera,
 	Images_Settings& img_settings,
 	Drawing_Settings& draw_settings,
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
 	Camera_Settings& cam_settings,
+	Illumination_Settings& ill_settings,
 	float dt
 ) noexcept;
 
 void render(
 	Widget3& root,
-	Camera& camera,
 	Texture_Settings& tex_settings,
-	sf::RenderTexture& texture_target,
+	sf::RenderTexture& render_texture,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
 ) noexcept;
@@ -60,7 +62,7 @@ void render_postprocessing(
 	Texture_Settings& settings, const sf::Texture& texture, sf::RenderTarget& target
 ) noexcept;
 
-void update_debug_ui(Widget3& root, Camera& camera) noexcept;
+void update_debug_ui() noexcept;
 
 int main() {
 	View_Matrix = new Matrix4f();
@@ -80,7 +82,7 @@ int main() {
 	context_settings.depthBits = 24;
 	context_settings.stencilBits = 8;
 	context_settings.antialiasingLevel = 4;
-	context_settings.majorVersion = 3;
+	context_settings.majorVersion = 4;
 	context_settings.minorVersion = 3;
 
 	Window_Info.title = "Infographie";
@@ -101,15 +103,18 @@ int main() {
 		return -1;
 	}
 
+	if (glDebugMessageControl != NULL) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+		glDebugMessageCallback((GLDEBUGPROCARB)Common::verbose_opengl_error, NULL);
+	}
+
 	check_gl_error();
 
 	ImGui::SFML::Init(Window_Info.window);
-	glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 
-	sf::RenderTexture texture_target;
-	texture_target.create(
-		Window_Info.size.x, Window_Info.size.y, Window_Info.window.getSettings()
-	);
+	sf::RenderTexture render_texture;
+	render_texture.create(UNROLL_2(Window_Info.size));
 
 	Images_Settings img_settings;
 	Camera_Settings cam_settings;
@@ -117,42 +122,51 @@ int main() {
 	Drawing_Settings draw_settings;
 	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
+	Illumination_Settings ill_settings;
+
+	Window_Info.ill_settings = &ill_settings;
 
 	std::shared_mutex function_from_another_thread_mutex;
 	std::vector<std::function<void(void)>> function_from_another_thread;
 
 	Widget3 scene_root;
-	auto& camera = *scene_root.make_child<Camera>();
-	auto& camera2 = *scene_root.make_child<Camera>();
-	camera.set_viewport({ {0, 0}, {Window_Info.size.x / 2, Window_Info.size.y } });
-	camera2.set_viewport({ { Window_Info.size.x / 2, 0 }, { Window_Info.size.x / 2, 1 * Window_Info.size.y } });
-	camera.set_perspective(
-		70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
-	);
-	camera2.set_perspective(
-		70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
-	);
-	camera.set_global_position({ 0, 0, -10 });
-	camera2.set_global_position({ 0, 0, -10 });
-	camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
-	camera2.look_at({ 0, 0, 0 }, { 0, 1, 0 });
-	// it's ok to render from the parent all it's going to do is that the camera will try to call
-	// it's propagate_opengl_render method. But a camera doesn't render anything, it's just
-	// a simple class to hold the different transformation matrix. So it's going to be a no op
-	// and pass to his siblings.
-	camera.render_from(&scene_root);
-	camera2.render_from(&scene_root);
+
+	auto add_cam_to_root = [](Widget3& root) -> Camera& {
+		auto& camera = *root.make_child<Camera>();
+		camera.set_viewport({ {0, 0}, {Window_Info.size.x, Window_Info.size.y } });
+		camera.set_perspective(
+			70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+		);
+		camera.set_global_position({ 0, 0, -10 });
+		camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
+		// it's ok to render from the parent all it's going to do is that the camera will try to call
+		// it's propagate_opengl_render method. But a camera doesn't render anything, it's just
+		// a simple class to hold the different transformation matrix. So it's going to be a no op
+		// and pass to his siblings.
+		camera.render_from(&root);
+		return camera;
+	};
+
+	//auto& camera2 = *scene_root.make_child<Camera>();
+	//camera2.set_viewport({ { Window_Info.size.x / 2, 0 }, { Window_Info.size.x / 2, 1 * Window_Info.size.y } });
+	//camera2.set_perspective(
+	//	70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+	//);
+	//camera2.set_global_position({ 0, 0, -10 });
+	//camera2.look_at({ 0, 0, 0 }, { 0, 1, 0 });
+	//camera2.render_from(&scene_root);
 
 	img_settings.root = &scene_root;
 	geo_settings.root = &scene_root;
 	tex_settings.root = &scene_root;
 	cam_settings.root = &scene_root;
+	ill_settings.root = &scene_root;
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
 
-	cam_settings.camera_ids.push_back(camera.get_uuid());
-	cam_settings.camera_ids.push_back(camera2.get_uuid());
-
+	cam_settings.camera_ids.push_back(add_cam_to_root(scene_root).get_uuid());
+	//cam_settings.camera_ids.push_back(camera2.get_uuid());
+	{
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_texture(path.generic_string(), path)) return;
 		auto& texture = AM->get_texture(path.generic_string());
@@ -165,7 +179,6 @@ int main() {
 		}
 		img_settings.images_widget_id.push_back(img_widget->get_uuid());
 	});
-
 	img_settings.create_images_callback.push_back([&](const sf::Image& image){
 		static size_t Counter{ 0 };
 		auto& texture = AM->create_texture(std::to_string(Counter++) + "_created_image___");
@@ -177,7 +190,6 @@ int main() {
 		img_widget->set_global_position((Vector2f)Window_Info.size / 2);
 		img_settings.images_widget_id.push_back(img_widget->get_uuid());
 	});
-
 	draw_settings.add_canvas_callback.push_back([&](Vector2u size) {
 		auto canvas_widget = scene_root.make_child<Canvas>(draw_settings);
 		canvas_widget->set_size(size);
@@ -196,7 +208,6 @@ int main() {
 			draw_settings.primitives_widget_id.push_back(primitive_widget->get_uuid());
 		}
 	);
-
 	geo_settings.model_added_callback.push_back([&](const std::filesystem::path& path) {
 		if (!AM->load_object_file(path.generic_string(), path)) return;
 		std::lock_guard guard{ function_from_another_thread_mutex };
@@ -206,11 +217,10 @@ int main() {
 			auto model_widget = scene_root.make_child<Model>();
 			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
 			model_widget->set_object(AM->get_object_file(path.generic_string()));
-			model_widget->set_shader(AM->get_shader("Simple"));
+			model_widget->set_shader(AM->get_shader("Deferred_Simple"));
 			model_widget->set_select_shader(AM->get_shader("Uniform_Glow"));
 		});
 	});
-
 	geo_settings.texture_callback.push_back(
 		[&](Uuid_t id, std::filesystem::path path, Geometries_Settings::Texture_Type type) {
 			if (!AM->load_texture(path.generic_string(), path)) return;
@@ -233,22 +243,19 @@ int main() {
 			});
 		}
 	);
-	
 	geo_settings.texture_generated_set_callback.push_back([&](Uuid_t id) {
 		auto model_widget = (Model*)scene_root.find_child(id);
 		model_widget->set_texture(tex_settings.gradient_texture);
 	});
-
 	geo_settings.spawn_object_callback.push_back(
 		[&](const Object_File& obj) {
 			auto model_widget = scene_root.make_child<Model>();
 			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
 			model_widget->set_object_copy(obj);
-			model_widget->set_shader(AM->get_shader("Simple"));
+			model_widget->set_shader(AM->get_shader("Deferred_Simple"));
 			model_widget->set_select_shader(AM->get_shader("Uniform_Glow"));
 		}
 	);
-
 	tex_settings.cubemap_added.push_back([&](std::filesystem::path path) {
 		if (!std::filesystem::is_directory(path)) return;
 
@@ -283,6 +290,7 @@ int main() {
 		});
 	});
 
+	}
 	sf::Clock dt_clock;
 	float dt;
 	while (Window_Info.window.isOpen()) {
@@ -290,19 +298,15 @@ int main() {
 		IM::update(Window_Info.window);
 		if (!Window_Info.window.isOpen()) break;
 
-		glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
-		glClearDepth(1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
-
 		update(
 			scene_root,
-			camera,
 			img_settings,
 			draw_settings,
 			tran_settings,
 			geo_settings,
 			tex_settings,
 			cam_settings,
+			ill_settings,
 			dt
 		);
 
@@ -326,7 +330,13 @@ int main() {
 		}
 
 
-		render(scene_root, camera, tex_settings, texture_target, Window_Info.window, screenshot);
+		render(
+			scene_root,
+			tex_settings,
+			render_texture,
+			Window_Info.window,
+			screenshot
+		);
 
 		Window_Info.window.display();
 	}
@@ -335,13 +345,13 @@ int main() {
 
 void update(
 	Widget3& root,
-	Camera& camera,
 	Images_Settings& img_settings,
 	Drawing_Settings& draw_settings,
 	Transform_Settings& tran_settings,
 	Geometries_Settings& geo_settings,
 	Texture_Settings& tex_settings,
 	Camera_Settings& cam_settings,
+	Illumination_Settings& ill_settings,
 	float dt
 ) noexcept {
 	static constexpr auto Help_Popup_Title = "Help - Hestia";
@@ -395,7 +405,8 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
 	if (ImGui::CollapsingHeader("Texture")) update_texture_settings(tex_settings);
 	if (ImGui::CollapsingHeader("Camera")) update_camera_settings(cam_settings);
-	if (ImGui::CollapsingHeader("Debug")) update_debug_ui(root, camera);
+	if (ImGui::CollapsingHeader("Illumination")) update_illumination_settings(ill_settings);
+	if (ImGui::CollapsingHeader("Debug")) update_debug_ui();
 
 	root.propagate_update(dt);
 	ImGui::End();
@@ -403,63 +414,45 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 
 void render(
 	Widget3& root,
-	Camera& camera,
 	Texture_Settings& tex_settings,
 	sf::RenderTexture& texture_target,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
 ) noexcept {
-	texture_target.setActive();
+	Is_In_Sfml_Context = false;
 
-	glClearColor(UNROLL_3(Window_Info.clear_color), 1); check_gl_error();
-	glClearDepth(1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); check_gl_error();
+	//glDisable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_TEXTURE_2D);
+	//glEnable(GL_LIGHTING);
+	//glDepthFunc(GL_LESS);
+	check_gl_error();
 
-	ImGui::Begin("Debug render info", &Show_Render_Debug);
+	//ImGui::Begin("Debug render info", &Show_Render_Debug);
 	root.propagate_render(texture_target);
-	ImGui::End();
+	//ImGui::End();
 
 	texture_target.display();
-	check_gl_error();
 
-	target.setActive();
-	check_gl_error();
-
-	glPopAttrib();
-	check_gl_error();
-
-	Is_In_Sfml_Context = true;
-	target.pushGLStates();
-	defer {
-		target.popGLStates();
-		Is_In_Sfml_Context = false;
-
-		glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glEnable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_LIGHTING);
-		glDepthFunc(GL_LESS);
-		target.setActive(false);
-	};
-
-	if (screenshot) {
-		sf::RenderTexture render_texture;
-		render_texture.create(UNROLL_2(Window_Info.size));
-		render_texture.clear();
-		
-		root.propagate_render(render_texture);
-
-		render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
-		ImGui::SFML::Render(render_texture);
-		render_texture.display();
-		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
-	}
+	//Is_In_Sfml_Context = true;
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	target.resetGLStates();
+	//if (screenshot) {
+	//	sf::RenderTexture render_texture;
+	//	render_texture.create(UNROLL_2(Window_Info.size));
+	//	render_texture.clear();
+	//	
+	//	root.propagate_render(render_texture);
+	//
+	//	render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
+	//	ImGui::SFML::Render(render_texture);
+	//	render_texture.display();
+	//	render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
+	//}
 	render_postprocessing(tex_settings, texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
+	glPopAttrib();
 }
 
 void render_postprocessing(
@@ -575,28 +568,26 @@ void load_shaders() noexcept {
 		"res/shaders/uniform_glow.fragment",
 		"res/shaders/Explode.geometry"
 	);
+	AM->load_shader(
+		"Deferred_Simple",
+		"res/shaders/Simple_Deferred.vertex",
+		"res/shaders/Simple_Deferred.fragment"
+	);
+	AM->load_shader(
+		"Deferred_Light",
+		"res/shaders/Light_Deferred.vertex",
+		"res/shaders/Light_Deferred.fragment"
+	);
+	AM->load_shader(
+		"Deferred_Debug",
+		"res/shaders/FBO_Debug.vertex",
+		"res/shaders/FBO_Debug.fragment"
+	);
+	AM->load_shader("Light_Box", "res/shaders/Light_Box.vertex", "res/shaders/Light_Box.fragment");
 }
 
-void update_debug_ui(Widget3&, Camera& camera) noexcept {
-	thread_local float Cam_Speed = 15;
-	thread_local float Cam_Fov = 90;
-	thread_local float Cam_Near = 1;
+void update_debug_ui() noexcept {
 	thread_local bool show_demo_window{ false };
-
-	ImGui::DragFloat("Camera speed", &Cam_Speed, 0.1f, 0, 50);
-	ImGui::DragFloat("Camera fov", &Cam_Fov, 1, 0, 180);
-	ImGui::DragFloat("Camera near", &Cam_Near, 0.001f, 0, 10);
-
-	camera.set_perspective(
-		Cam_Fov / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, Cam_Near
-	);
-	camera.set_speed(Cam_Speed);
-	ImGui::Text("Camera pos; x: %.3f y: %.3f z: %.3f",
-		camera.get_global_position3().x,
-		camera.get_global_position3().y,
-		camera.get_global_position3().z
-	);
-
 	ImGui::Checkbox("Show render debug", &Show_Render_Debug);
 
 	if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;

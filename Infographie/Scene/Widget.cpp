@@ -244,11 +244,11 @@ Widget* Widget::find_child(Uuid_t id) const noexcept {
 void Widget::render(sf::RenderTarget& target) {
 	if (!visible) return;
 
-	sf::CircleShape mark{ 2.f };
-	mark.setOrigin(mark.getRadius(), mark.getRadius());
-	mark.setPosition(get_global_position());
-	mark.setFillColor(Vector4d{ 1, 1, 1, 0.2 });
-	target.draw(mark);
+	// sf::CircleShape mark{ 2.f };
+	// mark.setOrigin(mark.getRadius(), mark.getRadius());
+	// mark.setPosition(get_global_position());
+	// mark.setFillColor(Vector4d{ 1, 1, 1, 0.2 });
+	// target.draw(mark);
 }
 void Widget::propagate_render(sf::RenderTarget& target) {
 	if (!is_visible()) return;

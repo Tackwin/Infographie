@@ -1,11 +1,12 @@
 #pragma once
-
 #include "Widget.hpp"
-#include "Math/Vector.hpp"
-#include "Files/FileFormat.hpp"
 
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
+
+#include "Math/Vector.hpp"
+#include "Files/FileFormat.hpp"
+
 
 #include <optional>
 
@@ -45,7 +46,7 @@ public:
 
 	void set_selectable(bool v) noexcept;
 
-private:
+protected:
 	void toggle_picker() noexcept;
 	void push_picker() noexcept;
 	void pop_picker() noexcept;
