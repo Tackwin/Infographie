@@ -91,6 +91,7 @@ protected:
 			ZX,
 			Count
 		} selected_plan = Plan_List::None;
+
 		Vector3f initial_pos;
 
 		Picker() noexcept;

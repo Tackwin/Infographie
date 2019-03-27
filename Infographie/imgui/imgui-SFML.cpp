@@ -623,7 +623,6 @@ void RenderDrawLists(ImDrawData* draw_data)
     glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
 #else
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
-	check_gl_error();
 #endif
 
     glEnable(GL_BLEND);
@@ -636,29 +635,23 @@ void RenderDrawLists(ImDrawData* draw_data)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	check_gl_error();
 
     glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
-	check_gl_error();
 
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
-	check_gl_error();
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	check_gl_error();
 
 #ifdef GL_VERSION_ES_CL_1_1
     glOrthof(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
 #else
     glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
 #endif
-	check_gl_error();
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-	check_gl_error();
 
     for (int n = 0; n < draw_data->CmdListsCount; ++n) {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -666,11 +659,8 @@ void RenderDrawLists(ImDrawData* draw_data)
         const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer.front();
 
         glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + offsetof(ImDrawVert, pos)));
-		check_gl_error();
 		glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + offsetof(ImDrawVert, uv)));
-		check_gl_error();
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (void*)(vtx_buffer + offsetof(ImDrawVert, col)));
-		check_gl_error();
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); ++cmd_i) {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback) {
@@ -678,12 +668,9 @@ void RenderDrawLists(ImDrawData* draw_data)
             } else {
                 GLuint tex_id = (GLuint)*((unsigned int*)&pcmd->TextureId);
                 glBindTexture(GL_TEXTURE_2D, tex_id);
-				check_gl_error();
 				glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w),
                     (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
-				check_gl_error();
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, GL_UNSIGNED_SHORT, idx_buffer);
-				check_gl_error();
 			}
             idx_buffer += pcmd->ElemCount;
         }
@@ -695,7 +682,6 @@ void RenderDrawLists(ImDrawData* draw_data)
     glDisable(GL_SCISSOR_TEST);
 #else
     glPopAttrib();
-	check_gl_error();
 #endif
 }
 

@@ -12,9 +12,6 @@ namespace details {
 	struct Window_Struct {
 		static Window_Struct* instance;
 
-		// >TODO: REMOVE ME
-		Illumination_Settings* ill_settings;
-
 		std::shared_mutex cursor_mutex;
 
 		Vector2u size;

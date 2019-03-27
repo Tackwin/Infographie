@@ -18,7 +18,11 @@ public:
 	void set_light_color(Vector3f light_color) noexcept;
 	Vector3f get_light_color() const noexcept;
 
+	float get_strength() const noexcept;
+	void set_strength(float x) noexcept;
+
 private:
+	float strength{ 1 };
 	Vector3f light_color;
 
 };

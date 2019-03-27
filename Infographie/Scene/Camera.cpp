@@ -48,7 +48,7 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 	shader.setUniform("gPosition", 0);
 	shader.setUniform("gNormal", 1);
 	shader.setUniform("gAlbedoSpec", 2);
-	shader.setUniform("viewPos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
+	shader.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
 	sf::Shader::bind(&shader);
 
 	g_buffer.render_quad();

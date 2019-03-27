@@ -53,6 +53,7 @@ void update(
 void render(
 	Widget3& root,
 	Texture_Settings& tex_settings,
+	Illumination_Settings& ill_settings,
 	sf::RenderTexture& render_texture,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
@@ -109,7 +110,7 @@ int main() {
 		glDebugMessageCallback((GLDEBUGPROCARB)Common::verbose_opengl_error, NULL);
 	}
 
-	check_gl_error();
+	
 
 	ImGui::SFML::Init(Window_Info.window);
 
@@ -123,8 +124,6 @@ int main() {
 	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
 	Illumination_Settings ill_settings;
-
-	Window_Info.ill_settings = &ill_settings;
 
 	std::shared_mutex function_from_another_thread_mutex;
 	std::vector<std::function<void(void)>> function_from_another_thread;
@@ -164,7 +163,10 @@ int main() {
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
 
-	cam_settings.camera_ids.push_back(add_cam_to_root(scene_root).get_uuid());
+	auto& main_cam = add_cam_to_root(scene_root);
+	main_cam.set_focus(true);
+	cam_settings.camera_ids.push_back(main_cam.get_uuid());
+
 	//cam_settings.camera_ids.push_back(camera2.get_uuid());
 	{
 	img_settings.import_images_callback.push_back([&](const std::filesystem::path& path) {
@@ -333,6 +335,7 @@ int main() {
 		render(
 			scene_root,
 			tex_settings,
+			ill_settings,
 			render_texture,
 			Window_Info.window,
 			screenshot
@@ -415,10 +418,12 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 void render(
 	Widget3& root,
 	Texture_Settings& tex_settings,
+	Illumination_Settings& ill_settings,
 	sf::RenderTexture& texture_target,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
 ) noexcept {
+	static sf::Clock dt_clock;
 	Is_In_Sfml_Context = false;
 
 	//glDisable(GL_BLEND);
@@ -427,29 +432,43 @@ void render(
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
 	//glDepthFunc(GL_LESS);
-	check_gl_error();
 
-	//ImGui::Begin("Debug render info", &Show_Render_Debug);
+	auto& shader_light = AM->get_shader("Deferred_Light");
+	shader_light.setUniform("ambient_strength", ill_settings.ambient.strength);
+	shader_light.setUniform("ambient_color", sf::Vector3f{ UNROLL_3(ill_settings.ambient.color) });
+
+	for (size_t i = 0; i < ill_settings.directionals.size(); ++i) {
+		auto& x = ill_settings.directionals[i];
+
+		auto str = "light_dirs[" + std::to_string(i) + "].";
+
+		shader_light.setUniform(str + "dir", sf::Vector3f{ UNROLL_3(x.dir) } );
+		shader_light.setUniform(str + "color", sf::Vector3f{ UNROLL_3(x.color) });
+		shader_light.setUniform(str + "strength", x.strength);
+	}
+
+	ImGui::Begin("Debug render info", &Show_Render_Debug);
+	ImGui::Text("dt: %3.3f ms", dt_clock.restart().asSeconds() * 1000.f);
 	root.propagate_render(texture_target);
-	//ImGui::End();
+	ImGui::End();
 
 	texture_target.display();
 
-	//Is_In_Sfml_Context = true;
+	Is_In_Sfml_Context = true;
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	target.resetGLStates();
-	//if (screenshot) {
-	//	sf::RenderTexture render_texture;
-	//	render_texture.create(UNROLL_2(Window_Info.size));
-	//	render_texture.clear();
-	//	
-	//	root.propagate_render(render_texture);
-	//
-	//	render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
-	//	ImGui::SFML::Render(render_texture);
-	//	render_texture.display();
-	//	render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
-	//}
+	if (screenshot) {
+		sf::RenderTexture render_texture;
+		render_texture.create(UNROLL_2(Window_Info.size));
+		
+		root.propagate_render(render_texture);
+	
+		render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
+		ImGui::SFML::Render(render_texture);
+
+		render_texture.display();
+		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
+	}
 	render_postprocessing(tex_settings, texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
 	glPopAttrib();
@@ -588,7 +607,7 @@ void load_shaders() noexcept {
 
 void update_debug_ui() noexcept {
 	thread_local bool show_demo_window{ false };
-	ImGui::Checkbox("Show render debug", &Show_Render_Debug);
+	if (!Show_Render_Debug && ImGui::Button("Show render debug")) Show_Render_Debug = true;
 
 	if (!Log.data.empty() && ImGui::Button("Show logs")) Log.show = true;
 	ImGui::Checkbox("Demo", &show_demo_window);

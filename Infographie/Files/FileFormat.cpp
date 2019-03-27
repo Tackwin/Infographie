@@ -3,8 +3,7 @@
 #include <array>
 
 #include "OS/FileIO.hpp"
-
-#include <Windows.h>
+#include "Math/algorithms.hpp"
 
 std::optional<Object_File> Object_File::load_file(const std::filesystem::path& path) noexcept {
 	if (!std::filesystem::is_regular_file(path)) return std::nullopt;
@@ -156,42 +155,42 @@ Object_File Object_File::cube(Vector3f size) noexcept {
 	obj.min = size / -2;
 	obj.max = size / +2;
 
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f, -1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f, -1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
-	obj.normals.push_back({ 0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f, -1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f, -1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
+	obj.normals.push_back({  0.0f,  1.0f,  0.0f });
 
 	obj.uvs.push_back({ 0.0f, 0.0f });
 	obj.uvs.push_back({ 1.0f, 1.0f });

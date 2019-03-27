@@ -16,18 +16,6 @@ Matrix4f* Common::View_Matrix{ nullptr };
 Matrix4f* Common::Projection_Matrix{ nullptr };
 float Common::Alpha_Tolerance{ 0.f };
 
-void Common::check_gl_error() {
-	if (auto err = glGetError(); err != GL_NO_ERROR) {
-		// So that was a nice day ruined...
-		if (!Is_In_Sfml_Context) Log.push(
-			"You are tring to do the next error outside of the opengl thread is that cool ?"
-		);
-		std::string str((const char* const)glewGetErrorString(err));
-		DebugBreak();
-		Log.push(str);
-	}
-}
-
 // courtesy of
 // https://stackoverflow.com/questions/18064988/rendering-issue-with-different-computers/18067245#18067245
 
@@ -72,7 +60,11 @@ void GLAPIENTRY Common::verbose_opengl_error(
 	const char* message,
 	GLvoid*
 ) noexcept {
-	//if (severity != GL_DEBUG_SEVERITY_HIGH) return;
+	constexpr GLenum To_Ignore[] = {
+		131185
+	};
+
+	if (std::find(BEG_END(To_Ignore), id) != std::end(To_Ignore)) return;
 
 	printf("OpenGL Error:\n");
 	printf("=============\n");

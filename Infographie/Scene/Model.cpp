@@ -150,24 +150,19 @@ void Model::opengl_render() noexcept {
 		(void*)0                          // array buffer offset
 	);
 
-	check_gl_error();
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, obj_to_use.vertices.size());
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
-	check_gl_error();
 }
 
 void Model::set_object(const Object_File& o) noexcept {
 	if (vertex_array_id) {
 		glDeleteBuffers(1, &*vertex_buffer_id);
-		check_gl_error();
 		glDeleteBuffers(1, &*uv_buffer_id);
-		check_gl_error();
 		glDeleteVertexArrays(1, &*vertex_array_id);
-		check_gl_error();
 	}
 
 	vertex_array_id = 0;
@@ -175,36 +170,31 @@ void Model::set_object(const Object_File& o) noexcept {
 	vertex_buffer_id = 0;
 	normal_buffer_id = 0;
 	glGenVertexArrays(1, &*vertex_array_id);
-	check_gl_error();
 	glBindVertexArray(*vertex_array_id);
 	defer{ glBindVertexArray(0); };
-	check_gl_error();
 
 	glGenBuffers(1, &*vertex_buffer_id);
-	check_gl_error();
 	glBindBuffer(GL_ARRAY_BUFFER, *vertex_buffer_id);
 	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	check_gl_error();
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.vertices.size() * sizeof(Vector3f),
 		o.vertices.data(),
 		GL_STATIC_DRAW
 	);
-	check_gl_error();
 
 	glGenBuffers(1, &*uv_buffer_id);
-	check_gl_error();
+	
 	glBindBuffer(GL_ARRAY_BUFFER, *uv_buffer_id);
 	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	check_gl_error();
+	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.uvs.size() * sizeof(Vector2f),
 		o.uvs.data(),
 		GL_STATIC_DRAW
 	);
-	check_gl_error();
+	
 
 	glGenBuffers(1, &*normal_buffer_id);
 	glBindBuffer(GL_ARRAY_BUFFER, *normal_buffer_id);
@@ -225,11 +215,11 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 
 	if (vertex_array_id) {
 		glDeleteBuffers(1, &*vertex_buffer_id);
-		check_gl_error();
+		
 		glDeleteBuffers(1, &*uv_buffer_id);
-		check_gl_error();
+		
 		glDeleteVertexArrays(1, &*vertex_array_id);
-		check_gl_error();
+		
 	}
 
 	vertex_array_id = 0;
@@ -237,36 +227,36 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 	vertex_buffer_id = 0;
 	normal_buffer_id = 0;
 	glGenVertexArrays(1, &*vertex_array_id);
-	check_gl_error();
+	
 	glBindVertexArray(*vertex_array_id);
 	defer{ glBindVertexArray(0); };
-	check_gl_error();
+	
 
 	glGenBuffers(1, &*vertex_buffer_id);
-	check_gl_error();
+	
 	glBindBuffer(GL_ARRAY_BUFFER, *vertex_buffer_id);
 	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	check_gl_error();
+	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.vertices.size() * sizeof(Vector3f),
 		o.vertices.data(),
 		GL_STATIC_DRAW
 	);
-	check_gl_error();
+	
 
 	glGenBuffers(1, &*uv_buffer_id);
-	check_gl_error();
+	
 	glBindBuffer(GL_ARRAY_BUFFER, *uv_buffer_id);
 	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	check_gl_error();
+	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.uvs.size() * sizeof(Vector2f),
 		o.uvs.data(),
 		GL_STATIC_DRAW
 	);
-	check_gl_error();
+	
 
 	glGenBuffers(1, &*normal_buffer_id);
 	glBindBuffer(GL_ARRAY_BUFFER, *normal_buffer_id);
@@ -404,7 +394,6 @@ void Model::Picker::update(float) noexcept {
 		return;
 	}
 
-
 	Ray3f ray;
 	ray.pos = Window_Info.active_camera->get_global_position3();
 	ray.dir = get_ray_from_graphic_matrices(
@@ -478,7 +467,6 @@ void Model::Picker::update(float) noexcept {
 		break;
 	}
 	}
-
 
 }
 

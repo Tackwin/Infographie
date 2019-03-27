@@ -29,7 +29,7 @@ namespace details {
 };
 
 #define defer details::Defer _CONCAT(defer_, __COUNTER__) = [&]
-
+#define BEG_END(x) std::begin(x), std::end(x)
 namespace xstd {
 	constexpr size_t constexpr_pow2(size_t D) noexcept {
 		size_t p = 1;
@@ -133,7 +133,6 @@ namespace Common {
 		for (size_t i = 0; i < size; ++i) seed = xstd::hash_combine(seed, (size_t)user[i]);
 		return seed;
 	}
-	extern void check_gl_error();
 	extern void GLAPIENTRY verbose_opengl_error(
 		GLenum source,
 		GLenum type,

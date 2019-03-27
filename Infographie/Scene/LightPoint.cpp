@@ -30,7 +30,7 @@ Light_Point::~Light_Point() noexcept {
 
 void Light_Point::update(float) noexcept {
 	auto idx = std::to_string(Shader_Index_Map.at(this));
-	auto str = "lights[" + idx + "].";
+	auto str = "light_points[" + idx + "].";
 
 	AM->get_shader("Deferred_Light").setUniform(
 		str + "Position", sf::Vector3f{ UNROLL_3(get_global_position3()) }
@@ -40,10 +40,10 @@ void Light_Point::update(float) noexcept {
 	);
 	// update attenuation parameters and calculate radius
 	// note that we don't send this to the shader, we assume it is always 1.0 (in our case)
-	const float constant = 1.0f;
 	const float linear = 0.7f;
 	const float quadratic = 1.8f;
 	AM->get_shader("Deferred_Light").setUniform(str + "Linear", linear);
+	AM->get_shader("Deferred_Light").setUniform(str + "Strength", strength);
 	AM->get_shader("Deferred_Light").setUniform(str + "Quadratic", quadratic);
 }
 
@@ -64,3 +64,9 @@ Vector3f Light_Point::get_light_color() const noexcept {
 	return light_color;
 }
 
+float Light_Point::get_strength() const noexcept {
+	return strength;
+}
+void Light_Point::set_strength(float x) noexcept {
+	strength = x;
+}

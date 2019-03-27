@@ -238,3 +238,6 @@ std::optional<Vector3f> ray_plane(Ray3f ray, Vector3f center, Vector3f normal) n
 	return std::nullopt;
 }
 
+Vector3f plane_normal(Vector3f A, Vector3f B, Vector3f C) noexcept {
+	return (B - A).cross(C - A);
+}
