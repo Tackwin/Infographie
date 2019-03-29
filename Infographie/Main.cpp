@@ -164,7 +164,8 @@ int main() {
 	tran_settings.root = &scene_root;
 
 	auto& main_cam = add_cam_to_root(scene_root);
-	main_cam.set_focus(true);
+	main_cam.set_input_active(true);
+	main_cam.set_name("Main Camera");
 	cam_settings.camera_ids.push_back(main_cam.get_uuid());
 
 	//cam_settings.camera_ids.push_back(camera2.get_uuid());
@@ -433,6 +434,8 @@ void render(
 	//glEnable(GL_LIGHTING);
 	//glDepthFunc(GL_LESS);
 
+	texture_target.setActive(true);
+
 	auto& shader_light = AM->get_shader("Deferred_Light");
 	shader_light.setUniform("ambient_strength", ill_settings.ambient.strength);
 	shader_light.setUniform("ambient_color", sf::Vector3f{ UNROLL_3(ill_settings.ambient.color) });
@@ -603,6 +606,7 @@ void load_shaders() noexcept {
 		"res/shaders/FBO_Debug.fragment"
 	);
 	AM->load_shader("Light_Box", "res/shaders/Light_Box.vertex", "res/shaders/Light_Box.fragment");
+	AM->load_shader("HDR", "res/shaders/HDR.vertex", "res/shaders/HDR.fragment");
 }
 
 void update_debug_ui() noexcept {

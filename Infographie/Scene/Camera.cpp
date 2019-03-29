@@ -11,7 +11,9 @@
 
 #include "Window.hpp"
 
-Camera::Camera() noexcept : g_buffer(Window_Info.size) {
+#include "imgui/imgui.h"
+
+Camera::Camera() noexcept : g_buffer(Window_Info.size), hdr_buffer(Window_Info.size) {
 	pos3 = { 0, 0, 0 };
 }
 
@@ -23,6 +25,10 @@ Widget3* Camera::get_render_root() const noexcept {
 }
 
 void Camera::render(sf::RenderTarget& target) noexcept {
+	static int Show_Debug{ 0 };
+
+	ImGui::DragInt("Show Debug", &Show_Debug, 1, 0, 3);
+
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
 	compute_view();
 
@@ -37,21 +43,37 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 
 	render_root->propagate_opengl_render();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	hdr_buffer.set_active();
 
 	// the lighting phase
 	g_buffer.set_active_texture();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	auto& shader = AM->get_shader("Deferred_Light");
+	auto& shader_light = AM->get_shader("Deferred_Light");
 
-	shader.setUniform("gPosition", 0);
-	shader.setUniform("gNormal", 1);
-	shader.setUniform("gAlbedoSpec", 2);
-	shader.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
-	sf::Shader::bind(&shader);
+	shader_light.setUniform("gPosition", 0);
+	shader_light.setUniform("gNormal", 1);
+	shader_light.setUniform("gAlbedoSpec", 2);
+	shader_light.setUniform("show_debug", Show_Debug );
+	shader_light.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
+	sf::Shader::bind(&shader_light);
 
 	g_buffer.render_quad();
+
+	// HDR
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	hdr_buffer.set_active_texture();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	auto& shader_hdr = AM->get_shader("HDR");
+
+	shader_hdr.setUniform("gamma", 2.2f);
+	shader_hdr.setUniform("exposure", 1.f);
+	shader_hdr.setUniform("hdr_texture", 0);
+	sf::Shader::bind(&shader_hdr);
+
+	hdr_buffer.render_quad();
 
 	// The last phase
 
@@ -270,3 +292,4 @@ bool Camera::is_input_active() const noexcept {
 void Camera::set_input_active(bool v) noexcept {
 	input_active = v;
 }
+

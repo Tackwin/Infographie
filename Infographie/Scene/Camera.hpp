@@ -63,5 +63,6 @@ private:
 	std::vector<Uuid_t> ids_to_lock;
 
 	G_Buffer g_buffer;
+	HDR_Buffer hdr_buffer;
 };
 

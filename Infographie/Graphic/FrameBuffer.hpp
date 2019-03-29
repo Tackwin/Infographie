@@ -24,11 +24,37 @@ struct G_Buffer {
 private:
 	Vector2u size;
 
-	uint32_t g_buffer;
-	uint32_t pos_buffer;
-	uint32_t normal_buffer;
-	uint32_t albedo_buffer;
-	uint32_t depth_rbo;
-	uint32_t quad_VAO;
-	uint32_t quad_VBO;
+	uint32_t g_buffer{ 0 };
+	uint32_t pos_buffer{ 0 };
+	uint32_t normal_buffer{ 0 };
+	uint32_t albedo_buffer{ 0 };
+	uint32_t depth_rbo{ 0 };
+	uint32_t quad_VAO{ 0 };
+	uint32_t quad_VBO{ 0 };
+};
+
+struct HDR_Buffer {
+	HDR_Buffer(HDR_Buffer&) = delete;
+	HDR_Buffer& operator=(HDR_Buffer&) = delete;
+	HDR_Buffer(HDR_Buffer&&) = default;
+	HDR_Buffer& operator=(HDR_Buffer&&) = delete;
+
+	HDR_Buffer(Vector2u size) noexcept;
+	~HDR_Buffer() noexcept;
+
+	Vector2u get_size() const noexcept;
+
+	void set_active() noexcept;
+	void set_active_texture() noexcept;
+	void set_disable_texture() noexcept;
+
+	void render_quad() noexcept;
+private:
+	Vector2u size;
+
+	uint32_t hdr_buffer{ 0 };
+	uint32_t rbo_buffer{ 0 };
+	uint32_t color_buffer{ 0 };
+	uint32_t quad_VAO{ 0 };
+	uint32_t quad_VBO{ 0 };
 };

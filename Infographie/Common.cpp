@@ -61,7 +61,9 @@ void GLAPIENTRY Common::verbose_opengl_error(
 	GLvoid*
 ) noexcept {
 	constexpr GLenum To_Ignore[] = {
-		131185
+		131185,
+		131204  /*this one is the texture mipmap warning remember to periodically check it sfml*/
+				/*force me to ignore it*/
 	};
 
 	if (std::find(BEG_END(To_Ignore), id) != std::end(To_Ignore)) return;

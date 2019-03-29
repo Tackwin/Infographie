@@ -241,7 +241,7 @@ Widget* Widget::find_child(Uuid_t id) const noexcept {
 	return nullptr;
 }
 
-void Widget::render(sf::RenderTarget& target) {
+void Widget::render(sf::RenderTarget&) {
 	if (!visible) return;
 
 	// sf::CircleShape mark{ 2.f };
@@ -458,3 +458,11 @@ void Widget3::set_rotation(Vector3f r) noexcept {
 Vector3f Widget3::get_rotation3() const noexcept {
 	return rotation3;
 }
+
+void Widget::set_name(std::string x) noexcept {
+	name = std::move(x);
+}
+const std::string& Widget::get_name() const noexcept {
+	return name;
+}
+

@@ -11,7 +11,7 @@ struct Illumination_Settings {
 	Widget* root{nullptr};
 
 	struct Ambient {
-		float strength{ 0.1f };
+		float strength{ 1.f };
 		Vector3f color{ 1, 1, 1 };
 	} ambient;
 

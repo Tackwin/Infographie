@@ -113,6 +113,9 @@ public:
 
 	int get_z_index() const noexcept;
 
+	void set_name(std::string name) noexcept;
+	const std::string& get_name() const noexcept;
+
 protected: //god this is growing into a god class... :(
 	int z_index = 0;
 	Vector2f pos;
@@ -135,6 +138,8 @@ protected: //god this is growing into a god class... :(
 	// i can't imagine a case where a child whose parent just got destroyed
 	// still need to live. (also things like get_global_position would segfault)
 	std::vector<std::unique_ptr<Widget>> childs;
+
+	std::string name;
 
 	Callback on_hover;
 	Callback on_click;

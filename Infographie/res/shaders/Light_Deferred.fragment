@@ -33,13 +33,14 @@ uniform vec3 view_pos;
 uniform float ambient_strength;
 uniform vec3 ambient_color;
 
+uniform int show_debug;
+
 void main() {             
     // retrieve data from gbuffer
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Diffuse = texture(gAlbedoSpec, TexCoords).rgb;
     float Specular = texture(gAlbedoSpec, TexCoords).a;
-    
     // then calculate lighting as usual
     vec3 lighting  = Diffuse * ambient_color * ambient_strength;
     vec3 viewDir  = normalize(view_pos - FragPos);
@@ -73,6 +74,16 @@ void main() {
         lighting += (diffuse + specular) * light_dirs[i].strength;
     }
 
-
-    FragColor = vec4(lighting, 1.0);
+    if (show_debug == 0){
+        FragColor = vec4(lighting, 1.0);
+    }
+    if (show_debug == 1){
+        FragColor = vec4(FragPos, 1.0);
+    }
+    if (show_debug == 2){
+        FragColor = vec4(Normal, 1.0);
+    }
+    if (show_debug == 3){
+        FragColor = vec4(Diffuse, 1.0);
+    }
 }

@@ -8,14 +8,29 @@ void update_camera_settings(Camera_Settings& settings) noexcept {
 	if (settings.camera_ids.empty()) return;
 
 	thread_local Uuid_t Cam_Selected{ Uuid_t::zero() };
+	constexpr auto Temp_Buff_Max = 256;
+	thread_local char Temp_Buff[Temp_Buff_Max];
+
+	ImGui::Columns(2);
 	for (size_t i = 0; i < settings.camera_ids.size(); ++i) {
 		auto str = std::to_string(i);
+		auto current_cam = (Camera*)settings.root->find_child(settings.camera_ids[i]);
+		bool selected =
+			Cam_Selected == settings.camera_ids[i] ||
+			current_cam->is_input_active();
 
-		bool selected = Cam_Selected == settings.camera_ids[i];
-		ImGui::Selectable(str.c_str(), &selected);
+		strcpy_s(Temp_Buff, current_cam->get_name().c_str());
+		if (ImGui::InputText("", Temp_Buff, Temp_Buff_Max)) {
+			current_cam->set_name(std::string(Temp_Buff));
+		}
+		ImGui::NextColumn();
+		ImGui::Selectable(Temp_Buff, &selected, ImGuiSelectableFlags_SpanAllColumns, { 0, 0 });
+
+		
 		Cam_Selected = selected ? settings.camera_ids[i] : Cam_Selected;
-		((Camera*)settings.root->find_child(settings.camera_ids[i]))->set_input_active(selected);
+		current_cam->set_input_active(selected);
 	}
+	ImGui::Columns(1);
 
 	if (Cam_Selected == Uuid_t::zero()) return;
 
