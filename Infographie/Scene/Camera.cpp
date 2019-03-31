@@ -62,23 +62,24 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 	g_buffer.render_quad();
 
 	// HDR
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	target.setActive(true);
+	g_buffer.copy_depth_to(0);
+	
 	hdr_buffer.set_active_texture();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	auto& shader_hdr = AM->get_shader("HDR");
 
-	shader_hdr.setUniform("gamma", 2.2f);
-	shader_hdr.setUniform("exposure", 1.f);
+	shader_hdr.setUniform("gamma", gamma);
+	shader_hdr.setUniform("exposure", exposure);
 	shader_hdr.setUniform("hdr_texture", 0);
 	sf::Shader::bind(&shader_hdr);
 
 	hdr_buffer.render_quad();
 
 	// The last phase
-
-	g_buffer.copy_depth();
-
+	target.setActive(true);
+	g_buffer.copy_depth_to(0);
 	render_root->propagate_last_opengl_render();
 }
 
@@ -293,3 +294,18 @@ void Camera::set_input_active(bool v) noexcept {
 	input_active = v;
 }
 
+float Camera::get_exposure() const noexcept {
+	return exposure;
+}
+
+void Camera::set_exposure(float x) noexcept {
+	exposure = x;
+}
+
+float Camera::get_gamma() const noexcept {
+	return gamma;
+}
+
+void Camera::set_gamma(float x) noexcept {
+	gamma = x;
+}

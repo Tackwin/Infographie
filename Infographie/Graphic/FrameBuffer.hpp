@@ -20,7 +20,7 @@ struct G_Buffer {
 	void set_disable_texture() noexcept;
 
 	void render_quad() noexcept;
-	void copy_depth() noexcept;
+	void copy_depth_to(uint32_t id = 0) noexcept;
 private:
 	Vector2u size;
 
@@ -49,6 +49,8 @@ struct HDR_Buffer {
 	void set_disable_texture() noexcept;
 
 	void render_quad() noexcept;
+
+	uint32_t get_depth_id() const noexcept;
 private:
 	Vector2u size;
 

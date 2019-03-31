@@ -113,14 +113,14 @@ void G_Buffer::render_quad() noexcept {
 	glBindVertexArray(0);
 }
 
-void G_Buffer::copy_depth() noexcept {
+void G_Buffer::copy_depth_to(uint32_t id) noexcept {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, g_buffer);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id); // write to default framebuffer
 	// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
 	// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
 	// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
 	glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, id);
 }
 
 
@@ -205,5 +205,9 @@ void HDR_Buffer::render_quad() noexcept {
 	glBindVertexArray(quad_VAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+}
+
+uint32_t HDR_Buffer::get_depth_id() const noexcept {
+	return rbo_buffer;
 }
 

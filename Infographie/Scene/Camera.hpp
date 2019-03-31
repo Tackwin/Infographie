@@ -39,6 +39,11 @@ public:
 	bool is_input_active() const noexcept;
 	void set_input_active(bool v) noexcept;
 
+	float get_exposure() const noexcept;
+	void set_exposure(float x) noexcept;
+	float get_gamma() const noexcept;
+	void set_gamma(float x) noexcept;
+
 private:
 
 	void select_ray_cast() noexcept;
@@ -57,6 +62,9 @@ private:
 	float yaw{ PIf };
 
 	float speed{ 15 };
+
+	float exposure{ 1.f };
+	float gamma{ 2.2f };
 
 	bool input_active{ false };
 

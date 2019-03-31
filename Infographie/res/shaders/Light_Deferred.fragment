@@ -41,6 +41,10 @@ void main() {
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Diffuse = texture(gAlbedoSpec, TexCoords).rgb;
     float Specular = texture(gAlbedoSpec, TexCoords).a;
+    
+    // If the normal is (0.1, 0.1, 0.1) that means it's a cubemap pixel.
+    
+
     // then calculate lighting as usual
     vec3 lighting  = Diffuse * ambient_color * ambient_strength;
     vec3 viewDir  = normalize(view_pos - FragPos);

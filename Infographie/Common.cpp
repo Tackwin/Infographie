@@ -66,6 +66,10 @@ void GLAPIENTRY Common::verbose_opengl_error(
 				/*force me to ignore it*/
 	};
 
+	constexpr GLenum To_Break_On[] = {
+		1282
+	};
+
 	if (std::find(BEG_END(To_Ignore), id) != std::end(To_Ignore)) return;
 
 	printf("OpenGL Error:\n");
@@ -81,5 +85,8 @@ void GLAPIENTRY Common::verbose_opengl_error(
 	printf(" Message:   ");
 	printf("%s\n\n", message);
 	fflush(stdout);
-	//DebugBreak();
+
+	if (std::find(BEG_END(To_Break_On), id) != std::end(To_Break_On)) {
+		DebugBreak();
+	}
 }

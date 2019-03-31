@@ -429,12 +429,12 @@ void render(
 
 	//glDisable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
 	//glDepthFunc(GL_LESS);
 
-	texture_target.setActive(true);
+	//texture_target.setActive(true);
 
 	auto& shader_light = AM->get_shader("Deferred_Light");
 	shader_light.setUniform("ambient_strength", ill_settings.ambient.strength);
@@ -456,6 +456,7 @@ void render(
 	ImGui::End();
 
 	texture_target.display();
+	target.setActive(true);
 
 	Is_In_Sfml_Context = true;
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
