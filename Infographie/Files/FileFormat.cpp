@@ -202,12 +202,12 @@ Object_File Object_File::cube(Vector3f size) noexcept {
 	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
 	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
 	obj.normals.push_back({  0.0f,  0.0f,  1.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
-	obj.normals.push_back({  -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
+	obj.normals.push_back({ -1.0f,  0.0f,  0.0f });
 	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
 	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
 	obj.normals.push_back({  1.0f,  0.0f,  0.0f });
@@ -301,6 +301,40 @@ Object_File Object_File::cube(Vector3f size) noexcept {
 	obj.vertices.push_back({-size.x / 2.f,  size.y / 2.f, -size.z / 2.f});
 	obj.vertices.push_back({-size.x / 2.f,  size.y / 2.f,  size.z / 2.f});
 
+	for (size_t i = 0; i < obj.vertices.size(); i+=3) {
+		auto& pos1 = obj.vertices[i + 0];
+		auto& pos2 = obj.vertices[i + 1];
+		auto& pos3 = obj.vertices[i + 2];
+
+		auto& uv1 = obj.uvs[i + 0];
+		auto& uv2 = obj.uvs[i + 1];
+		auto& uv3 = obj.uvs[i + 2];
+
+		auto edge1 = pos2 - pos1;
+		auto edge2 = pos3 - pos1;
+		auto deltaUV1 = uv2 - uv1;
+		auto deltaUV2 = uv3 - uv1;
+
+		float dt = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		Vector3f tangent;
+		Vector3f bitangent;
+
+		tangent.x = dt * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent.y = dt * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent.z = dt * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent = tangent.normalize();
+
+		bitangent.x = dt * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		bitangent.y = dt * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		bitangent.z = dt * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		bitangent = bitangent.normalize();
+
+		for (size_t i = 0; i < 3; ++i) {
+			obj.tangents.push_back(tangent);
+			obj.bitangents.push_back(bitangent);
+		}
+	}
 	return obj;
 }
 
@@ -341,5 +375,39 @@ Object_File Object_File::tetraedre(Vector3f size) noexcept {
 	obj.uvs.push_back({ 1.0f, 0.0f });
 	obj.uvs.push_back({ 0.5f, 1.0f });
 
+	for (size_t i = 0; i < obj.vertices.size(); i += 3) {
+		auto& pos1 = obj.vertices[i + 0];
+		auto& pos2 = obj.vertices[i + 1];
+		auto& pos3 = obj.vertices[i + 2];
+
+		auto& uv1 = obj.uvs[i + 0];
+		auto& uv2 = obj.uvs[i + 1];
+		auto& uv3 = obj.uvs[i + 2];
+
+		auto edge1 = pos2 - pos1;
+		auto edge2 = pos3 - pos1;
+		auto deltaUV1 = uv2 - uv1;
+		auto deltaUV2 = uv3 - uv1;
+
+		float dt = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		Vector3f tangent;
+		Vector3f bitangent;
+
+		tangent.x = dt * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent.y = dt * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent.z = dt * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent = tangent.normalize();
+
+		bitangent.x = dt * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		bitangent.y = dt * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		bitangent.z = dt * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		bitangent = bitangent.normalize();
+
+		for (size_t i = 0; i < 3; ++i) {
+			obj.tangents.push_back(tangent);
+			obj.bitangents.push_back(bitangent);
+		}
+	}
 	return obj;
 }
