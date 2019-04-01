@@ -19,7 +19,7 @@
 void update_geometries_settings(Geometries_Settings& settings) noexcept {
 	std::lock_guard out_guard{ settings.mutex };
 	sf::ContextSettings context_settings = Window_Info.window.getSettings();
-	ImGui::Spacing(); ImGui::SameLine(); ImGui::Spacing(); ImGui::SameLine();
+	ImGui::Indent();
 	if (ImGui::CollapsingHeader("Opengl context")) {
 		ImGui::Text("Major version: %u", Window_Info.window.getSettings().majorVersion);
 		ImGui::Text("Minor version: %u", Window_Info.window.getSettings().minorVersion);
@@ -30,6 +30,7 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 		glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture);
 		ImGui::Text("Max active texture: %u", max_texture);
 	}
+	ImGui::Unindent();
 
 	if (ImGui::Button("Load model")) {
 		auto c = push_cursor(sf::Cursor::Wait);
@@ -56,13 +57,17 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 		}
 	}
 
+	ImGui::Indent();
 	if (settings.root) {
 		thread_local std::unordered_map<Model*, bool> selected_map;
 		for (auto& m : settings.models_widget_id) {
-			ImGui::Columns(4);
 			auto model = (Model*)settings.root->find_child(m);
 			ImGui::PushID(model);
 			defer{ ImGui::PopID(); };
+
+			auto label = std::to_string(model->get_n());
+			if (!ImGui::CollapsingHeader(label.c_str())) continue;
+
 			if (ImGui::Checkbox("Is focused", &selected_map[model])) {
 				model->set_focus(selected_map[model]);
 				model->lock_focus(selected_map[model]);
@@ -70,56 +75,44 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			if (model->is_focus() != selected_map[model]) {
 				selected_map[model] = model->is_focus();
 			}
-			ImGui::NextColumn();
 			ImGui::Text("%u", model->get_n());
-			ImGui::NextColumn();
-			if (ImGui::Button("Main Texture")) {
+
+			auto load_texture_lambda = [&](Geometries_Settings::Texture_Type type) {
 				auto c = push_cursor(sf::Cursor::Wait);
-				open_file_async([&, m, c](Open_File_Result result) {
+				open_file_async([&, m, c, type](Open_File_Result result) {
 					pop_cursor(c);
 					std::lock_guard guard{ settings.mutex };
 					if (!result.succeded) return;
 
 					for (auto& f : settings.texture_callback) {
-						f(m, result.filepath, Geometries_Settings::Texture_Type::Normal);
+						f(m, result.filepath, type);
 					}
 				});
+			};
+
+			if (ImGui::Button("Main Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::Main);
 			}
-			ImGui::NextColumn();
 			if (ImGui::Button("Gradient Texture")) {
 				for (auto& f : settings.texture_generated_set_callback) f(m);
 			}
-			ImGui::NextColumn();
-
-			// We went over the line (that is 4 columns wide)
-			// We skip the first column of the new line to align with the last.
-			ImGui::NextColumn();
-
 			if (ImGui::Button("Alpha Texture")) {
-				auto c = push_cursor(sf::Cursor::Wait);
-				open_file_async([&, m, c](Open_File_Result result) {
-					pop_cursor(c);
-					std::lock_guard guard{ settings.mutex };
-					if (!result.succeded) return;
-
-					for (auto& f : settings.texture_callback) {
-						f(m, result.filepath, Geometries_Settings::Texture_Type::Alpha);
-					}
-				});
+				load_texture_lambda(Geometries_Settings::Texture_Type::Alpha);
 			}
-			ImGui::NextColumn();
-
+			if (ImGui::Button("Normal Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::Normal);
+			}
+			if (ImGui::Button("Speculative Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::Speculative);
+			}
 			if (ImGui::Button("Box")) {
 				model->set_render_checkbox(!model->does_render_checkbox());
 			}
-
-			ImGui::NextColumn();
 			if (ImGui::Button(model->is_visible() ? "Close" : "Open")) {
 				model->set_visible(!model->is_visible());
 			}
-			ImGui::NextColumn();
-			ImGui::Columns(1);
 		}
 	}
+	ImGui::Unindent();
 
 }

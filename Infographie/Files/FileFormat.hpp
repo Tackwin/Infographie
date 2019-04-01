@@ -9,6 +9,8 @@ struct Object_File {
 	std::vector<Vector2f> uvs;
 	std::vector<Vector3f> normals;
 	std::vector<Vector3f> vertices;
+	std::vector<Vector3f> tangents;
+	std::vector<Vector3f> bitangents;
 
 	Vector3f min;
 	Vector3f max;

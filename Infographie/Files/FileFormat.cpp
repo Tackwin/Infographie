@@ -122,6 +122,7 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 		indexed_vertices.push_back(obj.vertices[f.x.x - 1]);
 		indexed_vertices.push_back(obj.vertices[f.y.x - 1]);
 		indexed_vertices.push_back(obj.vertices[f.z.x - 1]);
+
 		static bool first = true;
 
 		if (first || obj.min.x > indexed_vertices.back().x) obj.min.x = indexed_vertices.back().x;
@@ -141,6 +142,40 @@ std::optional<Object_File> Object_File::load_file(const std::filesystem::path& p
 		indexed_normals.push_back(obj.normals[f.x.z - 1]);
 		indexed_normals.push_back(obj.normals[f.y.z - 1]);
 		indexed_normals.push_back(obj.normals[f.z.z - 1]);
+
+
+		auto& pos1 = obj.vertices[f.x.x - 1];
+		auto& pos2 = obj.vertices[f.y.x - 1];
+		auto& pos3 = obj.vertices[f.z.x - 1];
+
+		auto& uv1 = obj.uvs[f.x.y - 1];
+		auto& uv2 = obj.uvs[f.y.y - 1];
+		auto& uv3 = obj.uvs[f.z.y - 1];
+
+		auto edge1 = pos2 - pos1;
+		auto edge2 = pos3 - pos1;
+		auto deltaUV1 = uv2 - uv1;
+		auto deltaUV2 = uv3 - uv1;
+
+		float dt = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		Vector3f tangent;
+		Vector3f bitangent;
+
+		tangent.x = dt * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent.y = dt * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent.z = dt * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent = tangent.normalize();
+
+		bitangent.x = dt * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		bitangent.y = dt * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		bitangent.z = dt * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		bitangent = bitangent.normalize();
+
+		for (size_t i = 0; i < 3; ++i) {
+			obj.tangents.push_back(tangent);
+			obj.bitangents.push_back(bitangent);
+		}
 	}
 
 	obj.normals.swap(indexed_normals);

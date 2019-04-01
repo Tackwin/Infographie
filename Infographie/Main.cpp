@@ -233,13 +233,24 @@ int main() {
 			function_from_another_thread.push_back([model_widget, path, type] {
 				using Enum = Geometries_Settings::Texture_Type;
 				switch (type) {
-				case Enum::Normal :{
+				case Enum::Main :{
 					model_widget->set_texture(AM->get_texture(path.generic_string()));
 					break;
 				}
 				case Enum::Alpha :{
 					model_widget->set_alpha_texture(AM->get_texture(path.generic_string()));
 					break;
+				}
+				case Enum::Normal: {
+					model_widget->set_normal_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
+				case Enum::Speculative: {
+					model_widget->set_spec_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
+				default: {
+					assert("Should not happen !");
 				}
 				}
 

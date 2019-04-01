@@ -46,6 +46,9 @@ Model::~Model() noexcept {
 	if (vertex_array_id) {
 		glDeleteBuffers(1, &*vertex_buffer_id);
 		glDeleteBuffers(1, &*uv_buffer_id);
+		glDeleteBuffers(1, &*normal_buffer_id);
+		glDeleteBuffers(1, &*tangent_buffer_id);
+		glDeleteBuffers(1, &*bitangent_buffer_id);
 		glDeleteVertexArrays(1, &*vertex_array_id);
 	}
 }
@@ -87,7 +90,11 @@ void Model::opengl_render() noexcept {
 		glUniformMatrix4fv(glGetUniformLocation(handle, "projection"), 1, GL_FALSE, (float*)&proj);
 		glUniform1i(glGetUniformLocation(handle, "texture_main"), 0);
 		glUniform1i(glGetUniformLocation(handle, "texture_alpha"), 1);
+		glUniform1i(glGetUniformLocation(handle, "texture_normal"), 2);
+		glUniform1i(glGetUniformLocation(handle, "texture_speculative"), 3);
+		glUniform1i(glGetUniformLocation(handle, "use_spec"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_alpha"), 0);
+		glUniform1i(glGetUniformLocation(handle, "use_normal"), 0);
 		glUniform1f(glGetUniformLocation(handle, "alpha_tolerance"), Alpha_Tolerance);
 
 		if (s == select_shader) {
@@ -103,6 +110,16 @@ void Model::opengl_render() noexcept {
 			glBindTexture(GL_TEXTURE_2D, alpha_texture->getNativeHandle());
 			glUniform1i(glGetUniformLocation(handle, "use_alpha"), 1);
 		}
+		if (normal_texture) {
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, normal_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_normal"), 1);
+		}
+		if (normal_texture) {
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, normal_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_speculative"), 1);
+		}
 	}
 	defer{
 		if (shader) glUseProgram(0);
@@ -112,10 +129,19 @@ void Model::opengl_render() noexcept {
 
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
+	defer{ glDisableVertexAttribArray(0); };
 	// 2nd attribute buffer : UVs
 	glEnableVertexAttribArray(1);
+	defer{ glDisableVertexAttribArray(1); };
 	// 3rd attribute buffer : normals
 	glEnableVertexAttribArray(2);
+	defer{ glDisableVertexAttribArray(2); };
+	// 4th attribute buffer : tangents
+	glEnableVertexAttribArray(3);
+	defer{ glDisableVertexAttribArray(3); };
+	// 5th attribute buffer : bitangents
+	glEnableVertexAttribArray(4);
+	defer{ glDisableVertexAttribArray(4); };
 
 	glBindBuffer(GL_ARRAY_BUFFER, *vertex_buffer_id);
 	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
@@ -149,19 +175,38 @@ void Model::opengl_render() noexcept {
 		0,                                // stride
 		(void*)0                          // array buffer offset
 	);
+	glBindBuffer(GL_ARRAY_BUFFER, *tangent_buffer_id);
+	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
+	glVertexAttribPointer(
+		3,                                // attribute
+		3,                                // size
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
+	glBindBuffer(GL_ARRAY_BUFFER, *bitangent_buffer_id);
+	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
+	glVertexAttribPointer(
+		4,                                // attribute
+		3,                                // size
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
 
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, obj_to_use.vertices.size());
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
 }
 
 void Model::set_object(const Object_File& o) noexcept {
 	if (vertex_array_id) {
 		glDeleteBuffers(1, &*vertex_buffer_id);
 		glDeleteBuffers(1, &*uv_buffer_id);
+		glDeleteBuffers(1, &*normal_buffer_id);
+		glDeleteBuffers(1, &*tangent_buffer_id);
+		glDeleteBuffers(1, &*bitangent_buffer_id);
 		glDeleteVertexArrays(1, &*vertex_array_id);
 	}
 
@@ -169,13 +214,16 @@ void Model::set_object(const Object_File& o) noexcept {
 	uv_buffer_id = 0;
 	vertex_buffer_id = 0;
 	normal_buffer_id = 0;
+	tangent_buffer_id = 0;
+	bitangent_buffer_id = 0;
+
 	glGenVertexArrays(1, &*vertex_array_id);
 	glBindVertexArray(*vertex_array_id);
 	defer{ glBindVertexArray(0); };
+	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
 
 	glGenBuffers(1, &*vertex_buffer_id);
 	glBindBuffer(GL_ARRAY_BUFFER, *vertex_buffer_id);
-	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.vertices.size() * sizeof(Vector3f),
@@ -184,10 +232,7 @@ void Model::set_object(const Object_File& o) noexcept {
 	);
 
 	glGenBuffers(1, &*uv_buffer_id);
-	
 	glBindBuffer(GL_ARRAY_BUFFER, *uv_buffer_id);
-	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.uvs.size() * sizeof(Vector2f),
@@ -202,6 +247,24 @@ void Model::set_object(const Object_File& o) noexcept {
 		GL_ARRAY_BUFFER,
 		o.normals.size() * sizeof(Vector3f),
 		o.normals.data(),
+		GL_STATIC_DRAW
+	);
+
+	glGenBuffers(1, &*tangent_buffer_id);
+	glBindBuffer(GL_ARRAY_BUFFER, *tangent_buffer_id);
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		o.tangents.size() * sizeof(Vector3f),
+		o.tangents.data(),
+		GL_STATIC_DRAW
+	);
+
+	glGenBuffers(1, &*bitangent_buffer_id);
+	glBindBuffer(GL_ARRAY_BUFFER, *bitangent_buffer_id);
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		o.bitangents.size() * sizeof(Vector3f),
+		o.bitangents.data(),
 		GL_STATIC_DRAW
 	);
 
@@ -215,48 +278,43 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 
 	if (vertex_array_id) {
 		glDeleteBuffers(1, &*vertex_buffer_id);
-		
 		glDeleteBuffers(1, &*uv_buffer_id);
-		
+		glDeleteBuffers(1, &*normal_buffer_id);
+		glDeleteBuffers(1, &*tangent_buffer_id);
+		glDeleteBuffers(1, &*bitangent_buffer_id);
 		glDeleteVertexArrays(1, &*vertex_array_id);
-		
 	}
 
 	vertex_array_id = 0;
 	uv_buffer_id = 0;
 	vertex_buffer_id = 0;
 	normal_buffer_id = 0;
+	tangent_buffer_id = 0;
+	bitangent_buffer_id = 0;
+
 	glGenVertexArrays(1, &*vertex_array_id);
-	
 	glBindVertexArray(*vertex_array_id);
 	defer{ glBindVertexArray(0); };
-	
+	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
 
 	glGenBuffers(1, &*vertex_buffer_id);
-	
 	glBindBuffer(GL_ARRAY_BUFFER, *vertex_buffer_id);
-	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.vertices.size() * sizeof(Vector3f),
 		o.vertices.data(),
 		GL_STATIC_DRAW
 	);
-	
 
 	glGenBuffers(1, &*uv_buffer_id);
-	
 	glBindBuffer(GL_ARRAY_BUFFER, *uv_buffer_id);
-	defer{ glBindBuffer(GL_ARRAY_BUFFER, 0); };
-	
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		o.uvs.size() * sizeof(Vector2f),
 		o.uvs.data(),
 		GL_STATIC_DRAW
 	);
-	
+
 
 	glGenBuffers(1, &*normal_buffer_id);
 	glBindBuffer(GL_ARRAY_BUFFER, *normal_buffer_id);
@@ -267,6 +325,23 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 		GL_STATIC_DRAW
 	);
 
+	glGenBuffers(1, &*tangent_buffer_id);
+	glBindBuffer(GL_ARRAY_BUFFER, *tangent_buffer_id);
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		o.tangents.size() * sizeof(Vector3f),
+		o.tangents.data(),
+		GL_STATIC_DRAW
+	);
+
+	glGenBuffers(1, &*bitangent_buffer_id);
+	glBindBuffer(GL_ARRAY_BUFFER, *bitangent_buffer_id);
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		o.bitangents.size() * sizeof(Vector3f),
+		o.bitangents.data(),
+		GL_STATIC_DRAW
+	);
 	set_size(o.max - o.min);
 }
 
@@ -278,6 +353,13 @@ void Model::set_texture(const sf::Texture& t) noexcept {
 void Model::set_alpha_texture(const sf::Texture& t) noexcept {
 	alpha_texture = &t;
 }
+void Model::set_normal_texture(const sf::Texture& t) noexcept {
+	normal_texture = &t;
+}
+void Model::set_spec_texture(const sf::Texture& t) noexcept {
+	speculative_texture = &t;
+}
+
 
 
 void Model::set_shader(sf::Shader& s) noexcept {

@@ -64,7 +64,7 @@ private:
 	float speed{ 15 };
 
 	float exposure{ 1.f };
-	float gamma{ 2.2f };
+	float gamma{ 1.f };
 
 	bool input_active{ false };
 

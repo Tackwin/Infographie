@@ -26,6 +26,8 @@ public:
 	void set_object_copy(const Object_File& object_file) noexcept;
 	void set_texture(const sf::Texture& texture) noexcept;
 	void set_alpha_texture(const sf::Texture& texture) noexcept;
+	void set_normal_texture(const sf::Texture& texture) noexcept;
+	void set_spec_texture(const sf::Texture& texture) noexcept;
 	void set_shader(sf::Shader& shader) noexcept;
 	void set_select_shader(sf::Shader& shader) noexcept;
 
@@ -59,6 +61,8 @@ protected:
 	sf::Shader* select_shader{ nullptr };
 	const sf::Texture* texture{ nullptr };
 	const sf::Texture* alpha_texture{ nullptr };
+	const sf::Texture* normal_texture{ nullptr };
+	const sf::Texture* speculative_texture{ nullptr };
 
 	// For complexe object we take a reference from the Assets Manager
 	const Object_File* object_file{ nullptr };
@@ -76,6 +80,8 @@ protected:
 	std::optional<GLuint> vertex_buffer_id;
 	std::optional<GLuint> uv_buffer_id;
 	std::optional<GLuint> normal_buffer_id;
+	std::optional<GLuint> tangent_buffer_id;
+	std::optional<GLuint> bitangent_buffer_id;
 
 	Model* boundingbox_child{ nullptr };
 

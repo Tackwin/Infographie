@@ -12,8 +12,10 @@
 
 struct Geometries_Settings {
 	enum class Texture_Type {
-		Normal,
+		Main,
 		Alpha,
+		Normal,
+		Speculative,
 		Count
 	};
 

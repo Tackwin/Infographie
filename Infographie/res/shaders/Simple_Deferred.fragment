@@ -6,13 +6,17 @@ layout (location = 2) out vec4 gAlbedoSpec;
 in vec2 TexCoords;
 in vec3 FragPos;
 in vec3 Normal;
+in mat3 TBN;
 
 uniform int use_alpha;
 uniform float alpha_tolerance;
 
+uniform int use_normal;
+
 uniform sampler2D texture_main;
 uniform sampler2D texture_alpha;
 uniform sampler2D texture_specular;
+uniform sampler2D texture_normal;
 
 void main() {
     vec4 alpha_sample = texture(texture_alpha, TexCoords);
@@ -24,7 +28,15 @@ void main() {
     // store the fragment position vector in the first gbuffer texture
     gPosition = FragPos;
     // also store the per-fragment normals into the gbuffer
-    gNormal = normalize(Normal);
+    if (use_normal != 0){
+    	gNormal = texture(texture_normal, TexCoords).rgb;
+		gNormal = normalize(gNormal * 2.0 - 1.0);
+		// Here we do left side multiplication (instead of left) because TBN is calculated in opengl-space
+		// not application-space so we are in the right row/column major.
+		gNormal = normalize(TBN * gNormal);
+    } else {
+    	gNormal = normalize(Normal);
+    }
 
     // and the diffuse per-fragment color
     gAlbedoSpec.rgba = main_sample.rgba;
