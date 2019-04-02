@@ -48,6 +48,7 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 
 	// the lighting phase
 	g_buffer.set_active_texture();
+	glClearColor(UNROLL_3(Window_Info.clear_color), 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	auto& shader_light = AM->get_shader("Deferred_Light");
