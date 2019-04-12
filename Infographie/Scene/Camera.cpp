@@ -24,7 +24,7 @@ Widget3* Camera::get_render_root() const noexcept {
 	return render_root;
 }
 
-void Camera::render(sf::RenderTarget& target) noexcept {
+void Camera::render(Texture_Buffer& target) noexcept {
 	static int Show_Debug{ 0 };
 
 	ImGui::DragInt("Show Debug", &Show_Debug, 1, 0, 3);
@@ -63,8 +63,9 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 	g_buffer.render_quad();
 
 	// HDR
-	target.setActive(true);
-	g_buffer.copy_depth_to(0);
+	target.set_active();
+	//target.setActive(true);
+	g_buffer.copy_depth_to(target.get_frame_buffer_id());
 	
 	hdr_buffer.set_active_texture();
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -79,8 +80,9 @@ void Camera::render(sf::RenderTarget& target) noexcept {
 	hdr_buffer.render_quad();
 
 	// The last phase
-	target.setActive(true);
-	g_buffer.copy_depth_to(0);
+	target.set_active();
+	//target.setActive(true);
+	g_buffer.copy_depth_to(target.get_frame_buffer_id());
 	render_root->propagate_last_opengl_render();
 }
 

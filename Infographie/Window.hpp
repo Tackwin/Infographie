@@ -6,6 +6,7 @@
 
 #include "Math/Vector.hpp"
 #include "Scene/Camera.hpp"
+#include "Graphic/FrameBuffer.hpp"
 
 struct Illumination_Settings;
 namespace details {
@@ -21,6 +22,8 @@ namespace details {
 		sf::RenderWindow window;
 
 		Camera* active_camera;
+
+		Texture_Buffer* texure_buffer;
 
 		std::vector<std::unique_ptr<sf::Cursor>> cursor_stack;
 	};

@@ -211,3 +211,77 @@ uint32_t HDR_Buffer::get_depth_id() const noexcept {
 	return rbo_buffer;
 }
 
+Texture_Buffer::Texture_Buffer(Vector2u size) noexcept {
+	glGenFramebuffers(1, &frame_buffer);
+
+	texture.create(size.x, size.y);
+
+	// attach buffers
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.getNativeHandle(), 0
+	);
+
+	unsigned int attachments[1] = {
+		GL_COLOR_ATTACHMENT0
+	};
+	glDrawBuffers(1, attachments);
+
+	glGenRenderbuffers(1, &rbo_buffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo_buffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_buffer);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		assert("Framebuffer not complete!");
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	float quad_vertices[] = {
+		// positions        // texture Coords
+		-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+		 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+	};
+	// setup plane VAO
+	glGenVertexArrays(1, &quad_VAO);
+	glGenBuffers(1, &quad_VBO);
+	glBindVertexArray(quad_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+}
+
+Texture_Buffer::~Texture_Buffer() noexcept {
+	glDeleteFramebuffers(1, &frame_buffer);
+}
+
+const sf::Texture& Texture_Buffer::get_sfml_texture() const noexcept {
+	return texture;
+}
+
+void Texture_Buffer::set_active() noexcept {
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo_buffer);
+	unsigned int attachments[1] = {
+		GL_COLOR_ATTACHMENT0
+	};
+	glDrawBuffers(1, attachments);
+}
+
+uint32_t Texture_Buffer::get_frame_buffer_id() const noexcept {
+	return frame_buffer;
+}
+
+void Texture_Buffer::clear(Vector4f color) noexcept {
+	glClearColor(UNROLL_3(color), color.a);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+

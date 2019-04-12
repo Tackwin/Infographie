@@ -16,6 +16,9 @@ struct Cube_Map : Widget3 {
 
 	void set_textures(const sf::Image data[6]) noexcept;
 
+	[[nodiscard]]
+	bool load_texture(std::filesystem::path path) noexcept;
+
 	void set_name(std::string str) noexcept;
 	const std::string& get_name() const noexcept;
 private:

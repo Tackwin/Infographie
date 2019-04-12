@@ -29,6 +29,11 @@
 
 #include "Graphic/FrameBuffer.hpp"
 
+// Turns out that sfml (wich we link statically) already implement stb_image
+// so we don't do taht otherwise we would get duplicate symbol.
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "Files/stb_image.h"
+
 static bool Show_Render_Debug{ false };
 
 void load_textures() noexcept;
@@ -54,7 +59,8 @@ void render(
 	Widget3& root,
 	Texture_Settings& tex_settings,
 	Illumination_Settings& ill_settings,
-	sf::RenderTexture& render_texture,
+	Texture_Buffer& texture_target,
+	sf::RenderTexture& sf_texture_target,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
 ) noexcept;
@@ -110,12 +116,12 @@ int main() {
 		glDebugMessageCallback((GLDEBUGPROCARB)Common::verbose_opengl_error, NULL);
 	}
 
-	
-
 	ImGui::SFML::Init(Window_Info.window);
 
-	sf::RenderTexture render_texture;
-	render_texture.create(UNROLL_2(Window_Info.size));
+	sf::RenderTexture sf_render_texture;
+	sf_render_texture.create(UNROLL_2(Window_Info.size));
+
+	Texture_Buffer render_texture(Window_Info.size);
 
 	Images_Settings img_settings;
 	Camera_Settings cam_settings;
@@ -349,6 +355,7 @@ int main() {
 			tex_settings,
 			ill_settings,
 			render_texture,
+			sf_render_texture,
 			Window_Info.window,
 			screenshot
 		);
@@ -431,12 +438,15 @@ void render(
 	Widget3& root,
 	Texture_Settings& tex_settings,
 	Illumination_Settings& ill_settings,
-	sf::RenderTexture& texture_target,
+	Texture_Buffer& texture_target,
+	sf::RenderTexture& sf_texture_target,
 	sf::RenderTarget& target,
 	std::optional<std::filesystem::path> screenshot
 ) noexcept {
 	static sf::Clock dt_clock;
 	Is_In_Sfml_Context = false;
+
+	target.clear({ 0, 0, 0, 255 });
 
 	//glDisable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -445,7 +455,8 @@ void render(
 	//glEnable(GL_LIGHTING);
 	//glDepthFunc(GL_LESS);
 
-	//texture_target.setActive(true);
+	texture_target.set_active();
+	texture_target.clear({ 0, 0, 0, 1 });
 
 	auto& shader_light = AM->get_shader("Deferred_Light");
 	shader_light.setUniform("ambient_strength", ill_settings.ambient.strength);
@@ -464,9 +475,12 @@ void render(
 	ImGui::Begin("Debug render info", &Show_Render_Debug);
 	ImGui::Text("dt: %3.3f ms", dt_clock.restart().asSeconds() * 1000.f);
 	root.propagate_render(texture_target);
+	sf_texture_target.setActive(true);
+	sf_texture_target.clear({ 0, 0, 0, 0 });
+	root.propagate_render(sf_texture_target);
 	ImGui::End();
 
-	texture_target.display();
+
 	target.setActive(true);
 
 	Is_In_Sfml_Context = true;
@@ -478,13 +492,14 @@ void render(
 		
 		root.propagate_render(render_texture);
 	
-		render_postprocessing(tex_settings, texture_target.getTexture(), render_texture);
+		render_postprocessing(tex_settings, render_texture.getTexture(), render_texture);
 		ImGui::SFML::Render(render_texture);
 
 		render_texture.display();
 		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
 	}
-	render_postprocessing(tex_settings, texture_target.getTexture(), target);
+	render_postprocessing(tex_settings, texture_target.get_sfml_texture(), target);
+	//render_postprocessing(tex_settings, sf_texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
 	glPopAttrib();
 }
@@ -532,6 +547,8 @@ void render_postprocessing(
 	}
 
 	sf::Sprite sprite{ texture };
+	sprite.setScale(1, -1);
+	sprite.setPosition(0, (float)Window_Info.size.y);
 	target.draw(sprite, &shader);
 }
 

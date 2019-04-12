@@ -13,6 +13,8 @@
 #include "Math/Vector.hpp"
 #include "Math/Rectangle.hpp"
 
+#include "Graphic/FrameBuffer.hpp"
+
 class Widget {
 public:
 	struct Input_Mask { enum {
@@ -99,7 +101,9 @@ public:
 	virtual void propagate_update(float dt) noexcept;
 
 	virtual void render(sf::RenderTarget& target);
+	virtual void render(Texture_Buffer& target) noexcept;
 	virtual void propagate_render(sf::RenderTarget& target);
+	virtual void propagate_render(Texture_Buffer& target) noexcept;
 
 	std::bitset<9u> input(const std::bitset<9u>& mask);
 	std::bitset<9u> propagate_input();

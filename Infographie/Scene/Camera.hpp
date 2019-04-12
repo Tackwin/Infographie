@@ -14,7 +14,7 @@ public:
 	void render_from(Widget3* root) noexcept;
 	Widget3* get_render_root() const noexcept;
 
-	virtual void render(sf::RenderTarget& target) noexcept override;
+	virtual void render(Texture_Buffer& target) noexcept override;
 
 	void update(float dt) noexcept override;
 

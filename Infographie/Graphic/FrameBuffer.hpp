@@ -2,6 +2,8 @@
 #include "Common.hpp"
 #include "Math/Vector.hpp"
 
+#include <SFML/Graphics.hpp>
+
 // >Note: Tackwin
 // Every time i do a class wrapper around an OpenGl concept i try to have const mean doesn't
 // change the OpenGL state. Meaning technically most of the method could be const as they don't
@@ -57,6 +59,30 @@ private:
 	uint32_t hdr_buffer{ 0 };
 	uint32_t rbo_buffer{ 0 };
 	uint32_t color_buffer{ 0 };
+	uint32_t quad_VAO{ 0 };
+	uint32_t quad_VBO{ 0 };
+};
+
+struct Texture_Buffer {
+	Texture_Buffer(Texture_Buffer&) = delete;
+	Texture_Buffer& operator=(Texture_Buffer&) = delete;
+	Texture_Buffer(Texture_Buffer&&) = default;
+	Texture_Buffer& operator=(Texture_Buffer&&) = default;
+
+	Texture_Buffer(Vector2u size) noexcept;
+	~Texture_Buffer() noexcept;
+
+	uint32_t get_frame_buffer_id() const noexcept;
+
+	const sf::Texture& get_sfml_texture() const noexcept;
+
+	void set_active() noexcept;
+
+	void clear(Vector4f color) noexcept;
+private:
+	sf::Texture texture;
+	uint32_t frame_buffer{ 0 };
+	uint32_t rbo_buffer{ 0 };
 	uint32_t quad_VAO{ 0 };
 	uint32_t quad_VBO{ 0 };
 };

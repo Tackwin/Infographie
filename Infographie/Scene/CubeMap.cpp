@@ -4,6 +4,7 @@
 
 #include "Managers/AssetsManager.hpp"
 
+#include "Files/stb_image.h"
 
 Cube_Map::Cube_Map() noexcept : Widget3() {
 	glGenTextures(1, &texture_id);
@@ -25,6 +26,28 @@ void Cube_Map::opengl_render() noexcept {
 	// the Model class. In the same vein we don't let it bind his texture because we use
 	// a different type of texture (namely GL_TEXTURE_CUBE_MAP)
 	cube_model.opengl_render();
+}
+
+[[nodiscard]]
+bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
+	if (!std::filesystem::is_regular_file(path)) return false;
+
+	stbi_set_flip_vertically_on_load(true);
+	Vector2i size;
+	int n_comp;
+	auto* data = stbi_loadf(path.generic_string().c_str(), &size.x, &size.y, &n_comp, 0);
+	if (!data) return false;
+	defer{ stbi_image_free(data); };
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, size.x, size.y, 0, GL_RGB, GL_FLOAT, data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	return true;
 }
 
 void Cube_Map::set_textures(const sf::Image data[6]) noexcept {

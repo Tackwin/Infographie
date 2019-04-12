@@ -250,7 +250,18 @@ void Widget::render(sf::RenderTarget&) {
 	// mark.setFillColor(Vector4d{ 1, 1, 1, 0.2 });
 	// target.draw(mark);
 }
+void Widget::render(Texture_Buffer&) noexcept {
+	if (!visible) return;
+}
 void Widget::propagate_render(sf::RenderTarget& target) {
+	if (!is_visible()) return;
+	render(target);
+
+	for (const auto& c : childs) {
+		c->propagate_render(target);
+	}
+}
+void Widget::propagate_render(Texture_Buffer& target) noexcept {
 	if (!is_visible()) return;
 	render(target);
 
