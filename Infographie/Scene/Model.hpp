@@ -48,12 +48,25 @@ public:
 
 	void set_selectable(bool v) noexcept;
 
+	float get_roughness() const noexcept;
+	void set_roughness(float x) noexcept;
+
+	float get_metallic() const noexcept;
+	void set_metallic(float x) noexcept;
+
+	float get_ao() const noexcept;
+	void set_ao(float x) noexcept;
+
 protected:
 	void toggle_picker() noexcept;
 	void push_picker() noexcept;
 	void pop_picker() noexcept;
 
 	float picking_sphere_radius{ 0.f };
+
+	float metallic{ 0.5f };
+	float roughness{ 0.5f };
+	float ao{ 0.f };
 
 	size_t n;
 
@@ -63,6 +76,7 @@ protected:
 	const sf::Texture* alpha_texture{ nullptr };
 	const sf::Texture* normal_texture{ nullptr };
 	const sf::Texture* speculative_texture{ nullptr };
+	const sf::Texture* MRA_texture{ nullptr };
 
 	// For complexe object we take a reference from the Assets Manager
 	const Object_File* object_file{ nullptr };

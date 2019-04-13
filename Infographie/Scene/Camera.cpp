@@ -27,7 +27,7 @@ Widget3* Camera::get_render_root() const noexcept {
 void Camera::render(Texture_Buffer& target) noexcept {
 	static int Show_Debug{ 0 };
 
-	ImGui::DragInt("Show Debug", &Show_Debug, 1, 0, 3);
+	ImGui::DragInt("Show Debug", &Show_Debug, 0.1f, 0, 4);
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
 	compute_view();
@@ -56,6 +56,7 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	shader_light.setUniform("gPosition", 0);
 	shader_light.setUniform("gNormal", 1);
 	shader_light.setUniform("gAlbedoSpec", 2);
+	shader_light.setUniform("gMRA", 3);
 	shader_light.setUniform("show_debug", Show_Debug );
 	shader_light.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
 	sf::Shader::bind(&shader_light);

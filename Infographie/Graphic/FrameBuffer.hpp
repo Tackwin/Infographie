@@ -30,6 +30,7 @@ private:
 	uint32_t pos_buffer{ 0 };
 	uint32_t normal_buffer{ 0 };
 	uint32_t albedo_buffer{ 0 };
+	uint32_t MRA_buffer{ 0 }; // metallic + roughness + ambient occlusion
 	uint32_t depth_rbo{ 0 };
 	uint32_t quad_VAO{ 0 };
 	uint32_t quad_VBO{ 0 };

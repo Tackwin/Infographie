@@ -31,11 +31,19 @@ G_Buffer::G_Buffer(Vector2u size) noexcept : size(size) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, albedo_buffer, 0);
 
+	// - metallic + roughness + ambient occlusion color buffer
+	glGenTextures(1, &MRA_buffer);
+	glBindTexture(GL_TEXTURE_2D, MRA_buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, size.x, size.y, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, MRA_buffer, 0);
+
 	// - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-	unsigned int attachments[3] = {
-		GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2
+	unsigned int attachments[] = {
+		GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3
 	};
-	glDrawBuffers(3, attachments);
+	glDrawBuffers(sizeof(attachments) / sizeof(float), attachments);
 
 	glGenRenderbuffers(1, &depth_rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
@@ -75,6 +83,7 @@ G_Buffer::~G_Buffer() noexcept {
 	glDeleteTextures(1, &pos_buffer);
 	glDeleteTextures(1, &normal_buffer);
 	glDeleteTextures(1, &albedo_buffer);
+	glDeleteTextures(1, &MRA_buffer);
 	glDeleteVertexArrays(1, &quad_VAO);
 	glDeleteBuffers(1, &quad_VBO);
 }
@@ -82,10 +91,10 @@ G_Buffer::~G_Buffer() noexcept {
 void G_Buffer::set_active() noexcept {
 	glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
-	unsigned int attachments[3] = {
-		GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2
+	unsigned int attachments[] = {
+		GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3
 	};
-	glDrawBuffers(3, attachments);
+	glDrawBuffers(sizeof(attachments) / sizeof(float), attachments);
 }
 
 void G_Buffer::set_active_texture() noexcept {
@@ -95,6 +104,8 @@ void G_Buffer::set_active_texture() noexcept {
 	glBindTexture(GL_TEXTURE_2D, normal_buffer);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, albedo_buffer);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, MRA_buffer);
 }
 
 void G_Buffer::set_disable_texture() noexcept {
@@ -103,6 +114,8 @@ void G_Buffer::set_disable_texture() noexcept {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 

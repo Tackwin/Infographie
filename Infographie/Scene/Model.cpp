@@ -96,6 +96,9 @@ void Model::opengl_render() noexcept {
 		glUniform1i(glGetUniformLocation(handle, "use_alpha"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_normal"), 0);
 		glUniform1f(glGetUniformLocation(handle, "alpha_tolerance"), Alpha_Tolerance);
+		glUniform1f(glGetUniformLocation(handle, "metallic"), metallic);
+		glUniform1f(glGetUniformLocation(handle, "roughness"), roughness);
+		glUniform1f(glGetUniformLocation(handle, "ao"), ao);
 
 		if (s == select_shader) {
 			float a = (get_milliseconds_epoch() % 500000) / 1000.f;
@@ -598,4 +601,28 @@ void Model::pop_picker() noexcept {
 
 void Model::set_selectable(bool v) noexcept {
 	selectable = v;
+}
+
+float Model::get_metallic() const noexcept {
+	return metallic;
+}
+
+void Model::set_metallic(float x) noexcept {
+	metallic = x;
+}
+
+float Model::get_roughness() const noexcept {
+	return roughness;
+}
+
+void Model::set_roughness(float x) noexcept {
+	roughness = x;
+}
+
+float Model::get_ao() const noexcept {
+	return ao;
+}
+
+void Model::set_ao(float x) noexcept {
+	ao = x;
 }

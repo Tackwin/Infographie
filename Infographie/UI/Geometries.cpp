@@ -111,6 +111,18 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			if (ImGui::Button(model->is_visible() ? "Close" : "Open")) {
 				model->set_visible(!model->is_visible());
 			}
+
+			float ao = model->get_ao();
+			float metallic = model->get_metallic();
+			float roughness = model->get_roughness();
+
+			ImGui::DragFloat("Ambient occlusion", &ao, 0.01f, 0, 1);
+			ImGui::DragFloat("Roughness", &roughness, 0.01f, 0, 1);
+			ImGui::DragFloat("Metalic", &metallic, 0.01f, 0, 1);
+
+			model->set_ao(ao);
+			model->set_metallic(metallic);
+			model->set_roughness(roughness);
 		}
 	}
 	ImGui::Unindent();
