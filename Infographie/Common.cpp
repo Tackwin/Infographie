@@ -9,12 +9,15 @@
 
 #include "Math/Matrix.hpp"
 
+#include "OS/PathDefinition.hpp"
+
 std::unordered_map<std::string, std::any> Common::debug_values;
 Assets_Manager* Common::AM{ nullptr };
 bool Common::Is_In_Sfml_Context{ false };
 Matrix4f* Common::View_Matrix{ nullptr };
 Matrix4f* Common::Projection_Matrix{ nullptr };
 float Common::Alpha_Tolerance{ 0.f };
+std::filesystem::path Common::Base_Working_Directory{ get_working_dir() };
 
 // courtesy of
 // https://stackoverflow.com/questions/18064988/rendering-issue-with-different-computers/18067245#18067245
@@ -67,7 +70,7 @@ void GLAPIENTRY Common::verbose_opengl_error(
 	};
 
 	constexpr GLenum To_Break_On[] = {
-		1282
+		1282, 1286
 	};
 
 	if (std::find(BEG_END(To_Ignore), id) != std::end(To_Ignore)) return;

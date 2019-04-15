@@ -44,6 +44,7 @@ struct Texture_Settings {
 	std::pair<std::string, std::string> get_shader_path() const noexcept;
 
 	std::vector<std::function<void(std::filesystem::path)>> cubemap_added;
+	std::vector<std::function<void(std::filesystem::path)>> environment_added;
 
 	Widget* root{ nullptr };
 	std::vector<Uuid_t> cubemap_ids;

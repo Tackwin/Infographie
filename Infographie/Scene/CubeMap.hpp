@@ -12,7 +12,7 @@ struct Cube_Map : Widget3 {
 
 	Cube_Map() noexcept;
 
-	virtual void opengl_render() noexcept override;
+	virtual void last_opengl_render() noexcept override;
 
 	void set_textures(const sf::Image data[6]) noexcept;
 
@@ -25,5 +25,6 @@ private:
 	Model cube_model;
 
 	size_t texture_id;
+	size_t irradiance_id;
 	std::string name;
 };

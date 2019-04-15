@@ -1,0 +1,39 @@
+[Header]
+ICOfile = "Bridge02B_8k_Thumb.jpg"
+Name = "RI Overpass 2"
+Author = "Alex Hart"
+Location = "Under the Henderson Bridge"
+Comment = "Overcast, no direct light"
+GEOlat = 41.8281899999999990
+GEOlong = -71.3736839999999970
+Date = "2010:05:03"
+Time = "09:00:00"
+North = -45.000000
+Link = "http://eahart.com"
+Height = 1.600000
+
+[Background]
+BGfile = "Bridge02B_8x4.jpg"
+BGmap = 1
+BGu = 0.000000
+BGv = 0.000000
+BGheight = 4000
+
+[Enviroment]
+EVfile = "Bridge02B_8k_Env.hdr"
+EVmap = 1
+EVu = 0.000000
+EVv = 0.000000
+EVheight = 256
+EVmulti = 1.000000
+EVgamma = 1.000000
+
+[Reflection]
+REFfile = "Bridge02B_8k_Ref.hdr"
+REFmap = 1
+REFu = 0.000000
+REFv = 0.000000
+REFheight = 1024
+REFmulti = 1.000000
+REFgamma = 1.000000
+

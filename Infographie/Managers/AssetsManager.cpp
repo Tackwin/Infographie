@@ -54,14 +54,14 @@ bool Assets_Manager::load_texture(
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	}
 	else {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	stubSetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE), 
@@ -101,13 +101,13 @@ bool Assets_Manager::load_image(const std::string &key, const std::string &path)
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	} else {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	SetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE), 
@@ -147,13 +147,13 @@ bool Assets_Manager::load_font(const std::string &key, const std::string &path) 
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	} else {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE), 
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	stubSetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE), 
@@ -196,7 +196,7 @@ bool Assets_Manager::load_object_file(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	}
 	else {
 		ref = *loaded;
@@ -204,7 +204,7 @@ bool Assets_Manager::load_object_file(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	stubSetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE),
@@ -239,7 +239,7 @@ bool Assets_Manager::load_shader(
 		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
 	);
 	std::printf(
-		"%s: %s %s",
+		"%s: %s %s ",
 		key.c_str(),
 		vertex.generic_string().c_str(),
 		fragment.generic_string().c_str()
@@ -252,14 +252,14 @@ bool Assets_Manager::load_shader(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	}
 	else {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	stubSetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE),
@@ -286,7 +286,7 @@ bool Assets_Manager::load_shader(
 		FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
 	);
 	std::printf(
-		"%s: %s %s",
+		"%s: %s %s ",
 		key.c_str(),
 		vertex.generic_string().c_str(),
 		fragment.generic_string().c_str()
@@ -301,14 +301,14 @@ bool Assets_Manager::load_shader(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_RED
 		);
-		printf(" Couldn't load file /!\\\n");
+		printf("Couldn't load file /!\\\n");
 	}
 	else {
 		stubSetConsoleTextAttribute(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			FOREGROUND_GREEN
 		);
-		printf(" Succes !\n");
+		printf("Succes !\n");
 	}
 	stubSetConsoleTextAttribute(
 		GetStdHandle(STD_OUTPUT_HANDLE),

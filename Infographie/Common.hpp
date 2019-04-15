@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cassert>
 #include <functional>
+#include <filesystem>
 #include <unordered_set>
 #include <unordered_map>
 #include <any>
@@ -121,6 +122,7 @@ class Assets_Manager;
 struct Matrix4f;
 namespace Common {
 	extern Assets_Manager* AM;
+	extern std::filesystem::path Base_Working_Directory;
 	constexpr size_t SEED = 0;
 	constexpr float PIf = 3.1415296f;
 	constexpr double PI = 3.1415926535898;

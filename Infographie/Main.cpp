@@ -302,14 +302,28 @@ int main() {
 			scene_root.add_child(cubemap, -1);
 
 			tex_settings.cubemap_ids.push_back(cubemap->get_uuid());
-			cubemap->set_name((--p.end())->generic_string());
+			cubemap->set_name((--p.end())->generic_string()); // <- that's code for the parent dir.
 			cubemap->set_textures(std::move(d));
 
 			// I hope this will eventually execute
 			delete[] d;
 		});
 	});
+	tex_settings.environment_added.push_back([&](std::filesystem::path path) {
+		if (!std::filesystem::is_regular_file(path)) return;
 
+		std::lock_guard guard{ function_from_another_thread_mutex };
+		function_from_another_thread.push_back([&, p = path] {
+			auto cubemap = new Cube_Map();
+			scene_root.add_child(cubemap, 2); // We render last
+
+			tex_settings.cubemap_ids.push_back(cubemap->get_uuid());
+			cubemap->set_name(p.filename().generic_string());
+			if (!cubemap->load_texture(p)) {
+				Log.push("Couldn't load cubemap");
+			}
+		});
+	});
 	}
 	sf::Clock dt_clock;
 	float dt;
@@ -453,7 +467,7 @@ void render(
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
-	//glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
 
 	texture_target.set_active();
 	texture_target.clear({ 0, 0, 0, 1 });
@@ -499,7 +513,7 @@ void render(
 		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
 	}
 	render_postprocessing(tex_settings, texture_target.get_sfml_texture(), target);
-	//render_postprocessing(tex_settings, sf_texture_target.getTexture(), target);
+	render_postprocessing(tex_settings, sf_texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
 	glPopAttrib();
 }

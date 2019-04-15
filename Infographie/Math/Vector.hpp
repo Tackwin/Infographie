@@ -52,8 +52,8 @@ struct __vec_member<1, T> {
 		T components[1];
 	};
 
-	__vec_member() : x(0) {}
-	__vec_member(T x) : x(x) {}
+	constexpr __vec_member() : x(0) {}
+	constexpr __vec_member(T x) : x(x) {}
 };
 template<typename T>
 struct __vec_member<2, T> {
@@ -65,8 +65,8 @@ struct __vec_member<2, T> {
 		T components[2];
 	};
 
-	__vec_member() : x(0), y(0) {}
-	__vec_member(T x, T y) : x(x), y(y) {}
+	constexpr __vec_member() : x(0), y(0) {}
+	constexpr __vec_member(T x, T y) : x(x), y(y) {}
 };
 template<typename T>
 struct __vec_member<3, T> {
@@ -84,8 +84,8 @@ struct __vec_member<3, T> {
 		T components[3];
 	};
 
-	__vec_member() : x{}, y{}, z{} {}
-	__vec_member(T x, T y, T z) : x(x), y(y), z(z) {}
+	constexpr __vec_member() : x{}, y{}, z{} {}
+	constexpr __vec_member(T x, T y, T z) : x(x), y(y), z(z) {}
 };
 template<typename T>
 struct __vec_member<4, T> {
@@ -113,8 +113,8 @@ struct __vec_member<4, T> {
 		T components[4];
 	};
 
-	__vec_member() : x(0), y(0), z(0), w(0) {}
-	__vec_member(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
+	constexpr __vec_member() : x(0), y(0), z(0), w(0) {}
+	constexpr __vec_member(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 };
 
 template<size_t D, typename T = float>

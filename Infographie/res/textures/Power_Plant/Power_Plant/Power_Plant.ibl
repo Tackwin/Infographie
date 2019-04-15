@@ -1,0 +1,39 @@
+[Header]
+ICOfile = "rad06_Thumb.jpg"
+PREVIEWfile = "rad06_preview.jpg"
+Name = "Power Plant"
+Author = "tischbein3"
+Location = "splotchdog land"
+Comment = "Nuclear Power Plant in Summer. Charming."
+
+[Background]
+BGfile = "rad06_Bg.jpg"
+BGmap = 1
+BGu = 0.000000
+BGv = 0.000000
+BGheight = 4000
+
+[Enviroment]
+EVfile = "rad06_Env.exr"
+EVmap = 1
+EVu = 0.000000
+EVv = 0.000000
+EVheight = 180
+EVmulti = 1.000000
+EVgamma = 1.000000
+
+[Reflection]
+REFfile = "rad06_Ref.exr"
+REFmap = 1
+REFu = 0.000000
+REFv = 0.000000
+REFheight = 2000
+REFmulti = 1.000000
+REFgamma = 1.000000
+
+[Sun]
+SUNcolor = 241,222,197
+SUNmulti = 2.205729
+SUNu = 0.309000
+SUNv = 0.255000
+

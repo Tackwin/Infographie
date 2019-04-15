@@ -51,6 +51,20 @@ void update_texture_settings(Texture_Settings& settings) noexcept {
 			for (auto& f : settings.cubemap_added) f(*opt_path);
 		});
 	}
+	if (ImGui::Button("Load Environment (IBL)")) {
+		auto c = push_cursor(sf::Cursor::Wait);
+		
+		Open_File_Opts opts;
+		opts.ext_filters[""].push_back(".hdr");
+
+		open_file_async([&, c](Open_File_Result result) {
+			pop_cursor(c);
+			if (!result.succeded) return;
+			std::lock_guard guard{ settings.mutex };
+
+			for (auto& f : settings.environment_added) f(result.filepath);
+		}, opts);
+	}
 	if (settings.root && !settings.cubemap_ids.empty()) {
 		ImGui::Separator();
 		

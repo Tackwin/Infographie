@@ -9,6 +9,11 @@
 struct Open_File_Opts {
 	void* owner{ nullptr };
 
+	// A name and a list of extension authorized (serve to categorize what is authorized for what).
+	// ex: {
+	//	{"Images", {".png", ".jpg"...}},
+	//	{"Videos", {".mp4", ".mkv"...}}
+	// }
 	std::unordered_map<std::string, std::vector<std::string>> ext_filters;
 	std::filesystem::path filepath;
 	std::filesystem::path filename;

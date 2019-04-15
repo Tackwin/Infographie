@@ -330,7 +330,7 @@ Object_File Object_File::cube(Vector3f size) noexcept {
 		bitangent.z = dt * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 		bitangent = bitangent.normalize();
 
-		for (size_t i = 0; i < 3; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
 			obj.tangents.push_back(tangent);
 			obj.bitangents.push_back(bitangent);
 		}
@@ -404,7 +404,7 @@ Object_File Object_File::tetraedre(Vector3f size) noexcept {
 		bitangent.z = dt * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 		bitangent = bitangent.normalize();
 
-		for (size_t i = 0; i < 3; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
 			obj.tangents.push_back(tangent);
 			obj.bitangents.push_back(bitangent);
 		}

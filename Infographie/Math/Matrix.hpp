@@ -67,7 +67,7 @@ struct Matrix4f {
 	}
 
 	static Matrix4f look_at(Vector3f eye, Vector3f center, Vector3f up) noexcept {
-		Vector3f f = (center - eye).normalize();
+		Vector3f f = (eye - center).normalize();
 		Vector3f s = up.cross(f).normalize();
 		Vector3f u = f.cross(s);
 
