@@ -16,6 +16,9 @@ struct Geometries_Settings {
 		Alpha,
 		Normal,
 		Speculative,
+		Roughness,
+		Metallic,
+		AO,
 		Count
 	};
 

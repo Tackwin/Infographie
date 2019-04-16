@@ -92,9 +92,15 @@ void Model::opengl_render() noexcept {
 		glUniform1i(glGetUniformLocation(handle, "texture_alpha"), 1);
 		glUniform1i(glGetUniformLocation(handle, "texture_normal"), 2);
 		glUniform1i(glGetUniformLocation(handle, "texture_speculative"), 3);
+		glUniform1i(glGetUniformLocation(handle, "texture_metallic"), 4);
+		glUniform1i(glGetUniformLocation(handle, "texture_roughness"), 5);
+		glUniform1i(glGetUniformLocation(handle, "texture_ao"), 6);
 		glUniform1i(glGetUniformLocation(handle, "use_spec"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_alpha"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_normal"), 0);
+		glUniform1i(glGetUniformLocation(handle, "use_metallic"), 0);
+		glUniform1i(glGetUniformLocation(handle, "use_roughness"), 0);
+		glUniform1i(glGetUniformLocation(handle, "use_ao"), 0);
 		glUniform1f(glGetUniformLocation(handle, "alpha_tolerance"), Alpha_Tolerance);
 		glUniform1f(glGetUniformLocation(handle, "metallic"), metallic);
 		glUniform1f(glGetUniformLocation(handle, "roughness"), roughness);
@@ -122,6 +128,21 @@ void Model::opengl_render() noexcept {
 			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D, normal_texture->getNativeHandle());
 			glUniform1i(glGetUniformLocation(handle, "use_speculative"), 1);
+		}
+		if (metallic_texture) {
+			glActiveTexture(GL_TEXTURE4);
+			glBindTexture(GL_TEXTURE_2D, metallic_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_metallic"), 1);
+		}
+		if (roughness_texture) {
+			glActiveTexture(GL_TEXTURE5);
+			glBindTexture(GL_TEXTURE_2D, roughness_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_roughness"), 1);
+		}
+		if (ao_texture) {
+			glActiveTexture(GL_TEXTURE6);
+			glBindTexture(GL_TEXTURE_2D, ao_texture->getNativeHandle());
+			glUniform1i(glGetUniformLocation(handle, "use_ao"), 1);
 		}
 	}
 	defer{
@@ -625,4 +646,16 @@ float Model::get_ao() const noexcept {
 
 void Model::set_ao(float x) noexcept {
 	ao = x;
+}
+
+void Model::set_roughness_texture(const sf::Texture& texture) noexcept {
+	roughness_texture = &texture;
+}
+
+void Model::set_metallic_texture(const sf::Texture& texture) noexcept {
+	metallic_texture = &texture;
+}
+
+void Model::set_ao_texture(const sf::Texture& texture) noexcept {
+	ao_texture = &texture;
 }

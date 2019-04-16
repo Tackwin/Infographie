@@ -7,6 +7,8 @@
 
 #include "Graphic/FrameBuffer.hpp"
 
+#include "Scene/Cubemap.hpp"
+
 class Camera : public Widget3 {
 public:
 	Camera() noexcept;
@@ -48,6 +50,8 @@ private:
 
 	void select_ray_cast() noexcept;
 	void compute_view() noexcept;
+
+	Cube_Map* find_active_cubemap() const noexcept;
 
 	Widget3* render_root{ nullptr };
 

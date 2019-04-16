@@ -255,6 +255,18 @@ int main() {
 					model_widget->set_spec_texture(AM->get_texture(path.generic_string()));
 					break;
 				}
+				case Enum::Metallic: {
+					model_widget->set_metallic_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
+				case Enum::Roughness: {
+					model_widget->set_roughness_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
+				case Enum::AO: {
+					model_widget->set_ao_texture(AM->get_texture(path.generic_string()));
+					break;
+				}
 				default: {
 					assert("Should not happen !");
 				}
@@ -468,6 +480,8 @@ void render(
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
 	glDepthFunc(GL_LEQUAL);
+
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	texture_target.set_active();
 	texture_target.clear({ 0, 0, 0, 1 });

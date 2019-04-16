@@ -105,6 +105,15 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			if (ImGui::Button("Speculative Texture")) {
 				load_texture_lambda(Geometries_Settings::Texture_Type::Speculative);
 			}
+			if (ImGui::Button("Metallic Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::Metallic);
+			}
+			if (ImGui::Button("Roughness Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::Roughness);
+			}
+			if (ImGui::Button("Ambient oclusion Texture")) {
+				load_texture_lambda(Geometries_Settings::Texture_Type::AO);
+			}
 			if (ImGui::Button("Box")) {
 				model->set_render_checkbox(!model->does_render_checkbox());
 			}

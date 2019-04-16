@@ -27,7 +27,7 @@ Widget3* Camera::get_render_root() const noexcept {
 void Camera::render(Texture_Buffer& target) noexcept {
 	static int Show_Debug{ 0 };
 
-	ImGui::DragInt("Show Debug", &Show_Debug, 0.1f, 0, 4);
+	ImGui::DragInt("Show Debug", &Show_Debug, 0.1f, 0, 10);
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
 	compute_view();
@@ -35,6 +35,7 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	if (!render_root) return;
 
 	Window_Info.active_camera = this;
+	auto active_cubemap = find_active_cubemap();
 
 	// Geometry phase
 	g_buffer.set_active();
@@ -57,8 +58,24 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	shader_light.setUniform("gNormal", 1);
 	shader_light.setUniform("gAlbedoSpec", 2);
 	shader_light.setUniform("gMRA", 3);
-	shader_light.setUniform("show_debug", Show_Debug );
+	shader_light.setUniform("show_debug", Show_Debug);
 	shader_light.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
+	shader_light.setUniform("use_ibl", 0);
+
+	if (active_cubemap) {
+		shader_light.setUniform("use_ibl", 1);
+		shader_light.setUniform("irradianceMap", 7);
+		shader_light.setUniform("prefilterMap", 8);
+		shader_light.setUniform("brdfLUT", 9);
+
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, active_cubemap->get_irradiance_id());
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, active_cubemap->get_prefilter_id());
+		glActiveTexture(GL_TEXTURE9);
+		glBindTexture(GL_TEXTURE_2D, active_cubemap->get_brdf_lut_id());
+	}
+
 	sf::Shader::bind(&shader_light);
 
 	g_buffer.render_quad();
@@ -312,4 +329,18 @@ float Camera::get_gamma() const noexcept {
 
 void Camera::set_gamma(float x) noexcept {
 	gamma = x;
+}
+
+Cube_Map* Camera::find_active_cubemap() const noexcept {
+	assert(render_root);
+
+	// For now the best is ust the last as it should never happen to have two cubemaps visible
+	// at the same time
+	Cube_Map* best = nullptr;
+	render_root->for_every_childs([&](Widget* w) {
+		if (auto candidate = dynamic_cast<Cube_Map*>(w); candidate && candidate->is_visible())
+			best = candidate;
+	});
+
+	return best;
 }

@@ -21,10 +21,16 @@ struct Cube_Map : Widget3 {
 
 	void set_name(std::string str) noexcept;
 	const std::string& get_name() const noexcept;
+
+	[[nodiscard]] size_t get_irradiance_id() const noexcept;
+	[[nodiscard]] size_t get_prefilter_id() const noexcept;
+	[[nodiscard]] size_t get_brdf_lut_id() const noexcept;
 private:
 	Model cube_model;
 
 	size_t texture_id;
 	size_t irradiance_id;
+	size_t prefilter_id;
+	static std::optional<size_t> brdf_lut_id;
 	std::string name;
 };

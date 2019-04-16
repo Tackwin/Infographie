@@ -70,7 +70,7 @@ void GLAPIENTRY Common::verbose_opengl_error(
 	};
 
 	constexpr GLenum To_Break_On[] = {
-		1282, 1286
+		1280, 1282, 1286
 	};
 
 	if (std::find(BEG_END(To_Ignore), id) != std::end(To_Ignore)) return;

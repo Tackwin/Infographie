@@ -27,6 +27,9 @@ public:
 	void set_texture(const sf::Texture& texture) noexcept;
 	void set_alpha_texture(const sf::Texture& texture) noexcept;
 	void set_normal_texture(const sf::Texture& texture) noexcept;
+	void set_roughness_texture(const sf::Texture& texture) noexcept;
+	void set_metallic_texture(const sf::Texture& texture) noexcept;
+	void set_ao_texture(const sf::Texture& texture) noexcept;
 	void set_spec_texture(const sf::Texture& texture) noexcept;
 	void set_shader(sf::Shader& shader) noexcept;
 	void set_select_shader(sf::Shader& shader) noexcept;
@@ -66,7 +69,7 @@ protected:
 
 	float metallic{ 0.5f };
 	float roughness{ 0.5f };
-	float ao{ 0.f };
+	float ao{ 1.f };
 
 	size_t n;
 
@@ -76,7 +79,9 @@ protected:
 	const sf::Texture* alpha_texture{ nullptr };
 	const sf::Texture* normal_texture{ nullptr };
 	const sf::Texture* speculative_texture{ nullptr };
-	const sf::Texture* MRA_texture{ nullptr };
+	const sf::Texture* metallic_texture{ nullptr };
+	const sf::Texture* roughness_texture{ nullptr };
+	const sf::Texture* ao_texture{ nullptr };
 
 	// For complexe object we take a reference from the Assets Manager
 	const Object_File* object_file{ nullptr };

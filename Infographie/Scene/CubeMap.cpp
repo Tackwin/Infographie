@@ -10,6 +10,8 @@
 
 #include "OS/PathDefinition.hpp"
 
+std::optional<size_t> Cube_Map::brdf_lut_id = std::nullopt;
+
 Cube_Map::Cube_Map() noexcept : Widget3() {
 	glGenTextures(1, &texture_id);
 
@@ -34,6 +36,7 @@ void Cube_Map::last_opengl_render() noexcept {
 [[nodiscard]]
 bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 	constexpr Vector2u Cubemap_Texture_Size{ 2048, 2048 };
+	constexpr size_t Max_Mip_Levels = 10;
 
 	if (!std::filesystem::is_regular_file(path)) return false;
 
@@ -48,6 +51,14 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 		AM->load_shader(
 			"Equi_To_Cube", "res/shaders/cubemap.vertex", "res/shaders/equi_to_cube.fragment"
 		);
+	}
+	if (!AM->have_shader("Prefilter_Cubemap")) {
+		AM->load_shader(
+			"Prefilter_Cubemap", "res/shaders/cubemap.vertex", "res/shaders/prefilter.fragment"
+		);
+	}
+	if (!AM->have_shader("BRDF")) {
+		AM->load_shader("BRDF", "res/shaders/brdf.vertex", "res/shaders/brdf.fragment");
 	}
 
 	auto& equi_to_cube_shader = AM->get_shader("Equi_To_Cube");
@@ -194,7 +205,15 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 	for (unsigned int i = 0; i < 6; ++i)
 	{
 		glTexImage2D(
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+			0,
+			GL_RGB16F,
+			Cubemap_Texture_Size.x / 16,
+			Cubemap_Texture_Size.y / 16,
+			0,
+			GL_RGB,
+			GL_FLOAT,
+			nullptr
 		);
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -205,7 +224,12 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+	glRenderbufferStorage(
+		GL_RENDERBUFFER,
+		GL_DEPTH_COMPONENT24,
+		Cubemap_Texture_Size.x / 16,
+		Cubemap_Texture_Size.y / 16
+	);
 
 	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
 	// -----------------------------------------------------------------------------
@@ -220,7 +244,8 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 
-	glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+	// don't forget to configure the viewport to the capture dimensions.
+	glViewport(0, 0, Cubemap_Texture_Size.x / 16, Cubemap_Texture_Size.y / 16);
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 	for (unsigned int i = 0; i < 6; ++i) {
 		glUniformMatrix4fv(
@@ -242,6 +267,151 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
+	// --------------------------------------------------------------------------------
+	glGenTextures(1, &prefilter_id);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_id);
+	for (unsigned int i = 0; i < 6; ++i) {
+		glTexImage2D(
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+			0,
+			GL_RGB16F,
+			Cubemap_Texture_Size.x / 4,
+			Cubemap_Texture_Size.y / 4,
+			0,
+			GL_RGB,
+			GL_FLOAT,
+			nullptr
+		);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	// be sure to set minifcation filter to mip_linear 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+	// pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+	// ----------------------------------------------------------------------------------------------------
+	auto& prefilter_shader = AM->get_shader("Prefilter_Cubemap");
+	sf::Shader::bind(&prefilter_shader);
+	prefilter_shader.setUniform("environmentMap", 0);
+	glUniformMatrix4fv(
+		glGetUniformLocation(prefilter_shader.getNativeHandle(), "projection"),
+		1,
+		GL_FALSE,
+		(float*)&captureProjection
+	);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	for (unsigned int mip = 0; mip < Max_Mip_Levels; ++mip) {
+		// reisze framebuffer according to mip-level size.
+		size_t mipWidth = (size_t)(Cubemap_Texture_Size.x / 4 * std::pow(0.5, mip));
+		size_t mipHeight = (size_t)(Cubemap_Texture_Size.y / 4 * std::pow(0.5, mip));
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+		glViewport(0, 0, mipWidth, mipHeight);
+
+		float roughness = (float)mip / (float)(Max_Mip_Levels - 1);
+		prefilter_shader.setUniform("roughness", roughness);
+		for (unsigned int i = 0; i < 6; ++i) {
+			glUniformMatrix4fv(
+				glGetUniformLocation(prefilter_shader.getNativeHandle(), "view"),
+				1,
+				GL_FALSE,
+				(float*)&captureViews[i]
+			);
+			glFramebufferTexture2D(
+				GL_FRAMEBUFFER,
+				GL_COLOR_ATTACHMENT0,
+				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				prefilter_id,
+				mip
+			);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			glBindVertexArray(cubeVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	if (!brdf_lut_id) {
+		brdf_lut_id = 0;
+
+		// pbr: generate a 2D LUT from the BRDF equations used.
+		// ----------------------------------------------------
+		glGenTextures(1, &*brdf_lut_id);
+
+		// pre-allocate enough memory for the LUT texture.
+		glBindTexture(GL_TEXTURE_2D, *brdf_lut_id);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RG16F,
+			Cubemap_Texture_Size.x,
+			Cubemap_Texture_Size.y,
+			0,
+			GL_RG,
+			GL_FLOAT,
+			0
+		);
+		// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(
+			GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, Cubemap_Texture_Size.x, Cubemap_Texture_Size.y
+		);
+		glFramebufferTexture2D(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *brdf_lut_id, 0
+		);
+
+		glViewport(0, 0, Cubemap_Texture_Size.x, Cubemap_Texture_Size.y);
+		sf::Shader::bind(&AM->get_shader("BRDF"));
+		glClearColor(1, 1, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		
+		size_t quadVAO;
+		size_t quadVBO;
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+				1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+				1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(
+			1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))
+		);
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
+	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return true;
@@ -280,4 +450,14 @@ void Cube_Map::set_name(std::string str) noexcept {
 	name = std::move(str);
 }
 
+[[nodiscard]] size_t Cube_Map::get_irradiance_id() const noexcept {
+	return irradiance_id;
+}
+[[nodiscard]] size_t Cube_Map::get_prefilter_id() const noexcept {
+	return prefilter_id;
+}
+[[nodiscard]] size_t Cube_Map::get_brdf_lut_id() const noexcept {
+	assert(brdf_lut_id);
 
+	return *brdf_lut_id;
+}

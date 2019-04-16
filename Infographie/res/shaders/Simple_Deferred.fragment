@@ -9,15 +9,21 @@ in vec3 FragPos;
 in vec3 Normal;
 in mat3 TBN;
 
-uniform int use_alpha;
 uniform float alpha_tolerance;
 
+uniform int use_alpha;
 uniform int use_normal;
+uniform int use_metallic;
+uniform int use_roughness;
+uniform int use_ao;
 
 uniform sampler2D texture_main;
 uniform sampler2D texture_alpha;
 uniform sampler2D texture_specular;
 uniform sampler2D texture_normal;
+uniform sampler2D texture_metallic;
+uniform sampler2D texture_roughness;
+uniform sampler2D texture_ao;
 
 uniform float metallic;
 uniform float roughness;
@@ -49,4 +55,14 @@ void main() {
     gAlbedoSpec.a = 1;
 
     gMRA = vec3(metallic, roughness, ao);
+    if (use_metallic != 0) {
+    	gMRA.r = texture(texture_metallic, TexCoords).r;
+    }
+    if (use_roughness != 0) {
+    	gMRA.g = texture(texture_roughness, TexCoords).r;
+    }
+    if (use_ao != 0) {
+    	gMRA.b = texture(texture_ao, TexCoords).r;
+    }
+
 }
