@@ -93,3 +93,7 @@ void GLAPIENTRY Common::verbose_opengl_error(
 		DebugBreak();
 	}
 }
+
+size_t xstd::fact(size_t x) noexcept {
+	return x > 1 ? x * fact(x - 1) : 1;
+}

@@ -648,14 +648,14 @@ void Model::set_ao(float x) noexcept {
 	ao = x;
 }
 
-void Model::set_roughness_texture(const sf::Texture& texture) noexcept {
-	roughness_texture = &texture;
+void Model::set_roughness_texture(const sf::Texture& t) noexcept {
+	roughness_texture = &t;
 }
 
-void Model::set_metallic_texture(const sf::Texture& texture) noexcept {
-	metallic_texture = &texture;
+void Model::set_metallic_texture(const sf::Texture& t) noexcept {
+	metallic_texture = &t;
 }
 
-void Model::set_ao_texture(const sf::Texture& texture) noexcept {
-	ao_texture = &texture;
+void Model::set_ao_texture(const sf::Texture& t) noexcept {
+	ao_texture = &t;
 }

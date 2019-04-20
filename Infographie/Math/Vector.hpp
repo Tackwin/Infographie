@@ -8,8 +8,6 @@
 #pragma warning(push)
 #pragma warning(disable: 4201)
 
-#define EXPAND(x) x
-
 #define UNROLL_2(v) (v).x, (v).y
 #define UNROLL_2_P(v, prefix) (prefix)((v).x), (prefix)((v).y)
 #define UNROLL_3(v) (v).x, (v).y, (v).z
@@ -681,6 +679,11 @@ struct Vector : public __vec_member<D, T> {
 		
 		return (Vector2f{ this->x, -this->y }.dot(B - A) + Vector2f{ A.x, -A.y }.dot(B)) /
 				(B - A).length();
+	}
+
+	template<size_t Dp = D>
+	std::enable_if_t<Dp == 2, float> area() noexcept {
+		return this->x * this->y;
 	}
 };
 

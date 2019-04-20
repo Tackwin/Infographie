@@ -86,6 +86,8 @@ namespace xstd {
 
 		return bs | consecutive_to_bitset<S>(args...);
 	}
+
+	extern size_t fact(size_t x) noexcept;
 };
 
 namespace std {

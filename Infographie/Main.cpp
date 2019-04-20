@@ -15,6 +15,7 @@
 #include "UI/Texture.hpp"
 #include "UI/Illumination.hpp"
 #include "UI/Cameras.hpp"
+#include "UI/Topologie.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
 #include "Scene/Widget.hpp"
@@ -22,6 +23,7 @@
 #include "Scene/Canvas.hpp"
 #include "Scene/CubeMap.hpp"
 #include "Scene/Primitive.hpp"
+#include "Scene/Bezier.hpp"
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 #include "Utils/TimeInfo.hpp"
@@ -52,6 +54,7 @@ void update(
 	Texture_Settings& tex_settings,
 	Camera_Settings& cam_settings,
 	Illumination_Settings& ill_settings,
+	Topologie_Settings& top_settings,
 	float dt
 ) noexcept;
 
@@ -127,6 +130,7 @@ int main() {
 	Camera_Settings cam_settings;
 	Texture_Settings tex_settings;
 	Drawing_Settings draw_settings;
+	Topologie_Settings top_settings;
 	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
 	Illumination_Settings ill_settings;
@@ -166,6 +170,7 @@ int main() {
 	tex_settings.root = &scene_root;
 	cam_settings.root = &scene_root;
 	ill_settings.root = &scene_root;
+	top_settings.root = &scene_root;
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
 
@@ -336,6 +341,9 @@ int main() {
 			}
 		});
 	});
+	top_settings.added_bezier.push_back([&](size_t n_point) {
+		scene_root.make_child<Bezier>(n_point);
+	});
 	}
 	sf::Clock dt_clock;
 	float dt;
@@ -353,6 +361,7 @@ int main() {
 			tex_settings,
 			cam_settings,
 			ill_settings,
+			top_settings,
 			dt
 		);
 
@@ -400,6 +409,7 @@ void update(
 	Texture_Settings& tex_settings,
 	Camera_Settings& cam_settings,
 	Illumination_Settings& ill_settings,
+	Topologie_Settings& top_settings,
 	float dt
 ) noexcept {
 	static constexpr auto Help_Popup_Title = "Help - Hestia";
@@ -454,6 +464,7 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 	if (ImGui::CollapsingHeader("Texture")) update_texture_settings(tex_settings);
 	if (ImGui::CollapsingHeader("Camera")) update_camera_settings(cam_settings);
 	if (ImGui::CollapsingHeader("Illumination")) update_illumination_settings(ill_settings);
+	if (ImGui::CollapsingHeader("Topology")) update_topologie_settings(top_settings);
 	if (ImGui::CollapsingHeader("Debug")) update_debug_ui();
 
 	root.propagate_update(dt);
@@ -503,17 +514,21 @@ void render(
 	ImGui::Begin("Debug render info", &Show_Render_Debug);
 	ImGui::Text("dt: %3.3f ms", dt_clock.restart().asSeconds() * 1000.f);
 	root.propagate_render(texture_target);
-	sf_texture_target.setActive(true);
-	sf_texture_target.clear({ 0, 0, 0, 0 });
-	root.propagate_render(sf_texture_target);
-	ImGui::End();
 
 
 	target.setActive(true);
 
 	Is_In_Sfml_Context = true;
+	
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	target.resetGLStates();
+
+	sf_texture_target.setActive(true);
+	sf_texture_target.clear({ 0, 0, 0, 0 });
+	root.propagate_render(sf_texture_target);
+	
+	ImGui::End();
+	
 	if (screenshot) {
 		sf::RenderTexture render_texture;
 		render_texture.create(UNROLL_2(Window_Info.size));
@@ -526,9 +541,11 @@ void render(
 		render_texture.display();
 		render_texture.getTexture().copyToImage().saveToFile(screenshot->generic_string());
 	}
+	
 	render_postprocessing(tex_settings, texture_target.get_sfml_texture(), target);
-	render_postprocessing(tex_settings, sf_texture_target.getTexture(), target);
 	ImGui::SFML::Render(target);
+	render_postprocessing(tex_settings, sf_texture_target.getTexture(), target);
+	
 	glPopAttrib();
 }
 

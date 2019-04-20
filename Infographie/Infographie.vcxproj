@@ -121,6 +121,7 @@
     <ClCompile Include="OS\windows\OpenFile.cpp" />
     <ClCompile Include="OS\windows\PathDefinition.cpp" />
     <ClCompile Include="OS\windows\SystemConfiguration.cpp" />
+    <ClCompile Include="Scene\Bezier.cpp" />
     <ClCompile Include="Scene\Camera.cpp" />
     <ClCompile Include="Scene\Canvas.cpp" />
     <ClCompile Include="Scene\CubeMap.cpp" />
@@ -135,6 +136,7 @@
     <ClCompile Include="UI\Illumination.cpp" />
     <ClCompile Include="UI\Images.cpp" />
     <ClCompile Include="UI\Texture.cpp" />
+    <ClCompile Include="UI\Topologie.cpp" />
     <ClCompile Include="UI\Transform.cpp" />
     <ClCompile Include="Utils\Logs.cpp" />
     <ClCompile Include="Utils\TimeInfo.cpp" />
@@ -142,6 +144,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bezier.hpp" />
     <ClInclude Include="Containers\DynArray.hpp" />
     <ClInclude Include="Containers\Graph.hpp" />
     <ClInclude Include="Containers\QuadTree.hpp" />
@@ -151,6 +154,7 @@
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui-SFML.h" />
     <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
     <ClInclude Include="Managers\AssetsManager.hpp" />
     <ClInclude Include="Managers\InputsManager.hpp" />
     <ClInclude Include="Math\algorithms.hpp" />
@@ -165,6 +169,7 @@
     <ClInclude Include="OS\OpenFile.hpp" />
     <ClInclude Include="OS\PathDefinition.hpp" />
     <ClInclude Include="OS\SystemConfiguration.hpp" />
+    <ClInclude Include="Scene\Bezier.hpp" />
     <ClInclude Include="Scene\Camera.hpp" />
     <ClInclude Include="Scene\Canvas.hpp" />
     <ClInclude Include="Scene\CubeMap.hpp" />
@@ -173,12 +178,14 @@
     <ClInclude Include="Scene\Model.hpp" />
     <ClInclude Include="Scene\Primitive.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
+    <ClInclude Include="Topologie.hpp" />
     <ClInclude Include="UI\Cameras.hpp" />
     <ClInclude Include="UI\Drawings.hpp" />
     <ClInclude Include="UI\Geometries.hpp" />
     <ClInclude Include="UI\Illumination.hpp" />
     <ClInclude Include="UI\Images.hpp" />
     <ClInclude Include="UI\Texture.hpp" />
+    <ClInclude Include="UI\Topologie.hpp" />
     <ClInclude Include="UI\Transform.hpp" />
     <ClInclude Include="Utils\Logs.hpp" />
     <ClInclude Include="Utils\TimeInfo.hpp" />

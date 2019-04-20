@@ -131,6 +131,12 @@
     <ClCompile Include="Scene\LightPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Bezier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Topologie.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -249,6 +255,13 @@
     <ClInclude Include="UI\Illumination.hpp" />
     <ClInclude Include="Graphic\FrameBuffer.hpp" />
     <ClInclude Include="Scene\LightPoint.hpp" />
+    <ClInclude Include="Topologie.hpp" />
+    <ClInclude Include="imgui\imgui_internal.h">
+      <Filter>extern</Filter>
+    </ClInclude>
+    <ClInclude Include="Bezier.hpp" />
+    <ClInclude Include="Scene\Bezier.hpp" />
+    <ClInclude Include="UI\Topologie.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
