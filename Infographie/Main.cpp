@@ -24,6 +24,7 @@
 #include "Scene/CubeMap.hpp"
 #include "Scene/Primitive.hpp"
 #include "Scene/Bezier.hpp"
+#include "Scene/Surface.hpp"
 #include "Managers/AssetsManager.hpp"
 #include "Managers/InputsManager.hpp"
 #include "Utils/TimeInfo.hpp"
@@ -341,8 +342,11 @@ int main() {
 			}
 		});
 	});
-	top_settings.added_bezier.push_back([&](size_t n_point) {
+	top_settings.added_curve.push_back([&](size_t n_point) {
 		scene_root.make_child<Bezier>(n_point);
+	});
+	top_settings.added_surface.push_back([&](size_t n_point) {
+		scene_root.make_child<Surface>(n_point);
 	});
 	}
 	sf::Clock dt_clock;

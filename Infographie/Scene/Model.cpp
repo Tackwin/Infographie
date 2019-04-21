@@ -101,10 +101,12 @@ void Model::opengl_render() noexcept {
 		glUniform1i(glGetUniformLocation(handle, "use_metallic"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_roughness"), 0);
 		glUniform1i(glGetUniformLocation(handle, "use_ao"), 0);
+		glUniform1i(glGetUniformLocation(handle, "use_plain_color"), use_plain_color ? 1 : 0);
 		glUniform1f(glGetUniformLocation(handle, "alpha_tolerance"), Alpha_Tolerance);
 		glUniform1f(glGetUniformLocation(handle, "metallic"), metallic);
 		glUniform1f(glGetUniformLocation(handle, "roughness"), roughness);
 		glUniform1f(glGetUniformLocation(handle, "ao"), ao);
+		glUniform4fv(glGetUniformLocation(handle, "plain_color"), 1, &plain_color.x);
 
 		if (s == select_shader) {
 			float a = (get_milliseconds_epoch() % 500000) / 1000.f;
@@ -658,4 +660,11 @@ void Model::set_metallic_texture(const sf::Texture& t) noexcept {
 
 void Model::set_ao_texture(const sf::Texture& t) noexcept {
 	ao_texture = &t;
+}
+
+void Model::set_use_plain_color(bool x) noexcept {
+	use_plain_color = x;
+}
+void Model::set_plain_color(Vector4f x) noexcept {
+	plain_color = x;
 }

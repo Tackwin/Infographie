@@ -129,6 +129,7 @@
     <ClCompile Include="Scene\LightPoint.cpp" />
     <ClCompile Include="Scene\Model.cpp" />
     <ClCompile Include="Scene\Primitive.cpp" />
+    <ClCompile Include="Scene\Surface.cpp" />
     <ClCompile Include="Scene\Widget.cpp" />
     <ClCompile Include="UI\Cameras.cpp" />
     <ClCompile Include="UI\Drawings.cpp" />
@@ -177,7 +178,9 @@
     <ClInclude Include="Scene\LightPoint.hpp" />
     <ClInclude Include="Scene\Model.hpp" />
     <ClInclude Include="Scene\Primitive.hpp" />
+    <ClInclude Include="Scene\Surface.hpp" />
     <ClInclude Include="Scene\Widget.hpp" />
+    <ClInclude Include="Surface.hpp" />
     <ClInclude Include="Topologie.hpp" />
     <ClInclude Include="UI\Cameras.hpp" />
     <ClInclude Include="UI\Drawings.hpp" />

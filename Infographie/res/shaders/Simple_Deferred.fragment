@@ -11,6 +11,7 @@ in mat3 TBN;
 
 uniform float alpha_tolerance;
 
+uniform int use_plain_color;
 uniform int use_alpha;
 uniform int use_normal;
 uniform int use_metallic;
@@ -28,6 +29,8 @@ uniform sampler2D texture_ao;
 uniform float metallic;
 uniform float roughness;
 uniform float ao;
+
+uniform vec4 plain_color;
 
 void main() {
     vec4 alpha_sample = texture(texture_alpha, TexCoords);
@@ -53,6 +56,9 @@ void main() {
     gAlbedoSpec.rgba = main_sample.rgba;
     // store specular intensity in gAlbedoSpec's alpha component
     gAlbedoSpec.a = 1;
+    if (use_plain_color != 0) {
+    	gAlbedoSpec = plain_color;
+    }
 
     gMRA = vec3(metallic, roughness, ao);
     if (use_metallic != 0) {

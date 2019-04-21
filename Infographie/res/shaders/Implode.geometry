@@ -6,7 +6,7 @@ in Vertex_Data {
     vec2 uv;
 } in_data[];
 
-out vec2 UV; 
+out vec2 UV;
 
 uniform float time;
 

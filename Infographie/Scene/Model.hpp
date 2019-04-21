@@ -60,6 +60,9 @@ public:
 	float get_ao() const noexcept;
 	void set_ao(float x) noexcept;
 
+	void set_use_plain_color(bool x) noexcept;
+	void set_plain_color(Vector4f x) noexcept;
+
 protected:
 	void toggle_picker() noexcept;
 	void push_picker() noexcept;
@@ -82,6 +85,9 @@ protected:
 	const sf::Texture* metallic_texture{ nullptr };
 	const sf::Texture* roughness_texture{ nullptr };
 	const sf::Texture* ao_texture{ nullptr };
+
+	bool use_plain_color{ true };
+	Vector4f plain_color;
 
 	// For complexe object we take a reference from the Assets Manager
 	const Object_File* object_file{ nullptr };

@@ -15,7 +15,19 @@ void update_topologie_settings(Topologie_Settings& settings) noexcept {
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("Add Bezier")) for (auto& x : settings.added_bezier) x(points);
+	if (ImGui::Button("Add Curve")) for (auto& x : settings.added_curve) x(points);
+
+	ImGui::PushItemWidth(100);
+
+	static int points_surface{ 5 };
+	ImGui::InputInt("Points² :", &points_surface);
+	points = std::max(2, points_surface);
+
+	ImGui::PopItemWidth();
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Add Surface")) for (auto& x : settings.added_surface) x(points_surface);
 
 	ImGui::Separator();
 	if (!settings.root) return;

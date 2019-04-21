@@ -137,6 +137,9 @@
     <ClCompile Include="UI\Topologie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Surface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -262,6 +265,10 @@
     <ClInclude Include="Bezier.hpp" />
     <ClInclude Include="Scene\Bezier.hpp" />
     <ClInclude Include="UI\Topologie.hpp" />
+    <ClInclude Include="Surface.hpp" />
+    <ClInclude Include="Scene\Surface.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
