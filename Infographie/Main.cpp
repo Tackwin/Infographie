@@ -16,6 +16,7 @@
 #include "UI/Illumination.hpp"
 #include "UI/Cameras.hpp"
 #include "UI/Topologie.hpp"
+#include "UI/RayTracing.hpp"
 #include "Scene/Image.hpp"
 #include "Scene/Model.hpp"
 #include "Scene/Widget.hpp"
@@ -56,6 +57,7 @@ void update(
 	Camera_Settings& cam_settings,
 	Illumination_Settings& ill_settings,
 	Topologie_Settings& top_settings,
+	Ray_Tracing_Settings& ray_tracing_settings,
 	float dt
 ) noexcept;
 
@@ -135,6 +137,7 @@ int main() {
 	Transform_Settings tran_settings;
 	Geometries_Settings geo_settings;
 	Illumination_Settings ill_settings;
+	Ray_Tracing_Settings ray_tracing_settings;
 
 	std::shared_mutex function_from_another_thread_mutex;
 	std::vector<std::function<void(void)>> function_from_another_thread;
@@ -145,7 +148,7 @@ int main() {
 		auto& camera = *root.make_child<Camera>();
 		camera.set_viewport({ {0, 0}, {Window_Info.size.x, Window_Info.size.y } });
 		camera.set_perspective(
-			70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
+			70 / (float)RAD_2_DEG, Window_Info.size.x / (float)Window_Info.size.y, 500, 0.01f
 		);
 		camera.set_global_position({ 0, 0, -10 });
 		camera.look_at({ 0, 0, 0 }, { 0, 1, 0 });
@@ -174,6 +177,7 @@ int main() {
 	top_settings.root = &scene_root;
 	draw_settings.root = &scene_root;
 	tran_settings.root = &scene_root;
+	ray_tracing_settings.root = &scene_root;
 
 	auto& main_cam = add_cam_to_root(scene_root);
 	main_cam.set_input_active(true);
@@ -233,7 +237,7 @@ int main() {
 			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
 			model_widget->set_object(AM->get_object_file(path.generic_string()));
 			model_widget->set_shader(AM->get_shader("Deferred_Simple"));
-			model_widget->set_select_shader(AM->get_shader("Uniform_Glow"));
+			model_widget->set_select_shader(AM->get_shader("Selected"));
 		});
 	});
 	geo_settings.texture_callback.push_back(
@@ -291,7 +295,7 @@ int main() {
 			geo_settings.models_widget_id.push_back(model_widget->get_uuid());
 			model_widget->set_object_copy(obj);
 			model_widget->set_shader(AM->get_shader("Deferred_Simple"));
-			model_widget->set_select_shader(AM->get_shader("Uniform_Glow"));
+			model_widget->set_select_shader(AM->get_shader("Selected"));
 		}
 	);
 	tex_settings.cubemap_added.push_back([&](std::filesystem::path path) {
@@ -366,6 +370,7 @@ int main() {
 			cam_settings,
 			ill_settings,
 			top_settings,
+			ray_tracing_settings,
 			dt
 		);
 
@@ -414,6 +419,7 @@ void update(
 	Camera_Settings& cam_settings,
 	Illumination_Settings& ill_settings,
 	Topologie_Settings& top_settings,
+	Ray_Tracing_Settings& ray_tracing_settings,
 	float dt
 ) noexcept {
 	static constexpr auto Help_Popup_Title = "Help - Hestia";
@@ -461,15 +467,16 @@ Gérer les différentes fonctionnalités de manière ordonnée, en pouvant dissimuler
 	ImGui::EndMenuBar();
 	ImGui::SetWindowPos({ 5, 5 });
 
-	if (ImGui::CollapsingHeader("Image")) update_image_settings(img_settings);
-	if (ImGui::CollapsingHeader("Drawing")) update_drawing_settings(draw_settings);
-	if (ImGui::CollapsingHeader("Transform")) update_transform_settings(tran_settings);
-	if (ImGui::CollapsingHeader("Geometries")) update_geometries_settings(geo_settings);
-	if (ImGui::CollapsingHeader("Texture")) update_texture_settings(tex_settings);
-	if (ImGui::CollapsingHeader("Camera")) update_camera_settings(cam_settings);
+	if (ImGui::CollapsingHeader("Image"))        update_image_settings(img_settings);
+	if (ImGui::CollapsingHeader("Drawing"))      update_drawing_settings(draw_settings);
+	if (ImGui::CollapsingHeader("Transform"))    update_transform_settings(tran_settings);
+	if (ImGui::CollapsingHeader("Geometries"))   update_geometries_settings(geo_settings);
+	if (ImGui::CollapsingHeader("Texture"))      update_texture_settings(tex_settings);
+	if (ImGui::CollapsingHeader("Camera"))       update_camera_settings(cam_settings);
 	if (ImGui::CollapsingHeader("Illumination")) update_illumination_settings(ill_settings);
-	if (ImGui::CollapsingHeader("Topology")) update_topologie_settings(top_settings);
-	if (ImGui::CollapsingHeader("Debug")) update_debug_ui();
+	if (ImGui::CollapsingHeader("Topology"))     update_topologie_settings(top_settings);
+	if (ImGui::CollapsingHeader("Ray Tracing"))  update_ray_tracing_settings(ray_tracing_settings);
+	if (ImGui::CollapsingHeader("Debug"))        update_debug_ui();
 
 	root.propagate_update(dt);
 	ImGui::End();
@@ -494,7 +501,7 @@ void render(
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
-	glDepthFunc(GL_LEQUAL);
+	glDepthFunc(GL_LESS);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
@@ -654,24 +661,22 @@ void load_shaders() noexcept {
 		"res/shaders/Identity.vertex",
 		"res/shaders/Edge.fragment"
 	);
-	AM->load_shader("Simple", "res/shaders/simple.vertex", "res/shaders/simple.fragment");
 	AM->load_shader("Skybox", "res/shaders/Skybox.vertex", "res/shaders/Skybox.fragment");
 	AM->load_shader(
-		"Uniform_Glow",
-		"res/shaders/uniform_glow.vertex",
-		"res/shaders/uniform_glow.fragment",
+		"Selected",
+		"res/shaders/Simple_Deferred.vertex",
+		"res/shaders/Simple_Deferred.fragment",
 		"res/shaders/Implode.geometry"
-	);
-	AM->load_shader(
-		"Explode",
-		"res/shaders/uniform_glow.vertex",
-		"res/shaders/uniform_glow.fragment",
-		"res/shaders/Explode.geometry"
 	);
 	AM->load_shader(
 		"Deferred_Simple",
 		"res/shaders/Simple_Deferred.vertex",
 		"res/shaders/Simple_Deferred.fragment"
+	);
+	AM->load_shader(
+		"Simple",
+		"res/shaders/Simple.vertex",
+		"res/shaders/Simple.fragment"
 	);
 	AM->load_shader(
 		"Deferred_Light",
@@ -685,6 +690,8 @@ void load_shaders() noexcept {
 	);
 	AM->load_shader("Light_Box", "res/shaders/Light_Box.vertex", "res/shaders/Light_Box.fragment");
 	AM->load_shader("HDR", "res/shaders/HDR.vertex", "res/shaders/HDR.fragment");
+	AM->load_shader("SSAO", "res/shaders/HDR.vertex", "res/shaders/ssao.fragment");
+	AM->load_shader("SSAO_Blur", "res/shaders/HDR.vertex", "res/shaders/SSAO_blur.fragment");
 }
 
 void update_debug_ui() noexcept {

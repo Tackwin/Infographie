@@ -87,3 +87,29 @@ private:
 	uint32_t quad_VAO{ 0 };
 	uint32_t quad_VBO{ 0 };
 };
+
+struct SSAO_Buffer {
+	SSAO_Buffer(SSAO_Buffer&) = delete;
+	SSAO_Buffer& operator=(SSAO_Buffer&) = delete;
+	SSAO_Buffer(SSAO_Buffer&&) = default;
+	SSAO_Buffer& operator=(SSAO_Buffer&&) = default;
+
+	SSAO_Buffer(Vector2u size) noexcept;
+	~SSAO_Buffer() noexcept;
+
+	void set_active_ssao() noexcept;
+	void set_active_blur() noexcept;
+
+	void set_active_texture_for_blur() noexcept;
+	void set_active_texture(size_t n) noexcept;
+	void render_quad() noexcept;
+
+private:
+
+	uint32_t quad_VAO{ 0 };
+	uint32_t quad_VBO{ 0 };
+	uint32_t ssao_buffer{ 0 };
+	uint32_t ssao_blur_buffer{ 0 };
+	uint32_t color_buffer{ 0 };
+	uint32_t blur_buffer{ 0 };
+};

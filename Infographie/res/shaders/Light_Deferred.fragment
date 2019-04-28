@@ -9,6 +9,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 uniform sampler2D gMRA;
+uniform sampler2D gSSAO;
 
 // IBL
 uniform samplerCube irradianceMap;
@@ -58,9 +59,10 @@ void main() {
     vec3 Diffuse = texture(gAlbedoSpec, TexCoords).rgb;
     float metallic = texture(gMRA, TexCoords).r;
     float roughness = texture(gMRA, TexCoords).g;
-    float ao = texture(gMRA, TexCoords).b;
+    float ao = texture(gSSAO, TexCoords).r * texture(gMRA, TexCoords).b;
     float Specular = texture(gAlbedoSpec, TexCoords).a;
-    
+    bool bypass_lighting = texture(gMRA, TexCoords).a < 0.0;
+
     // If the normal is (0.0, 0.0, 0.0) that means it's an empty pixel.
     // so we just discard the pixel
     if (Normal == vec3(0, 0, 0)) { discard; }
@@ -143,16 +145,17 @@ void main() {
         brdf = texture(brdfLUT, vec2(max(dot(Normal, viewDir), 0.0), roughness)).rg;
         specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-        vec3 ambient = (kD * diffuse + specular) * ao;
+        vec3 ambient = kD * diffuse + specular;
 
         lighting += ambient * ambient_color * ambient_strength;
     } else {
         lighting += Diffuse * ambient_color * ambient_strength;
     }
-    
+    lighting *= ao;
 
     if (show_debug == 0){
         FragColor = vec4(lighting, 1.0);
+        if (bypass_lighting) FragColor.rgb = Diffuse;
     }
     if (show_debug == 1){
         FragColor = vec4(FragPos, 1.0);
@@ -174,6 +177,12 @@ void main() {
     }
     if (show_debug == 7){
         FragColor = vec4(specular, 1.0);
+    }
+    if (show_debug == 8){
+        FragColor = vec4(vec3(texture(gSSAO, TexCoords).r), 1.0);
+    }
+    if (show_debug == 9){
+        FragColor = vec4(vec3(bypass_lighting ? 0.0 : 1.0), 1.0);
     }
 }
 

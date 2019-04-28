@@ -140,6 +140,9 @@
     <ClCompile Include="Scene\Surface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\RayTracing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp">
@@ -269,6 +272,7 @@
     <ClInclude Include="Scene\Surface.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="UI\RayTracing.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

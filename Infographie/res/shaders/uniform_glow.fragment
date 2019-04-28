@@ -2,6 +2,7 @@
 
 // Interpolated values from the vertex shaders
 in vec2 UV;
+in vec3 pos;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D texture_main;
@@ -15,7 +16,11 @@ uniform float alpha_tolerance;
 out vec4 frag_color;
 float near = 0.1;
 float far  = 5.0;
-  
+
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec4 gAlbedoSpec;
+
 float LinearizeDepth(float depth)  {
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));
@@ -45,8 +50,10 @@ void main() {
 
     frag_color = final_sample;
 	frag_color.rgb = frag_color.rgb * sin_time * 0.8 + vec3(0.1);
+    gAlbedoSpec = frag_color;
+    gNormal = vec3(1, 0, 0);
+    gPosition = pos;
 
-    
     // float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
     // frag_color = vec4(vec3(depth), 1);
     // ^-- Debug

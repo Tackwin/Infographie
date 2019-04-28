@@ -1,13 +1,14 @@
-#version 330 core
+#version 410 core
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec3 gMRA;
+layout (location = 3) out vec4 gMRA;
 
-in vec2 TexCoords;
-in vec3 FragPos;
-in vec3 Normal;
-in mat3 TBN;
+layout (location = 0) in vec3 FragPos;
+layout (location = 1) in vec2 TexCoords;
+layout (location = 2) in vec3 Normal;
+layout (location = 3) in mat3 TBN;
+layout (location = 6) flat in int use_lighting;
 
 uniform float alpha_tolerance;
 
@@ -28,7 +29,6 @@ uniform sampler2D texture_ao;
 
 uniform float metallic;
 uniform float roughness;
-uniform float ao;
 
 uniform vec4 plain_color;
 
@@ -60,7 +60,7 @@ void main() {
     	gAlbedoSpec = plain_color;
     }
 
-    gMRA = vec3(metallic, roughness, ao);
+    gMRA = vec4(metallic, roughness, 1, use_lighting);
     if (use_metallic != 0) {
     	gMRA.r = texture(texture_metallic, TexCoords).r;
     }

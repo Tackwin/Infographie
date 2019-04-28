@@ -13,7 +13,12 @@
 
 #include "imgui/imgui.h"
 
-Camera::Camera() noexcept : g_buffer(Window_Info.size), hdr_buffer(Window_Info.size) {
+std::vector<Vector3f> generate_ssao_samples(size_t n) noexcept;
+uint32_t get_noise_texture() noexcept;
+
+Camera::Camera() noexcept :
+	g_buffer(Window_Info.size), hdr_buffer(Window_Info.size), ssao_buffer(Window_Info.size)
+{
 	pos3 = { 0, 0, 0 };
 }
 
@@ -26,8 +31,10 @@ Widget3* Camera::get_render_root() const noexcept {
 
 void Camera::render(Texture_Buffer& target) noexcept {
 	static int Show_Debug{ 0 };
+	static int Show_Debug_SSAO{ 0 };
 
 	ImGui::DragInt("Show Debug", &Show_Debug, 0.1f, 0, 10);
+	ImGui::DragInt("Show Debug SSAO", &Show_Debug_SSAO, 0.1f, 0, 10);
 
 	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
 	compute_view();
@@ -43,12 +50,86 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	render_root->propagate_opengl_render();
+	
+	// ssao phase
+	// (Not the blur)
+	auto samples = generate_ssao_samples(ray_tracing_settings.kernel_sample_count);
+	auto noise_texture = get_noise_texture();
+	auto& ssao_shader = AM->get_shader("SSAO");
+	auto& ssao_shader_blur = AM->get_shader("SSAO_Blur");
 
+	ssao_buffer.set_active_ssao();
+	g_buffer.set_active_texture();
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// the first 4 are used by the geometry buffer.
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, noise_texture);
+
+	sf::Shader::bind(&ssao_shader);
+	ssao_shader.setUniform("gPosition", 0);
+	ssao_shader.setUniform("gNormal", 1);
+	ssao_shader.setUniform("gMRA", 3);
+	ssao_shader.setUniform("texNoise", 4);
+	ssao_shader.setUniform("kernelSize", (int)ray_tracing_settings.kernel_sample_count);
+	ssao_shader.setUniform("radius", ray_tracing_settings.ssao_radius);
+	ssao_shader.setUniform("bias", ray_tracing_settings.ssao_bias);
+	auto noise_scale = (Vector2f)(Window_Info.size / ray_tracing_settings.noise_scale);
+	glUniform2fv(
+		glGetUniformLocation(ssao_shader.getNativeHandle(), "noiseScale"),
+		1,
+		(float*)& noise_scale.x
+	);
+	auto global_pos = get_global_position3();
+	glUniform3fv(
+		glGetUniformLocation(ssao_shader.getNativeHandle(), "cam_pos"),
+		1,
+		(float*)& global_pos.x
+	);
+	ssao_shader_blur.setUniform("texture", 0);
+	ssao_shader_blur.setUniform("blur_radius", (int)ray_tracing_settings.blur_radius);
+	glUniformMatrix4fv(
+		glGetUniformLocation(ssao_shader.getNativeHandle(), "projection"),
+		1,
+		GL_FALSE,
+		(float*)& projection
+	);
+	glUniformMatrix4fv(
+		glGetUniformLocation(ssao_shader.getNativeHandle(), "view"),
+		1,
+		GL_FALSE,
+		(float*)& view
+	);
+	for (size_t i = 0; i < samples.size(); ++i) {
+		auto str = std::string("samples[") + std::to_string(i) + "]";
+		auto v = samples[i];
+
+		glUniform3fv(
+			glGetUniformLocation(ssao_shader.getNativeHandle(), str.c_str()),
+			1,
+			(float*)&v.x
+		);
+	}
+
+	ssao_buffer.render_quad();
+
+	// (Blur)
+	ssao_buffer.set_active_blur();
+	glClear(GL_COLOR_BUFFER_BIT);
+	sf::Shader::bind(&ssao_shader_blur);
+	ssao_buffer.set_active_texture_for_blur();
+	ssao_buffer.render_quad();
+
+	
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	hdr_buffer.set_active();
 
 	// the lighting phase
 	g_buffer.set_active_texture();
+	ssao_buffer.set_active_texture(10);
+
 	glClearColor(UNROLL_3(Window_Info.clear_color), 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -58,6 +139,7 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	shader_light.setUniform("gNormal", 1);
 	shader_light.setUniform("gAlbedoSpec", 2);
 	shader_light.setUniform("gMRA", 3);
+	shader_light.setUniform("gSSAO", 10);
 	shader_light.setUniform("show_debug", Show_Debug);
 	shader_light.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
 	shader_light.setUniform("use_ibl", 0);
@@ -77,7 +159,6 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	}
 
 	sf::Shader::bind(&shader_light);
-
 	g_buffer.render_quad();
 
 	// HDR
@@ -262,6 +343,8 @@ void Camera::look_at(Vector3f target, Vector3f u) noexcept {
 
 void Camera::set_perspective(float fov, float ratio, float f, float n) noexcept {
 	projection = Matrix4f::perspective(fov, ratio, f, n);
+	cam_far = f;
+	cam_near = n;
 }
 
 void Camera::set_orthographic(float scale, float ratio, float f, float n) noexcept {
@@ -343,4 +426,53 @@ Cube_Map* Camera::find_active_cubemap() const noexcept {
 	});
 
 	return best;
+}
+
+std::vector<Vector3f> generate_ssao_samples(size_t n) noexcept {
+	std::uniform_real_distribution<float> unit(0.f, 1.f);
+	std::uniform_real_distribution<float> angle(0.f, PIf);
+	std::default_random_engine generator;
+	std::vector<Vector3f> result;
+	for (unsigned int i = 0; i < n; ++i) {
+		float angles[2] = { angle(generator), angle(generator) };
+		auto sample = Vector3f::createUnitVector(angles);
+		sample *= unit(generator);
+		float scale = i / (float)n;
+		scale = xstd::lerp(0.1f, 1.0f, scale * scale);
+		sample *= scale;
+
+		result.push_back(sample);
+	}
+	return result;
+}
+
+uint32_t get_noise_texture() noexcept {
+	static std::optional<uint32_t> noise_texture;
+	if (!noise_texture) {
+
+		std::uniform_real_distribution<float> float_dist(-1, 1);
+		std::default_random_engine generator(SEED);
+
+		std::vector<Vector3f> noise;
+
+		for (unsigned int i = 0; i < 16; i++) {
+			Vector3f noise_vec;
+			noise_vec.x = float_dist(generator);
+			noise_vec.z = float_dist(generator);
+			noise_vec.z = 1;
+
+			noise.push_back(noise_vec);
+		}
+		
+		noise_texture = 0;
+		glGenTextures(1, &*noise_texture);
+		glBindTexture(GL_TEXTURE_2D, *noise_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 4, 4, 0, GL_RGB, GL_FLOAT, &noise[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	}
+	return *noise_texture;
 }

@@ -118,13 +118,13 @@ in vec3 frag_normal;
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec3 gMRA;
+layout (location = 3) out vec4 gMRA;
 
 void main() {
 	gNormal = frag_normal;
 	gAlbedoSpec = vec4(surface_color, 0.0);
 	gPosition = frag_pos;
-	gMRA = vec3(1);
+	gMRA = vec4(vec3(1), -1);
 }
 )";
 

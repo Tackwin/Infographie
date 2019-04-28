@@ -62,7 +62,7 @@ void update_camera_settings(Camera_Settings& settings) noexcept {
 	case 0: {
 		thread_local float Cam_Fov = 90;
 		thread_local float Cam_Far = 500;
-		thread_local float Cam_Near = 1;
+		thread_local float Cam_Near = 0.01f;
 
 		ImGui::DragFloat("Fov", &Cam_Fov, 1, 0, 180);
 		ImGui::DragFloat("Near", &Cam_Near, 0.001f, 0, 10);

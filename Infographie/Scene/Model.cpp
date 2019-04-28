@@ -38,7 +38,7 @@ Model::Model(bool w) noexcept : without_bounding_box(w) {
 	boundingbox_child = make_child<Model>(true);
 	boundingbox_child->set_object_copy(Object_File::cube(size3));
 	boundingbox_child->set_texture(AM->get_texture(Plain_Cube_Boundingbox_Texture_Key));
-	boundingbox_child->set_shader(AM->get_shader("Simple"));
+	boundingbox_child->set_shader(AM->get_shader("Deferred_Simple"));
 	boundingbox_child->set_visible(false);
 }
 
@@ -374,6 +374,7 @@ void Model::set_object_copy(const Object_File& obj) noexcept {
 
 
 void Model::set_texture(const sf::Texture& t) noexcept {
+	use_plain_color = false;
 	texture = &t;
 }
 void Model::set_alpha_texture(const sf::Texture& t) noexcept {

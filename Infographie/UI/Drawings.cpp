@@ -2,6 +2,7 @@
 
 #include "Drawings.hpp"
 #include <type_traits>
+#include <algorithm>
 #include <variant>
 
 
@@ -140,6 +141,7 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 
 			ImGui::Text("Circle parameters");
 			ImGui::InputInt("Size", &Circle_Size_Int, 1, 5);
+			Circle_Size_Int = std::clamp(Circle_Size_Int, 0, 100);
 
 			x.size = (size_t)Circle_Size_Int;
 		}
@@ -154,6 +156,7 @@ void update_drawing_tools(Drawing_Settings& settings) noexcept {
 
 			ImGui::Text("Square parameters");
 			ImGui::InputInt("Size", &Square_Size_Int, 1, 5);
+			Square_Size_Int = std::clamp(Square_Size_Int, 0, 100);
 
 			x.size = (size_t)Square_Size_Int;
 		}

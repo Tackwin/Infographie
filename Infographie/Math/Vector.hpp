@@ -120,7 +120,7 @@ struct Vector : public __vec_member<D, T> {
 
 #pragma region STATIC
 
-	static Vector<D, T> createUnitVector(float angles[D]) {
+	static Vector<D, T> createUnitVector(float angles[D-1]) {
 		Vector<D, T> result;
 		result[0] = cosf(angles[0]);
 		for (size_t i = 1u; i < D; ++i) {
@@ -138,7 +138,7 @@ struct Vector : public __vec_member<D, T> {
 	static Vector<2, T> createUnitVector(float angles) { // i'm not doing all the shit above for 2d
 		return { cosf(angles), sinf(angles) };
 	}
-	static Vector<D, T> createUnitVector(double angles[D]) {
+	static Vector<D, T> createUnitVector(double angles[D-1]) {
 		Vector<D, T> result;
 		result[0] = static_cast<T>(cos(angles[0]));
 		for (size_t i = 1u; i < D; ++i) {

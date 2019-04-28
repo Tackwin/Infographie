@@ -9,6 +9,8 @@
 
 #include "Scene/Cubemap.hpp"
 
+#include "UI/RayTracing.hpp"
+
 class Camera : public Widget3 {
 public:
 	Camera() noexcept;
@@ -46,6 +48,7 @@ public:
 	float get_gamma() const noexcept;
 	void set_gamma(float x) noexcept;
 
+	Ray_Tracing_Settings ray_tracing_settings;
 private:
 
 	void select_ray_cast() noexcept;
@@ -70,11 +73,15 @@ private:
 	float exposure{ 1.f };
 	float gamma{ 1.f };
 
+	float cam_far{ 500 };
+	float cam_near{ .01f };
+
 	bool input_active{ false };
 
 	std::vector<Uuid_t> ids_to_lock;
 
 	G_Buffer g_buffer;
 	HDR_Buffer hdr_buffer;
+	SSAO_Buffer ssao_buffer;
 };
 

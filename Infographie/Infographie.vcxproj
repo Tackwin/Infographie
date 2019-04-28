@@ -136,6 +136,7 @@
     <ClCompile Include="UI\Geometries.cpp" />
     <ClCompile Include="UI\Illumination.cpp" />
     <ClCompile Include="UI\Images.cpp" />
+    <ClCompile Include="UI\RayTracing.cpp" />
     <ClCompile Include="UI\Texture.cpp" />
     <ClCompile Include="UI\Topologie.cpp" />
     <ClCompile Include="UI\Transform.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="UI\Geometries.hpp" />
     <ClInclude Include="UI\Illumination.hpp" />
     <ClInclude Include="UI\Images.hpp" />
+    <ClInclude Include="UI\RayTracing.hpp" />
     <ClInclude Include="UI\Texture.hpp" />
     <ClInclude Include="UI\Topologie.hpp" />
     <ClInclude Include="UI\Transform.hpp" />

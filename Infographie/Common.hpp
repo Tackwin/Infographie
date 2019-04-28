@@ -32,6 +32,11 @@ namespace details {
 #define defer details::Defer _CONCAT(defer_, __COUNTER__) = [&]
 #define BEG_END(x) std::begin(x), std::end(x)
 namespace xstd {
+	template<typename T>
+	constexpr T lerp(T t, T a, T b) noexcept {
+		return a * (1 - t) + b * t;
+	}
+
 	constexpr size_t constexpr_pow2(size_t D) noexcept {
 		size_t p = 1;
 		for (size_t i = 0; i < D; ++i, p *= 2);
