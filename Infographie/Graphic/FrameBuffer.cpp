@@ -136,6 +136,27 @@ void G_Buffer::copy_depth_to(uint32_t id) noexcept {
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
 }
 
+void G_Buffer::copy_depth_to(uint32_t id, Rectangle2f v) noexcept {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, g_buffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id); // write to default framebuffer
+	// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+	// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+	// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+	glBlitFramebuffer(
+		0,
+		0,
+		size.x,
+		size.y,
+		(size_t)(v.x * size.x),
+		(size_t)(v.y * size.y),
+		(size_t)((v.x + v.w) * size.x),
+		(size_t)((v.y + v.h) * size.y),
+		GL_DEPTH_BUFFER_BIT,
+		GL_NEAREST
+	);
+	glBindFramebuffer(GL_FRAMEBUFFER, id);
+}
+
 
 HDR_Buffer::HDR_Buffer(Vector2u size) noexcept : size(size) {
 	glGenFramebuffers(1, &hdr_buffer);
@@ -296,6 +317,17 @@ uint32_t Texture_Buffer::get_frame_buffer_id() const noexcept {
 void Texture_Buffer::clear(Vector4f color) noexcept {
 	glClearColor(UNROLL_3(color), color.a);
 	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Texture_Buffer::set_active_texture() noexcept {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture.getNativeHandle());
+}
+
+void Texture_Buffer::render_quad() noexcept {
+	glBindVertexArray(quad_VAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }
 
 

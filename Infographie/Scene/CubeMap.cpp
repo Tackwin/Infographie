@@ -61,6 +61,10 @@ bool Cube_Map::load_texture(std::filesystem::path path) noexcept {
 		AM->load_shader("BRDF", "res/shaders/brdf.vertex", "res/shaders/brdf.fragment");
 	}
 
+	GLint vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+	defer{ glViewport(vp[0], vp[1], vp[2], vp[3]); };
+
 	auto& equi_to_cube_shader = AM->get_shader("Equi_To_Cube");
 	auto& irradiance_shader = AM->get_shader("Irradiance");
 

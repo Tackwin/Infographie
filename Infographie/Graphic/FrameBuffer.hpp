@@ -1,6 +1,7 @@
 #pragma once
 #include "Common.hpp"
 #include "Math/Vector.hpp"
+#include "Math/Rectangle.hpp"
 
 #include <SFML/Graphics.hpp>
 
@@ -23,6 +24,7 @@ struct G_Buffer {
 
 	void render_quad() noexcept;
 	void copy_depth_to(uint32_t id = 0) noexcept;
+	void copy_depth_to(uint32_t id, Rectangle2f viewport) noexcept;
 private:
 	Vector2u size;
 
@@ -78,8 +80,12 @@ struct Texture_Buffer {
 	const sf::Texture& get_sfml_texture() const noexcept;
 
 	void set_active() noexcept;
+	void set_active_texture() noexcept;
+
+	void render_quad() noexcept;
 
 	void clear(Vector4f color) noexcept;
+
 private:
 	sf::Texture texture;
 	uint32_t frame_buffer{ 0 };

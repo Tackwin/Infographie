@@ -146,7 +146,7 @@ int main() {
 
 	auto add_cam_to_root = [](Widget3& root) -> Camera& {
 		auto& camera = *root.make_child<Camera>();
-		camera.set_viewport({ {0, 0}, {Window_Info.size.x, Window_Info.size.y } });
+		camera.set_viewport({ 0, 0, 1, 1 });
 		camera.set_perspective(
 			70 / (float)RAD_2_DEG, Window_Info.size.x / (float)Window_Info.size.y, 500, 0.01f
 		);
@@ -161,7 +161,7 @@ int main() {
 	};
 
 	//auto& camera2 = *scene_root.make_child<Camera>();
-	//camera2.set_viewport({ { Window_Info.size.x / 2, 0 }, { Window_Info.size.x / 2, 1 * Window_Info.size.y } });
+	//camera2.set_viewport({ 0.5f, 0, 0.5f, 1 });
 	//camera2.set_perspective(
 	//	70 / (float)RAD_2_DEG, (float)Window_Info.size.x / (float)Window_Info.size.y, 500, 1
 	//);

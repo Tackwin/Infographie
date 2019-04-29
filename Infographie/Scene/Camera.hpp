@@ -24,7 +24,7 @@ public:
 
 	void set_speed(float speed) noexcept;
 
-	void set_viewport(Rectangle2u rec) noexcept;
+	void set_viewport(Rectangle2f rec) noexcept;
 	void set_gl_view() noexcept;
 
 	void look_at(Vector3f target, Vector3f up) noexcept;
@@ -48,8 +48,30 @@ public:
 	float get_gamma() const noexcept;
 	void set_gamma(float x) noexcept;
 
+	// All the parameters that get eveluated each frame(ie. the one that don't need cached value
+	// that would be set in a setter) i just make them public it's easier and express intent.
+
+	float pitch{ 0 };
+	float yaw{ PIf };
+
+	float cam_far{ 500 };
+	float cam_near{ .01f };
+	
+	float speed{ 15 };
+
+	float exposure{ 1.f };
+	float gamma{ 1.f };
+
+	Vector3f look_dir{ 0, 0, 1 };
+	Vector3f right{ 1, 0, 0 };
+	Vector3f up{ 0, 1, 0 };
+
 	Ray_Tracing_Settings ray_tracing_settings;
+	
 private:
+	int Show_Debug{ 0 };
+	int Show_Debug_SSAO{ 0 };
+	bool Active_Debug{ true };
 
 	void select_ray_cast() noexcept;
 	void compute_view() noexcept;
@@ -60,21 +82,7 @@ private:
 
 	Matrix4f view;
 	Matrix4f projection;
-	Rectangle2u viewport;
-	Vector3f look_dir{ 0, 0, 1 };
-	Vector3f right{ 1, 0, 0 };
-	Vector3f up{ 0, 1, 0 };
-
-	float pitch{ 0 };
-	float yaw{ PIf };
-
-	float speed{ 15 };
-
-	float exposure{ 1.f };
-	float gamma{ 1.f };
-
-	float cam_far{ 500 };
-	float cam_near{ .01f };
+	Rectangle2f viewport;
 
 	bool input_active{ false };
 

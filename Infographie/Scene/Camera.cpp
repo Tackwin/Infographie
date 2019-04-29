@@ -30,13 +30,22 @@ Widget3* Camera::get_render_root() const noexcept {
 }
 
 void Camera::render(Texture_Buffer& target) noexcept {
-	static int Show_Debug{ 0 };
-	static int Show_Debug_SSAO{ 0 };
-
+	ImGui::PushID(name.c_str());
+	defer{ ImGui::PopID(); };
+	ImGui::Separator();
+	ImGui::Text(name.c_str());
 	ImGui::DragInt("Show Debug", &Show_Debug, 0.1f, 0, 10);
 	ImGui::DragInt("Show Debug SSAO", &Show_Debug_SSAO, 0.1f, 0, 10);
+	ImGui::Checkbox("Active?", &Active_Debug);
 
-	glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
+	if (!Active_Debug) return;
+
+	glViewport(
+		0,
+		0,
+		Window_Info.size.x,
+		Window_Info.size.y
+	);
 	compute_view();
 
 	if (!render_root) return;
@@ -144,6 +153,8 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	shader_light.setUniform("view_pos", sf::Vector3f{ UNROLL_3(get_global_position3()) });
 	shader_light.setUniform("use_ibl", 0);
 
+	ImGui::Text("Cubemap: %p", active_cubemap);
+
 	if (active_cubemap) {
 		shader_light.setUniform("use_ibl", 1);
 		shader_light.setUniform("irradianceMap", 7);
@@ -164,10 +175,9 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	// HDR
 	target.set_active();
 	//target.setActive(true);
-	g_buffer.copy_depth_to(target.get_frame_buffer_id());
+	//g_buffer.copy_depth_to(target.get_frame_buffer_id());
 	
 	hdr_buffer.set_active_texture();
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	auto& shader_hdr = AM->get_shader("HDR");
 
@@ -175,13 +185,20 @@ void Camera::render(Texture_Buffer& target) noexcept {
 	shader_hdr.setUniform("exposure", exposure);
 	shader_hdr.setUniform("hdr_texture", 0);
 	sf::Shader::bind(&shader_hdr);
-
+	
+	glViewport(
+		(size_t)(viewport.x* Window_Info.size.x),
+		(size_t)(viewport.y* Window_Info.size.y),
+		(size_t)(viewport.w* Window_Info.size.x),
+		(size_t)(viewport.h* Window_Info.size.y)
+	);
 	hdr_buffer.render_quad();
 
 	// The last phase
 	target.set_active();
 	//target.setActive(true);
-	g_buffer.copy_depth_to(target.get_frame_buffer_id());
+
+	g_buffer.copy_depth_to(target.get_frame_buffer_id(), viewport);
 	render_root->propagate_last_opengl_render();
 }
 
@@ -273,12 +290,12 @@ void Camera::select_ray_cast() noexcept {
 			// and it's the same if the camera is at an angle.
 			// so just use the ui to select objects
 
-		// >TP2
-		// Turn out my view and proection matrix were wrong all along, they needed to be
-		// transposed, damn you linear algebra and your non obvious graphical bug argh....
+	// >TP2
+	// Turn out my view and proection matrix were wrong all along, they needed to be
+	// transposed, damn you linear algebra and your non obvious graphical bug argh....
 
-		// My god i was doing	Vector3f{ ray4.x, ray4.y, ray.z } instead of
-		//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
+	// My god i was doing	Vector3f{ ray4.x, ray4.y, ray.z } instead of
+	//						Vector3f{ ray4.x, ray4.y, ray4.z } ... (L+13)
 
 	auto ray_origin = pos3;
 	auto ray = get_ray_from_graphic_matrices(get_mouse_viewport(), projection, view);
@@ -298,7 +315,7 @@ void Camera::select_ray_cast() noexcept {
 				if (
 					!selected ||
 					(intersection - ray_origin).length2() < (*opt - ray_origin).length2()
-					) {
+				) {
 					selected = w3;
 					intersection = *opt;
 				}
@@ -331,7 +348,7 @@ void Camera::select_ray_cast() noexcept {
 	}
 }
 
-void Camera::set_viewport(Rectangle2u rec) noexcept {
+void Camera::set_viewport(Rectangle2f rec) noexcept {
 	viewport = rec;
 }
 
@@ -384,9 +401,16 @@ void Camera::lock(std::vector<Uuid_t> ids) noexcept {
 }
 
 Vector2f Camera::get_mouse_viewport() const noexcept {
+	auto screen_viewport = Rectangle2u{
+		(size_t)(viewport.x * Window_Info.size.x),
+		(size_t)(viewport.y * Window_Info.size.y),
+		(size_t)(viewport.w * Window_Info.size.x),
+		(size_t)(viewport.h * Window_Info.size.y)
+	};
+
 	return {
-		(2.f * (IM::getMouseScreenPos().x - viewport.x)) / viewport.w - 1.f,
-		1.f - (2.f * IM::getMouseScreenPos().y - viewport.y) / viewport.h
+		(2.f * (IM::getMouseScreenPos().x - screen_viewport.x)) / screen_viewport.w - 1.f,
+		1.f - (2.f * (IM::getMouseScreenPos().y - screen_viewport.y)) / screen_viewport.h
 	};
 }
 
