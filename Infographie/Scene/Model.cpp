@@ -504,11 +504,11 @@ void Model::Picker::update(float) noexcept {
 	}
 
 	Ray3f ray;
-	ray.pos = Window_Info.active_camera->get_global_position3();
+	ray.pos = Window_Info.input_active_camera->get_global_position3();
 	ray.dir = get_ray_from_graphic_matrices(
-		Window_Info.active_camera->get_mouse_viewport(),
-		Window_Info.active_camera->get_projection_matrix(),
-		Window_Info.active_camera->get_view_matrix()
+		Window_Info.input_active_camera->get_mouse_viewport(),
+		Window_Info.input_active_camera->get_projection_matrix(),
+		Window_Info.input_active_camera->get_view_matrix()
 	);
 	if (IM::isMouseJustPressed(sf::Mouse::Left)) {
 		auto p = xy_plan->get_global_position3();

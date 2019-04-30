@@ -22,6 +22,7 @@ namespace details {
 		sf::RenderWindow window;
 
 		Camera* active_camera;
+		Camera* input_active_camera{ nullptr };
 
 		Texture_Buffer* texure_buffer;
 

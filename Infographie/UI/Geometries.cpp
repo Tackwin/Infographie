@@ -50,12 +50,6 @@ void update_geometries_settings(Geometries_Settings& settings) noexcept {
 			f(Object_File::cube({ 1, 1, 1 }));
 		}
 	}
-	ImGui::SameLine();
-	if (ImGui::ImageButton(AM->get_texture("Tetra_Icon"), { 20, 20 }, 2)) {
-		for (auto& f : settings.spawn_object_callback) {
-			f(Object_File::tetraedre({ 1, 1, 1 }));
-		}
-	}
 
 	ImGui::Indent();
 	if (settings.root) {

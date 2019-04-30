@@ -205,6 +205,7 @@ void Camera::render(Texture_Buffer& target) noexcept {
 
 void Camera::update(float dt) noexcept {
 	if (!input_active) return;
+	Window_Info.input_active_camera = this;
 
 	if (debug_values["Camera_Speed"].type() == typeid(float)) {
 		speed = std::any_cast<float>(debug_values["Camera_Speed"]);
