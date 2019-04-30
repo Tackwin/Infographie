@@ -580,6 +580,8 @@ void Model::Picker::update(float) noexcept {
 }
 
 void Model::Picker::last_opengl_render() noexcept {
+	glDisable(GL_DEPTH_TEST);
+
 	// It's crazy we can make constant screen size just by scaling world woordinate by camera
 	// distance.
 	auto dist =
@@ -595,13 +597,11 @@ void Model::Picker::last_opengl_render() noexcept {
 	yz_plan->set_scaling(scale);
 	zx_plan->set_scaling(scale);
 
-	glDisable(GL_DEPTH_TEST);
-	defer{
-		glEnable(GL_DEPTH_TEST);
-	};
 	xy_plan->opengl_render();
 	yz_plan->opengl_render();
 	zx_plan->opengl_render();
+
+	glEnable(GL_DEPTH_TEST);
 }
 
 

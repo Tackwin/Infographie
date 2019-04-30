@@ -408,9 +408,12 @@ Vector2f Camera::get_mouse_viewport() const noexcept {
 		(size_t)(viewport.h * Window_Info.size.y)
 	};
 
+	auto mouse_pos = IM::getMouseScreenPos();
+	mouse_pos.y = Window_Info.size.y - mouse_pos.y;
+
 	return {
-		(2.f * (IM::getMouseScreenPos().x - screen_viewport.x)) / screen_viewport.w - 1.f,
-		1.f - (2.f * (IM::getMouseScreenPos().y - screen_viewport.y)) / screen_viewport.h
+		(2.f * (mouse_pos.x - screen_viewport.x)) / screen_viewport.w - 1.f,
+		(2.f * (mouse_pos.y - screen_viewport.y)) / screen_viewport.h - 1.f
 	};
 }
 

@@ -16,5 +16,5 @@ void main() {
 	// if we do the mathematically correct thing and make z = 1 we are going to need to set depth_test = LEQUAL in app code
 	// meaning that we are going to lose a lot of perf filled the screen with quad at the same depth
 	// so we make the z = 0.99 to keep the LESS function in the depth test. 
-	gl_Position.z -= 0.00001;
+	//gl_Position.z -= 0.00001;
 }

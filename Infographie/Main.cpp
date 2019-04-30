@@ -321,7 +321,7 @@ int main() {
 		std::lock_guard guard{ function_from_another_thread_mutex };
 		function_from_another_thread.push_back([&, p = path, d = data] {
 			auto cubemap = new Cube_Map();
-			scene_root.add_child(cubemap, -1);
+			scene_root.add_child(cubemap, 5);
 
 			tex_settings.cubemap_ids.push_back(cubemap->get_uuid());
 			cubemap->set_name((--p.end())->generic_string()); // <- that's code for the parent dir.
@@ -501,7 +501,7 @@ void render(
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 

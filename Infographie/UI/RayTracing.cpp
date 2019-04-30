@@ -201,7 +201,6 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 		nhit = -1 * nhit;
 		inside = true;
 	}
-
 	
 	if ((sphere->transparency > 0 || sphere->reflection > 0) && current_depth < scene.max_depth) {
 		float facingratio = -ray.dir.dot(nhit);

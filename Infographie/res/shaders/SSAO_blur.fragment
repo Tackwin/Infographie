@@ -3,17 +3,17 @@ out float FragColor;
 
 in vec2 TexCoords;
 
-uniform sampler2D ssao_input;
+uniform sampler2D texture;
 
 uniform int blur_radius;
 
 void main()  {
-    vec2 texelSize = 1.0 / vec2(textureSize(ssao_input, 0));
+    vec2 texelSize = 1.0 / vec2(textureSize(texture, 0));
     float result = 0.0;
     for (int x = -blur_radius; x < blur_radius; ++x) {
         for (int y = -blur_radius; y < blur_radius; ++y) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(ssao_input, TexCoords + offset).r;
+            result += texture2D(texture, TexCoords + offset).r;
         }
     }
     FragColor = result / (4.0 * blur_radius * blur_radius);
