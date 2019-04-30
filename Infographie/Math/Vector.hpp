@@ -526,12 +526,19 @@ struct Vector : public __vec_member<D, T> {
 
 	template<typename U = T>
 	operator const std::enable_if_t<
-		std::is_same_v<U, T> && std::is_floating_point_v<T> && D == 4,
+		std::is_same_v<U, T> && std::is_floating_point_v<T> && D >= 3,
 		sf::Color
 	>() const {
-		return sf::Color(COLOR_UNROLL(
-			((Vector<4U, std::uint8_t>)(this->operator*(255)))
-		));
+		if constexpr (D == 3) {
+			return sf::Color(UNROLL_3(
+				((Vector<D, std::uint8_t>)(this->operator*(255)))
+			));
+		}
+		else {
+			return sf::Color(COLOR_UNROLL(
+				((Vector<D, std::uint8_t>)(this->operator*(255)))
+			));
+		}
 	}
 
 	template<typename U>

@@ -241,3 +241,21 @@ std::optional<Vector3f> ray_plane(Ray3f ray, Vector3f center, Vector3f normal) n
 Vector3f plane_normal(Vector3f A, Vector3f B, Vector3f C) noexcept {
 	return (B - A).cross(C - A);
 }
+
+std::optional<Vector2f> ray_sphere(Ray3f ray, Vector3f center, float r) noexcept {
+	auto l = center - ray.pos;
+	float tca = l.dot(ray.dir);
+
+	if (tca < 0) return std::nullopt;
+
+	float d2 = l.dot(l) - tca * tca;
+	if (d2 > r * r) return std::nullopt;
+
+	float thc = sqrt(r * r - d2);
+	
+
+	float t0 = tca - thc;
+	float t1 = tca + thc;
+
+	return Vector2f{ t0, t1 };
+}

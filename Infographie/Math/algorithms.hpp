@@ -47,4 +47,5 @@ extern Vector3f get_ray_from_graphic_matrices(Vector2f pos, Matrix4f proj, Matri
 extern std::optional<Vector3f> ray_plane(Ray3f ray, Vector3f center, Vector3f normal) noexcept;
 extern bool ray_box(Ray3f ray, Vector3f pos, Vector3f size) noexcept;
 extern Vector3f plane_normal(Vector3f A, Vector3f B, Vector3f C) noexcept;
+extern std::optional<Vector2f> ray_sphere(Ray3f ray, Vector3f center, float r) noexcept;
 
