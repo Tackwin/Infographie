@@ -24,6 +24,7 @@ struct Scene_Opts {
 		Vector3f emission_color{ 0, 0, 0 };
 		float transparency{ 0 };
 		float reflection{ 0 };
+		float fresnel{ 0.1f };
 	};
 	
 	std::vector<Ball> balls;
@@ -98,11 +99,13 @@ void update_ray_tracing_settings(Ray_Tracing_Settings& settings) noexcept {
 			defer{ ImGui::PopID(); };
 
 			ImGui::DragFloat("Radius", &opts.balls[i].r, 0.1f, 0.f);
+			ImGui::DragFloat("Fresnel", &opts.balls[i].fresnel, 0.1f, 0.f);
 			ImGui::DragFloat3("Position", &opts.balls[i].pos.x);
 			ImGui::ColorEdit3("Surface Color", &opts.balls[i].surface_color.x);
 			ImGui::ColorEdit3("Emissive Color", &opts.balls[i].emission_color.x);
 			ImGui::DragFloat("Transparency", &opts.balls[i].transparency, 0.01f, 0.f, 1.f);
 			ImGui::DragFloat("Reflection", &opts.balls[i].reflection, 0.01f, 0.f, 1.f);
+			ImGui::Separator();
 		}
 	}
 	if (!settings.root) return;
@@ -138,6 +141,7 @@ sf::Image render_scene(Scene_Opts opts) noexcept {
 			auto color = trace(opts, ray, 0);
 
 			auto f = [exposure = opts.exposure, gamma = opts.gamma](float x) {
+				//return std::min(1.f, x);
 				return std::powf(1 - std::expf(-x * exposure), 1 / gamma);
 			};
 
@@ -177,7 +181,7 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 	// point of intersection 
 	Vector3f phit = ray.pos + ray.dir * (*t_near);
 
-	float attenuation = 1.f;
+	float attenuation = *t_near * *t_near;
 
 	// normal at the intersection point 
 	Vector3f nhit = phit - sphere->pos;
@@ -197,12 +201,13 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 		nhit = -1 * nhit;
 		inside = true;
 	}
+
 	
 	if ((sphere->transparency > 0 || sphere->reflection > 0) && current_depth < scene.max_depth) {
 		float facingratio = -ray.dir.dot(nhit);
 
 		// change the mix value to tweak the effect
-		float fresneleffect = xstd::lerp(0.1f, 1.f, powf(1 - facingratio, 3));
+		float fresneleffect = xstd::lerp(sphere->fresnel, 1.f, powf(1 - facingratio, 3));
 		Ray3f new_ray;
 
 		// compute reflection direction (not need to normalize because all vectors
@@ -229,24 +234,22 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 			refraction = trace(scene, new_ray, current_depth + 1);
 		}
 		// the result is a mix of reflection and refraction (if the sphere is transparent)
-		surface_color = (
+		surface_color += (
 			reflection * fresneleffect +
-			sphere->transparency * refraction* (1 - fresneleffect)
+			sphere->transparency * refraction * (1 - fresneleffect)
 		);
-		surface_color.x *= sphere->surface_color.x;
-		surface_color.y *= sphere->surface_color.y;
-		surface_color.z *= sphere->surface_color.z;
-	
-		return surface_color + sphere->emission_color;
+		return (surface_color + sphere->emission_color);
 	}
 
 	// it's a diffuse object, no need to raytrace any further
+
+
 	for (size_t i = 0; i < scene.balls.size(); ++i) {
 		auto& ball = scene.balls[i];
 
 		if (ball.emission_color.x > 0) {
 			// this is a light
-			Vector3f transmission = { 1, 1, 1 };
+			float transmission = 1;
 			Vector3f lightDirection = ball.pos - phit;
 
 			lightDirection.normalize();
@@ -258,7 +261,7 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 					new_ray.dir = lightDirection;
 
 					if (ray_sphere(new_ray, scene.balls[j].pos, scene.balls[j].r)) {
-						transmission = { 0, 0, 0};
+						transmission = 0;
 						break;
 					}
 				}
@@ -266,15 +269,14 @@ Vector3f trace(const Scene_Opts& scene, Ray3f ray, size_t current_depth) noexcep
 
 			Vector3f to_add = sphere->surface_color * std::max(0.f, nhit.dot(lightDirection));
 
-			to_add.x *= transmission.x * ball.emission_color.x;
-			to_add.y *= transmission.y * ball.emission_color.y;
-			to_add.z *= transmission.z * ball.emission_color.z;
+			to_add.x *= ball.emission_color.x;
+			to_add.y *= ball.emission_color.y;
+			to_add.z *= ball.emission_color.z;
 
-			surface_color += to_add;
+			surface_color += to_add * transmission / 1;
 		}
 	}
-
-	return surface_color + sphere->emission_color;
+	return (surface_color + sphere->emission_color);
 }
 
 Scene_Opts default_scene() noexcept {
@@ -299,21 +301,24 @@ Scene_Opts default_scene() noexcept {
 
 	b.pos = Vector3f(5.f, -1.f, -15.f);
 	b.r = 2;
-	b.surface_color = { 0.90f, 0.76f, 0.46f };
+	b.surface_color = { 0.45f, 0.38f, 0.23f };
+	b.emission_color = { 0.45f, 0.38f, 0.23f };
 	b.reflection = 1;
 	b.transparency = 0.0f;
 
 	opts.balls.push_back(b);
 
-	b.pos = Vector3f(5.f, 0.f, -25.f);
+	b.pos = Vector3f(5.f, 0.f, -26.f);
 	b.r = 3;
 	b.surface_color = { 0.65f, 0.77f, 0.97f };
+	b.emission_color = { 0, 0, 0 };
 
 	opts.balls.push_back(b);
 
 	b.pos = Vector3f(-5.5f, 0.f, -15.f);
 	b.r = 3;
 	b.surface_color = { 0.90f, 0.90f, 0.90f };
+	b.emission_color = { 0, 0, 0 };
 
 	opts.balls.push_back(b);
 
